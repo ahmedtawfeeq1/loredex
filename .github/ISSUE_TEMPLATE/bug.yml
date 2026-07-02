@@ -1,0 +1,29 @@
+name: Bug report
+description: Something broke
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: loredex version
+      placeholder: npx loredex --version
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the command you ran and its output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `npx loredex doctor`
+      render: shell
