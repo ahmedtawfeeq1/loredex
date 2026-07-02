@@ -47,7 +47,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OWNER/loredex.git"
+    "url": "git+https://github.com/ahmedtawfeeq1/loredex.git"
   },
   "dependencies": {
     "chokidar": "^5.0.0",

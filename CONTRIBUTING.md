@@ -5,7 +5,7 @@ Thanks for helping! The bar for a first contribution is deliberately low.
 ## Setup
 
 ```bash
-git clone https://github.com/OWNER/loredex
+git clone https://github.com/ahmedtawfeeq1/loredex
 cd loredex
 npm install
 npm test          # vitest — should be green before you start
