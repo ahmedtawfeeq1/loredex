@@ -1,0 +1,65 @@
+{
+  "name": "loredex",
+  "version": "0.1.0",
+  "description": "Auto-organize AI-generated markdown into an Obsidian-compatible vault. Your coding agents write hundreds of files — loredex gives them a brain to put them in.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Ahmed Tawfeeq",
+  "bin": {
+    "loredex": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "tsup": {
+    "entry": [
+      "src/cli.ts"
+    ],
+    "format": [
+      "esm"
+    ],
+    "target": "node20",
+    "clean": true
+  },
+  "keywords": [
+    "obsidian",
+    "markdown",
+    "ai",
+    "claude-code",
+    "codex",
+    "cursor",
+    "knowledge-base",
+    "vault",
+    "second-brain",
+    "agents"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OWNER/loredex.git"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0",
+    "commander": "^14.0.3",
+    "gray-matter": "^4.0.3",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.2",
+    "@types/node": "^26.1.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}
