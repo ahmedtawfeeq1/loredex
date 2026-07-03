@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.3.0...loredex-v0.3.1) (2026-07-03)
+
+
+### Bug Fixes
+
+* drop --bare from headless claude calls — it strips credentials ([c5badfa](https://github.com/ahmedtawfeeq1/loredex/commit/c5badfa003be8828d3def58e5609ebad6408773f))
+* keep plugin version in sync with releases ([c2af48a](https://github.com/ahmedtawfeeq1/loredex/commit/c2af48ae6d173eca1afab5e515443be181c4d3df))
+
 ## [0.3.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.2.0...loredex-v0.3.0) (2026-07-03)
 
 
