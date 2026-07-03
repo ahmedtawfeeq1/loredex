@@ -31,12 +31,12 @@ prefers). Never file into the vault's `projects/` tree yourself — the router o
 
 | Intent | Command |
 |---|---|
-| Set up loredex for this project | `npx -y loredex init` (options: `--vault <path>`, `--sync git`) |
-| Organize existing markdown in a repo | `npx -y loredex adopt --dry-run` first, show the user the plan, then `npx -y loredex adopt -y` after they confirm |
-| Route pending files now | `npx -y loredex route` |
-| Curate: Start-Here brief, stale flags, semantic links | `npx -y loredex curate <project> --objective "<text>" [--since <date>] [--topic <t>] --dry-run`, then `-y` after the user confirms |
-| Vault statistics | `npx -y loredex status` |
-| Troubleshoot | `npx -y loredex doctor` |
+| Set up loredex for this project | `npx -y loredex@latest init` (options: `--vault <path>`, `--sync git`) |
+| Organize existing markdown in a repo | `npx -y loredex@latest adopt --dry-run` first, show the user the plan, then `npx -y loredex@latest adopt -y` after they confirm |
+| Route pending files now | `npx -y loredex@latest route` |
+| Curate: Start-Here brief, stale flags, semantic links | `npx -y loredex@latest curate <project> --objective "<text>" [--since <date>] [--topic <t>] --dry-run`, then `-y` after the user confirms |
+| Vault statistics | `npx -y loredex@latest status` |
+| Troubleshoot | `npx -y loredex@latest doctor` |
 
 ## Curate flow (IMPORTANT — ask before running)
 
