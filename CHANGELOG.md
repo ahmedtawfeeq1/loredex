@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.3.2...loredex-v0.4.0) (2026-07-03)
+
+
+### Features
+
+* live progress ticker + friendly Start Here brief names ([8e441ec](https://github.com/ahmedtawfeeq1/loredex/commit/8e441ec5a61d70310fa88ae05f3878cff54a1ac4))
+
 ## [0.3.2](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.3.1...loredex-v0.3.2) (2026-07-03)
 
 
