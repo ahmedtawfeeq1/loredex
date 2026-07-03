@@ -16,8 +16,8 @@ describe('heuristic classifier', () => {
 
   it('takes topic from the deepest non-generic directory', () => {
     const path = makeFile(root, 'docs/current-system/01-engine.md')
-    const meta = classifyHeuristic(path, root, 'genudo')
-    expect(meta.project).toBe('genudo')
+    const meta = classifyHeuristic(path, root, 'my-app')
+    expect(meta.project).toBe('my-app')
     expect(meta.topic).toBe('current-system')
   })
 

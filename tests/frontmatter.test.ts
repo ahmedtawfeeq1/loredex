@@ -9,9 +9,9 @@ import {
 
 describe('frontmatter', () => {
   it('round-trips meta and body', () => {
-    const doc = { meta: { project: 'genudo', topic: 'gap-analysis' }, body: '# Hello\n' }
+    const doc = { meta: { project: 'my-app', topic: 'gap-analysis' }, body: '# Hello\n' }
     const parsed = parseDoc(serializeDoc(doc))
-    expect(parsed.meta.project).toBe('genudo')
+    expect(parsed.meta.project).toBe('my-app')
     expect(parsed.meta.topic).toBe('gap-analysis')
     expect(parsed.body.trim()).toBe('# Hello')
   })

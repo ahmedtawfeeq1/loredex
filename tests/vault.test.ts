@@ -11,8 +11,8 @@ describe('vault', () => {
   })
 
   it('computes target dir for project and research notes', () => {
-    expect(targetDir('/v', { project: 'GenuDo', topic: 'Gap Analysis' })).toBe(
-      join('/v', 'projects', 'genudo', 'gap-analysis'),
+    expect(targetDir('/v', { project: 'My App', topic: 'Gap Analysis' })).toBe(
+      join('/v', 'projects', 'my-app', 'gap-analysis'),
     )
     expect(targetDir('/v', { topic: 'llm-tools' })).toBe(join('/v', 'research', 'llm-tools'))
   })

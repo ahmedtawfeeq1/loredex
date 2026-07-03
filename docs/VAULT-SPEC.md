@@ -23,7 +23,7 @@ agent.
 
 ```yaml
 ---
-project: genudo               # required for deterministic filing
+project: my-app               # required for deterministic filing
 topic: gap-analysis           # required for deterministic filing
 type: research | finding | analysis | snapshot | note   # default: note
 date: 2026-07-03              # default: file mtime

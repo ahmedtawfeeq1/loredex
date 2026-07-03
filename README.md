@@ -20,11 +20,11 @@ Claude Code, Codex, and Cursor generate research, findings, gap analyses, and pl
 ```text
 BEFORE — scattered across your repo          AFTER — one connected vault
 ─────────────────────────────────           ────────────────────────────────────────────────
-docs/GAP-ANALYSIS.md                        projects/genudo/gap-analysis/2026-07-03-gap-analysis.md
-docs/current-system/00-OBJECTIVE.md    →    projects/genudo/current-system/2026-07-03-objective.md
-research-dump-v2.md                         projects/genudo/engine/2026-07-01-research-dump-v2.md
+docs/GAP-ANALYSIS.md                        projects/my-app/gap-analysis/2026-07-03-gap-analysis.md
+docs/current-system/00-OBJECTIVE.md    →    projects/my-app/current-system/2026-07-03-objective.md
+research-dump-v2.md                         projects/my-app/engine/2026-07-01-research-dump-v2.md
 notes/llm-pricing.md                        research/llm-tools/2026-06-28-llm-pricing.md
-                                            _index/genudo.md        ← map of content, auto-built
+                                            _index/my-app.md        ← map of content, auto-built
                                             _index/Home.md          ← vault-wide index
 ```
 
@@ -160,4 +160,4 @@ git clone https://github.com/ahmedtawfeeq1/loredex && cd loredex
 npm install && npm test
 ```
 
-MIT © [Ahmed Tawfeeq](https://github.com/ahmedtawfeeq1)
+MIT © [Ahmed Tawfeeq](https://github.com/ahmedtawfeeq1) — Head of AI & Founder @ [genudo.ai](https://genudo.ai)
