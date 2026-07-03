@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.2.0...loredex-v0.3.0) (2026-07-03)
+
+
+### Features
+
+* loredex curate — objective-driven briefs, stale flags, semantic links ([122ee30](https://github.com/ahmedtawfeeq1/loredex/commit/122ee30759a53ee3d58950575cf911adfd9d5507))
+
 ## [0.2.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.1.0...loredex-v0.2.0) (2026-07-02)
 
 
