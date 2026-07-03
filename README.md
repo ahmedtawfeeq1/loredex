@@ -98,9 +98,28 @@ No hook system in your agent? Run `loredex watch` (routes on file change) or `lo
 | `loredex init` | Create/register the vault, wire up the current project. `--sync git` enables auto-commit |
 | `loredex adopt [path]` | Classify + file a project's existing markdown. `--dry-run`, `--move`, `-y`, `--no-llm` |
 | `loredex route` | Process the vault inbox + new findings in the current project. `--strict` = frontmatter-only |
+| `loredex curate [project]` | **Agent-driven optimization**: Start-Here brief for an objective, stale/duplicate flags, semantic links. `--objective`, `--since`, `--topic`, `--dry-run` |
 | `loredex watch` | Daemon: route automatically on file changes |
 | `loredex status` | Vault statistics |
 | `loredex doctor` | Check config, vault, and classifier availability |
+
+## 🧭 Curate — from "filed" to "understood"
+
+Filing solves storage; `curate` solves *"where do I start?"*:
+
+```bash
+loredex curate my-app --objective "draft the v2 spec" --since 2026-07-01 --dry-run
+```
+
+An agent reads a digest of the scoped notes and writes a **`_START-HERE` brief** into the
+vault: what this work is, the 5–10 notes to read in order *for your objective*, and
+suggested next actions. It also flags stale docs (`status: stale`, `superseded_by`),
+spots duplicate coverage, and rewrites `## Related` sections with semantic (not
+same-folder) links. Scope to a single session's output with `--since`/`--topic` — each
+scoped brief is a durable session handoff. Deterministic bonus pass: wikilinks pointing at
+code files (`[[chat.py]]`) become inline code, so your Obsidian graph has no ghost nodes.
+
+Same safety rules: dry-run first, never deletes, merge suggestions are flags — you decide.
 
 ## ☁️ Sync across devices
 
@@ -126,6 +145,7 @@ No loredex server, no account, no lock-in: **your files, any agent, forever.**
 
 ## 🗺️ Roadmap
 
+- [x] `loredex curate` — objective-driven briefs, stale detection, semantic links (v0.3)
 - [ ] MCP server (`vault_store`, `vault_search`) — agents read the vault as long-term memory
 - [ ] Semantic search over the vault
 - [ ] Cursor-native hook adapter

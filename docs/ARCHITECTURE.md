@@ -60,3 +60,16 @@ agent writes .md ──► docs/ or vault _inbox/
 
 `npm test` — vitest. Unit tests per core module + one e2e (`tests/e2e.test.ts`) that runs
 adopt/route against temp dirs with `LOREDEX_CLASSIFIER=none` (no network, no LLM).
+
+## Curate flow (v0.3)
+
+```
+loredex curate <project> [--objective ...] [--since/--topic scope]
+   │
+   ├─ deterministic: sanitizeWikilinks over scoped notes (src/core/sanitize.ts)
+   ├─ digest: name+meta+headings+excerpt per note (src/core/curate.ts)
+   ├─ LLM (one call, src/llm/curator.ts): brief, reading order, next actions,
+   │   stale flags, duplicate sets, semantic clusters — steered by the objective
+   └─ apply (non-destructive): _START-HERE brief note, frontmatter stamps,
+       Related sections rewritten from clusters, indexes rebuilt, git commit
+```

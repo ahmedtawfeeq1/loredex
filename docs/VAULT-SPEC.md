@@ -58,3 +58,20 @@ Rules:
 ```
 
 `LOREDEX_CLASSIFIER=claude|codex|heuristic|none` forces a classifier (tests use `none`).
+
+## Curation fields (v0.3)
+
+Added by `loredex curate`, all frontmatter-only:
+
+```yaml
+status: stale | superseded      # flagged by curation; note body untouched
+superseded_by: <note-name>      # the newer note that replaces this one
+```
+
+Brief notes (`_START-HERE-<project>.md`, scoped: `_START-HERE-<project>--<slug>.md`) live at
+the project root with `type: brief`, `objective: <text>`, `loredex: brief`. The main brief
+is overwritten per full-project run; scoped briefs accumulate as session handoffs.
+
+Ghost-link rule: wikilinks whose target has a non-`.md` extension (`[[chat.py]]`) are
+rewritten to inline code at routing time and by curate — they can never resolve to a note
+and only pollute the graph.
