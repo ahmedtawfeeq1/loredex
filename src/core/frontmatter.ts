@@ -11,6 +11,9 @@ export interface Meta {
   source?: string
   session?: string
   tags?: string[]
+  status?: string
+  superseded_by?: string
+  objective?: string
   loredex?: string
 }
 

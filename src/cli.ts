@@ -2,6 +2,7 @@
 import { Command } from 'commander'
 import pkg from '../package.json'
 import { runAdopt } from './commands/adopt'
+import { runCurate } from './commands/curate'
 import { runDoctor } from './commands/doctor'
 import { runInit } from './commands/init'
 import { runRoute } from './commands/route'
@@ -41,6 +42,17 @@ program
   .option('--strict', 'only route files with complete frontmatter (no guessing)')
   .option('--no-llm', 'classify with heuristics only (no LLM calls)')
   .action((opts) => runRoute(opts))
+
+program
+  .command('curate [project]')
+  .description('agent-driven vault optimization: Start-Here brief, stale flags, semantic links')
+  .option('--objective <text>', 'the objective the brief should answer')
+  .option('--topic <topic...>', 'limit curation to these topics (task scope)')
+  .option('--since <date>', 'limit curation to notes dated on/after YYYY-MM-DD')
+  .option('--dry-run', 'show the plan without writing anything')
+  .option('-y, --yes', 'skip the confirmation prompt')
+  .option('--no-llm', 'deterministic pass only (ghost-link cleanup, no brief)')
+  .action((project, opts) => runCurate(project, opts))
 
 program
   .command('watch')

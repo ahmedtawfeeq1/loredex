@@ -6,6 +6,7 @@ import type { Config } from './config'
 import { type Meta, parseDoc, serializeDoc } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
+import { sanitizeWikilinks } from './sanitize'
 import { targetDir, targetName, uniquePath } from './vault'
 
 export interface PlanItem {
@@ -67,7 +68,8 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
       loredex: 'routed',
     }
     const dest = uniquePath(item.destDir, item.destName)
-    writeFileSync(dest, serializeDoc({ meta, body }))
+    // ghost-link hygiene: [[x.py]] wikilinks would render as fake graph nodes in Obsidian
+    writeFileSync(dest, serializeDoc({ meta, body: sanitizeWikilinks(body).body }))
     if (item.mode === 'move') {
       unlinkSync(item.source)
     } else {

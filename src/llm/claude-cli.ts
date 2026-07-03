@@ -20,30 +20,29 @@ export function claudeAvailable(): boolean {
   }
 }
 
-/** Classify via headless Claude Code. --bare skips hooks/skills/CLAUDE.md (also prevents hook recursion). */
-export function classifyWithClaude(prompt: string): Meta | null {
-  const result = spawnSync(
-    'claude',
-    [
-      '-p',
-      prompt,
-      '--bare',
-      '--output-format',
-      'json',
-      '--json-schema',
-      SCHEMA,
-      '--model',
-      'haiku',
-    ],
-    { encoding: 'utf8', timeout: 90_000 },
-  )
+/**
+ * Headless Claude Code call with structured JSON output.
+ * --bare skips hooks/skills/CLAUDE.md (also prevents hook recursion).
+ */
+export function runClaudeJson(
+  prompt: string,
+  schema: string,
+  timeoutMs: number,
+  model?: string,
+): unknown | null {
+  const args = ['-p', prompt, '--bare', '--output-format', 'json', '--json-schema', schema]
+  if (model) args.push('--model', model)
+  const result = spawnSync('claude', args, { encoding: 'utf8', timeout: timeoutMs })
   if (result.status !== 0 || !result.stdout) return null
   try {
     const envelope = JSON.parse(result.stdout)
-    const parsed =
-      typeof envelope.result === 'string' ? JSON.parse(envelope.result) : envelope.result
-    return parsed as Meta
+    return typeof envelope.result === 'string' ? JSON.parse(envelope.result) : envelope.result
   } catch {
     return null
   }
+}
+
+export function classifyWithClaude(prompt: string): Meta | null {
+  // haiku: classification is cheap-and-fast territory
+  return runClaudeJson(prompt, SCHEMA, 90_000, 'haiku') as Meta | null
 }
