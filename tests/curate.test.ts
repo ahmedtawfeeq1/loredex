@@ -64,11 +64,14 @@ describe('curate', () => {
     )
   })
 
-  it('names briefs by scope', () => {
-    expect(briefFileName('demo', false)).toBe('_START-HERE-demo.md')
-    expect(briefFileName('demo', true, 'Draft THE spec!')).toBe(
-      '_START-HERE-demo--draft-the-spec.md',
+  it('names briefs by scope, short and stopword-free', () => {
+    expect(briefFileName('demo', false)).toBe('Start Here - demo.md')
+    expect(briefFileName('demo', true, 'Draft THE spec!')).toBe('Start Here - demo - spec.md')
+    expect(briefFileName('demo', true, 'draft the BMAD spec for the P0 flat GENU agent')).toBe(
+      'Start Here - demo - bmad-spec-p0-flat-genu.md',
     )
+    // no objective → date slug
+    expect(briefFileName('demo', true)).toMatch(/^Start Here - demo - \d{4}-\d{2}-\d{2}\.md$/)
   })
 
   it('applies a curation plan non-destructively', () => {
@@ -111,7 +114,7 @@ describe('curate', () => {
     rebuildIndexes(vault)
     const moc = readFileSync(join(vault, '_index', 'demo.md'), 'utf8')
     expect(moc).toContain('## Start here')
-    expect(moc).toContain('[[_START-HERE-demo]]')
+    expect(moc).toContain('[[Start Here - demo]]')
     expect(moc).toMatch(/\[\[2026-04-01-old-plan\]\] _\(stale\)_/)
     expect(moc).not.toMatch(/\[\[2026-07-01-core\]\] _\(stale\)_/)
   })

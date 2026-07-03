@@ -68,7 +68,7 @@ status: stale | superseded      # flagged by curation; note body untouched
 superseded_by: <note-name>      # the newer note that replaces this one
 ```
 
-Brief notes (`_START-HERE-<project>.md`, scoped: `_START-HERE-<project>--<slug>.md`) live at
+Brief notes (`Start Here - <project>.md`, scoped: `Start Here - <project> - <short-slug>.md`) live at
 the project root with `type: brief`, `objective: <text>`, `loredex: brief`. The main brief
 is overwritten per full-project run; scoped briefs accumulate as session handoffs.
 

@@ -61,12 +61,22 @@ export async function runCurate(
 
   let plan = null
   if (opts.llm) {
-    console.log(pc.dim('asking the LLM for the curation plan… (can take a minute)'))
-    plan = curateWithLlm({
+    const started = Date.now()
+    const tick = () => {
+      const elapsed = Math.round((Date.now() - started) / 1000)
+      process.stdout.write(
+        `\r${pc.dim(`LLM reading ${notes.length}-note digest and writing the brief… ${elapsed}s (typically 30–90s)`)}   `,
+      )
+    }
+    tick()
+    const ticker = setInterval(tick, 1000)
+    plan = await curateWithLlm({
       projectName: project,
       objective: opts.objective,
       digest: buildDigest(notes),
     })
+    clearInterval(ticker)
+    process.stdout.write(`\r${' '.repeat(90)}\r`)
     if (!plan) {
       console.log(
         pc.yellow('!'),

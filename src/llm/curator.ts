@@ -1,6 +1,6 @@
-import { spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import type { CurationPlan } from '../core/curate'
-import { runClaudeJson } from './claude-cli'
+import { runClaudeJsonAsync } from './claude-cli'
 import { detectProvider } from './provider'
 
 const CURATE_SCHEMA = JSON.stringify({
@@ -97,27 +97,40 @@ function isPlan(value: unknown): value is CurationPlan {
   )
 }
 
-/** One-call vault curation via the installed agent CLI. Null when unavailable or failed. */
-export function curateWithLlm(input: CurateInput): CurationPlan | null {
+// ponytail: codex has no structured-output flag; greedy-parse the largest JSON object
+function codexExec(prompt: string): Promise<unknown | null> {
+  return new Promise((resolve) => {
+    const child = spawn('codex', ['exec', prompt], { timeout: TIMEOUT_MS })
+    let stdout = ''
+    child.stdout.on('data', (chunk: Buffer) => {
+      stdout += chunk.toString()
+    })
+    child.on('error', () => resolve(null))
+    child.on('close', () => {
+      const match = stdout.match(/\{[\s\S]*\}/)
+      if (!match) return resolve(null)
+      try {
+        resolve(JSON.parse(match[0]))
+      } catch {
+        resolve(null)
+      }
+    })
+  })
+}
+
+/**
+ * One-call vault curation via the installed agent CLI. Null when unavailable or failed.
+ * Async so callers can keep a live progress ticker running.
+ */
+export async function curateWithLlm(input: CurateInput): Promise<CurationPlan | null> {
   const provider = detectProvider()
   if (provider === 'none') return null
   const prompt = buildPrompt(input)
 
-  let result: unknown = null
-  if (provider === 'claude') {
-    result = runClaudeJson(prompt, CURATE_SCHEMA, TIMEOUT_MS)
-  } else {
-    // ponytail: codex has no structured-output flag; greedy-parse the largest JSON object
-    const res = spawnSync('codex', ['exec', prompt], { encoding: 'utf8', timeout: TIMEOUT_MS })
-    const match = res.stdout?.match(/\{[\s\S]*\}/)
-    if (match) {
-      try {
-        result = JSON.parse(match[0])
-      } catch {
-        result = null
-      }
-    }
-  }
+  const result =
+    provider === 'claude'
+      ? await runClaudeJsonAsync(prompt, CURATE_SCHEMA, TIMEOUT_MS)
+      : await codexExec(prompt)
   const normalized = result as Partial<CurationPlan> | null
   if (!isPlan(normalized)) return null
   return {

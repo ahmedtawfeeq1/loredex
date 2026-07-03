@@ -39,7 +39,7 @@ export function collectNotes(vaultPath: string, project: string): ScopedNote[] {
   const notes: ScopedNote[] = []
   for (const path of walkMarkdown(root)) {
     const name = basename(path, '.md')
-    if (name.startsWith('_START-HERE')) continue
+    if (isBriefName(name)) continue
     let doc: ReturnType<typeof parseDoc>
     try {
       doc = parseDoc(readFileSync(path, 'utf8'))
@@ -105,11 +105,43 @@ export function buildDigest(notes: ScopedNote[]): string {
     .join('\n\n')
 }
 
+// filler words that carry no meaning in a brief filename
+const SLUG_STOPWORDS = new Set([
+  'the',
+  'a',
+  'an',
+  'of',
+  'for',
+  'to',
+  'and',
+  'in',
+  'on',
+  'with',
+  'draft',
+  'write',
+  'create',
+  'make',
+])
+
+/** Legacy `_START-HERE` prefix kept so pre-v0.4 vaults still index their old briefs. */
+export function isBriefName(name: string): boolean {
+  return name.startsWith('Start Here') || name.startsWith('_START-HERE')
+}
+
 export function briefFileName(project: string, scoped: boolean, objective?: string): string {
-  const base = `_START-HERE-${slugify(project)}`
+  const base = `Start Here - ${slugify(project)}`
   if (!scoped) return `${base}.md`
-  const slug = slugify(objective ?? new Date().toISOString().slice(0, 10))
-  return `${base}--${slug}.md`
+  let slug = ''
+  if (objective) {
+    for (const word of slugify(objective).split('-')) {
+      if (SLUG_STOPWORDS.has(word)) continue
+      const next = slug ? `${slug}-${word}` : word
+      if (next.length > 24) break
+      slug = next
+    }
+  }
+  if (!slug) slug = new Date().toISOString().slice(0, 10)
+  return `${base} - ${slug}.md`
 }
 
 export interface ApplyResult {

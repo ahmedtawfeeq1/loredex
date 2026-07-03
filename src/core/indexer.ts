@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join, relative, sep } from 'node:path'
+import { isBriefName } from './curate'
 import { parseDoc } from './frontmatter'
 import { walkMarkdown } from './scan'
 
@@ -21,7 +22,7 @@ export function rebuildIndexes(vaultPath: string): void {
       const name = basename(file, '.md')
 
       // curate briefs live at the project root and get their own MOC section
-      if (name.startsWith('_START-HERE')) {
+      if (isBriefName(name)) {
         const briefs = briefsByProject.get(project) ?? []
         briefs.push(name)
         briefsByProject.set(project, briefs)
