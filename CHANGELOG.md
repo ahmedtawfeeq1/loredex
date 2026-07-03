@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.3.1...loredex-v0.3.2) (2026-07-03)
+
+
+### Bug Fixes
+
+* republish with neutral README example names ([588c5a6](https://github.com/ahmedtawfeeq1/loredex/commit/588c5a6a4730f3d289d2ce28b4d6c14e40d077b8))
+
 ## [0.3.1](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.3.0...loredex-v0.3.1) (2026-07-03)
 
 
