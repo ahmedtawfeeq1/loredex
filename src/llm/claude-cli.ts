@@ -22,7 +22,8 @@ export function claudeAvailable(): boolean {
 
 /**
  * Headless Claude Code call with structured JSON output.
- * --bare skips hooks/skills/CLAUDE.md (also prevents hook recursion).
+ * No --bare: it skips user settings including credentials ("Not logged in").
+ * Recursion is safe anyway — the Stop hook only runs `route --strict`, which never calls an LLM.
  */
 export function runClaudeJson(
   prompt: string,
@@ -30,12 +31,14 @@ export function runClaudeJson(
   timeoutMs: number,
   model?: string,
 ): unknown | null {
-  const args = ['-p', prompt, '--bare', '--output-format', 'json', '--json-schema', schema]
+  const args = ['-p', prompt, '--output-format', 'json', '--json-schema', schema]
   if (model) args.push('--model', model)
   const result = spawnSync('claude', args, { encoding: 'utf8', timeout: timeoutMs })
   if (result.status !== 0 || !result.stdout) return null
   try {
     const envelope = JSON.parse(result.stdout)
+    if (envelope.is_error) return null
+    if (envelope.structured_output !== undefined) return envelope.structured_output
     return typeof envelope.result === 'string' ? JSON.parse(envelope.result) : envelope.result
   } catch {
     return null
