@@ -98,3 +98,25 @@ Link rewrite policy at routing time (prose only — fenced/inline code untouched
 
 `loredex reset <project>` removes a project's vault copies and unstamps originals for a
 clean re-adopt (migration path for pre-v0.5 vaults). Originals are never deleted.
+
+## Product level (v0.10)
+
+`Start Here - Product.md` at the vault root is the cross-project brief written by
+`loredex curate --product` — deterministic dashboard (projects, handoff flow,
+cross-references) plus LLM narrative and report-only risk/duplicate findings. Linked from
+`_index/Home.md`.
+
+Portable provenance fields on routed copies:
+
+```yaml
+source_path: /authoring/machine/abs/path.md   # fast local resolution
+source_project: my-app                        # project slug — portable
+source_rel: docs/GAP-ANALYSIS.md              # relative to that project's root — portable
+```
+
+Teammates' machines resolve `source_project`/`source_rel` through their own registered
+project roots; `source_path` wins when it exists locally.
+
+Generated paths (`_index/**`, `Start Here - Product.md`) are covered by a keep-local git
+merge driver written to `.git/info/attributes` — they never conflict between teammates and
+are regenerated from real content after every sync.

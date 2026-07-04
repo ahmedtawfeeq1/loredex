@@ -6,7 +6,6 @@ import { rebuildIndexes } from '../src/core/indexer'
 import {
   buildDashboard,
   collectProductHandoffs,
-  crossProjectEdges,
   projectState,
   renderDashboardMarkdown,
 } from '../src/core/product'

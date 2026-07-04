@@ -194,3 +194,38 @@ npx -y loredex@latest handoffs --consume <name>    # after acting on one
 
 `npx -y loredex@latest sync` is the general commit-pull-push loop for everything else the
 team should see (big adopts, curates). Offline everything degrades to local-only and says so.
+
+## The product view: `curate --product`
+
+For a product spanning several projects (one shared vault, each team's repo registered
+into it), this is the "full knowledge over the product" command:
+
+```bash
+npx -y loredex@latest curate --product --objective "ship the corrections feature" --dry-run
+```
+
+One run pulls the vault remote, then produces `Start Here - Product.md` at the vault root:
+
+- **Projects table** — per-project note counts, last activity, active topics, stale
+  counts, and whether each project's own Start Here brief is current.
+- **Flow** — every open handoff between teams with its age (an old open handoff = a team
+  that hasn't started), plus recently consumed ones.
+- **Cross-project references** — which projects' notes link into which.
+- **LLM sections** (skipped with `--no-llm`): the product narrative, one-line state and
+  next step per project, a reading order across projects, and **report-only**
+  risks/contradictions and duplicate-coverage findings — e.g. one project documenting an
+  API field as optional while another validates it as required. Nothing is auto-stamped
+  across project boundaries; you judge the findings.
+
+`--refresh-stale` first re-curates any project whose brief is missing or out of date, so
+the product view is built from fresh material. Runs are incremental — projects that
+haven't changed reuse their existing briefs at zero LLM cost.
+
+### Teams sharing one vault
+
+Generated files (`_index/*`, the product brief) are regenerated wholesale, so loredex
+registers a git merge driver that keeps them from ever conflicting between teammates —
+`sync` regenerates them from real post-pull content instead of line-merging. And every
+routed note now carries portable provenance (`source_project` + `source_rel` alongside the
+machine-local `source_path`), so drift detection works on any teammate's machine, resolved
+through their own registered project paths.
