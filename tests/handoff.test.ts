@@ -1,0 +1,121 @@
+import { execFileSync } from 'node:child_process'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { beforeAll, describe, expect, it } from 'vitest'
+import { runHandoff, runHandoffs } from '../src/commands/handoff'
+import { parseDoc } from '../src/core/frontmatter'
+import { gitPullPush } from '../src/core/router'
+import { walkMarkdown } from '../src/core/scan'
+
+describe('handoff', () => {
+  const sandbox = mkdtempSync(join(tmpdir(), 'loredex-handoff-'))
+  const vault = join(sandbox, 'vault')
+  const engineDir = join(vault, 'projects', 'ai-engine', 'endpoints')
+
+  beforeAll(() => {
+    process.env.LOREDEX_CONFIG_DIR = join(sandbox, 'config')
+    process.env.LOREDEX_CLASSIFIER = 'none'
+    mkdirSync(join(sandbox, 'config'), { recursive: true })
+    writeFileSync(
+      join(sandbox, 'config', 'config.json'),
+      JSON.stringify({ vaultPath: vault, sync: 'none', projects: {} }),
+    )
+    mkdirSync(engineDir, { recursive: true })
+    writeFileSync(
+      join(engineDir, '2026-07-01-correction-api.md'),
+      '---\nproject: ai-engine\ntopic: endpoints\ndate: "2026-07-01"\nloredex: routed\n---\n# Correction API\npayload semantics here\n',
+    )
+    writeFileSync(
+      join(engineDir, '2026-07-02-auth-notes.md'),
+      '---\nproject: ai-engine\ntopic: endpoints\ndate: "2026-07-02"\nloredex: routed\n---\n# Auth\ntoken flow\n',
+    )
+    return () => {
+      delete process.env.LOREDEX_CONFIG_DIR
+      delete process.env.LOREDEX_CLASSIFIER
+    }
+  })
+
+  it('writes an open handoff into the receiving project, deterministic without LLM', async () => {
+    await runHandoff({
+      to: 'backend',
+      from: 'ai-engine',
+      objective: 'build the CRUD',
+      yes: true,
+      llm: false,
+    })
+    const files = walkMarkdown(join(vault, 'projects', 'backend', 'handoffs'))
+    expect(files.length).toBe(1)
+    const doc = parseDoc(readFileSync(files[0] as string, 'utf8'))
+    expect(doc.meta.status).toBe('open')
+    expect(doc.meta.from_project).toBe('ai-engine')
+    expect(doc.meta.to_project).toBe('backend')
+    expect(doc.meta.objective).toBe('build the CRUD')
+    // reading order lists source notes newest-first as wikilinks
+    expect(doc.body).toContain('[[2026-07-02-auth-notes]]')
+    expect(doc.body.indexOf('2026-07-02-auth-notes')).toBeLessThan(
+      doc.body.indexOf('2026-07-01-correction-api'),
+    )
+  })
+
+  it('dry run writes nothing', async () => {
+    await runHandoff({ to: 'frontend', from: 'ai-engine', dryRun: true, llm: false })
+    expect(existsSync(join(vault, 'projects', 'frontend'))).toBe(false)
+  })
+
+  it('handoffs lists open ones and consume flips status', () => {
+    const logs: string[] = []
+    const original = console.log
+    console.log = (...args: unknown[]) => logs.push(args.join(' '))
+    try {
+      runHandoffs({ project: 'backend' })
+    } finally {
+      console.log = original
+    }
+    expect(logs.join('\n')).toContain('1 open handoff(s) for backend')
+    expect(logs.join('\n')).toContain('(from ai-engine)')
+
+    const name = walkMarkdown(join(vault, 'projects', 'backend', 'handoffs'))[0] as string
+    const noteName = name.split('/').pop()?.replace(/\.md$/, '') as string
+    runHandoffs({ project: 'backend', consume: noteName })
+    expect(parseDoc(readFileSync(name, 'utf8')).meta.status).toBe('consumed')
+
+    const logs2: string[] = []
+    console.log = (...args: unknown[]) => logs2.push(args.join(' '))
+    try {
+      runHandoffs({ project: 'backend' })
+    } finally {
+      console.log = original
+    }
+    expect(logs2.join('\n')).toContain('no open handoffs')
+  })
+})
+
+describe('gitPullPush', () => {
+  it('degrades gracefully outside git and without a remote', () => {
+    const notRepo = mkdtempSync(join(tmpdir(), 'loredex-sync-'))
+    expect(gitPullPush(notRepo)).toEqual({ pulled: false, pushed: false })
+
+    execFileSync('git', ['init', '-q'], { cwd: notRepo })
+    expect(gitPullPush(notRepo)).toEqual({ pulled: false, pushed: false })
+  })
+
+  it('pulls and pushes when a remote exists', () => {
+    const base = mkdtempSync(join(tmpdir(), 'loredex-sync2-'))
+    const remote = join(base, 'remote.git')
+    const clone = join(base, 'clone')
+    execFileSync('git', ['init', '-q', '--bare', remote])
+    execFileSync('git', ['clone', '-q', remote, clone])
+    execFileSync('git', ['config', 'user.email', 'a@b.c'], { cwd: clone })
+    execFileSync('git', ['config', 'user.name', 'test'], { cwd: clone })
+    writeFileSync(join(clone, 'note.md'), 'x')
+    execFileSync('git', ['add', '-A'], { cwd: clone })
+    execFileSync('git', ['commit', '-q', '-m', 'x'], { cwd: clone })
+
+    // first sync against an empty bare remote: pull has nothing to rebase onto (degrades
+    // gracefully to false), push still lands the branch
+    expect(gitPullPush(clone)).toEqual({ pulled: false, pushed: true })
+    // once the remote has the branch, both sides work
+    expect(gitPullPush(clone)).toEqual({ pulled: true, pushed: true })
+  })
+})

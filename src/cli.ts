@@ -4,10 +4,12 @@ import pkg from '../package.json'
 import { runAdopt } from './commands/adopt'
 import { runCurate } from './commands/curate'
 import { runDoctor } from './commands/doctor'
+import { runHandoff, runHandoffs } from './commands/handoff'
 import { runInit } from './commands/init'
 import { runReset } from './commands/reset'
 import { runRoute } from './commands/route'
 import { runStatus } from './commands/status'
+import { runSync } from './commands/sync'
 import { runWatch } from './commands/watch'
 
 const program = new Command()
@@ -66,6 +68,33 @@ program
   .description('watch registered projects + inbox and route new markdown automatically')
   .option('--no-llm', 'classify with heuristics only (no LLM calls)')
   .action((opts) => runWatch(opts))
+
+program
+  .command('handoff')
+  .description(
+    'hand finished work to another project team — writes a consumable brief into their vault space',
+  )
+  .requiredOption('--to <project>', 'receiving project')
+  .option('--from <project>', 'source project (default: registered project of cwd)')
+  .option('--objective <text>', 'what the receiving team is about to do with this work')
+  .option('--since <date>', 'only hand off notes dated on/after YYYY-MM-DD')
+  .option('--topic <topic...>', 'only hand off these topics')
+  .option('--dry-run', 'show the handoff without writing anything')
+  .option('-y, --yes', 'skip the confirmation prompt')
+  .option('--no-llm', 'deterministic handoff (dated reading list, no brief)')
+  .action((opts) => runHandoff(opts))
+
+program
+  .command('handoffs')
+  .description('list open handoffs addressed to a project (pulls the vault remote first)')
+  .option('--project <name>', 'project to check (default: registered project of cwd)')
+  .option('--consume <name>', 'mark a handoff consumed after acting on it')
+  .action((opts) => runHandoffs(opts))
+
+program
+  .command('sync')
+  .description("commit local vault changes, pull teammates' notes, push yours")
+  .action(runSync)
 
 program
   .command('reset <project>')

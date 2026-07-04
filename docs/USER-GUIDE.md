@@ -169,3 +169,28 @@ unscoped `Start Here - <project>.md` is the one worth keeping current.
 **How do I know if I need `reset`?** If clicking a link inside an old note creates an empty
 Obsidian note instead of navigating somewhere, that note predates link provenance (v0.5).
 `reset` that project, then `adopt` again.
+
+## Multi-project products: handoffs between teams
+
+One product, several repos (AI engine → backend → frontend), each feeding the same vault
+(share it via a private git remote). When one team finishes work another team builds on:
+
+```bash
+# finishing team (run from their repo)
+npx -y loredex@latest handoff --to backend \
+  --objective "implement the corrections CRUD endpoints" --since 2026-07-01 --dry-run
+```
+
+Review the brief, re-run with `-y`. The handoff lands in `projects/backend/handoffs/` with
+`status: open` and is pushed to the vault remote automatically. It carries what the
+interface artifact alone doesn't: field semantics, decisions, gotchas, and a reading order
+into the source team's actual notes.
+
+```bash
+# receiving team, at the start of their next session
+npx -y loredex@latest handoffs                     # pulls the remote, lists open handoffs
+npx -y loredex@latest handoffs --consume <name>    # after acting on one
+```
+
+`npx -y loredex@latest sync` is the general commit-pull-push loop for everything else the
+team should see (big adopts, curates). Offline everything degrades to local-only and says so.

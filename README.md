@@ -99,6 +99,9 @@ No hook system in your agent? Run `loredex watch` (routes on file change) or `lo
 | `loredex adopt [path]` | Classify + file a project's existing markdown. `--dry-run`, `--move`, `-y`, `--no-llm` |
 | `loredex route` | Process the vault inbox + new findings in the current project. `--strict` = frontmatter-only |
 | `loredex curate [project]` | **Agent-driven optimization**: Start-Here brief for an objective, stale/duplicate/orphan/drift flags, semantic links. `--objective`, `--since`, `--topic`, `--max-detailed`, `--dry-run` |
+| `loredex handoff --to <project>` | Hand finished work to another team: consumable brief with reading order, auto-synced. `--objective`, `--since`, `--dry-run` |
+| `loredex handoffs` | List open handoffs for this project (pulls remote first). `--consume <name>` marks done |
+| `loredex sync` | Commit local vault changes, pull teammates' notes, push yours |
 | `loredex reset <project>` | Remove a project's vault copies and unstamp originals for a clean re-adopt. `--dry-run`, `-y` |
 | `loredex watch` | Daemon: route automatically on file changes |
 | `loredex status` | Vault statistics |

@@ -125,3 +125,31 @@ export function gitAutoCommit(vaultPath: string, config: Config, message: string
     // git missing or nothing to commit — sync is best-effort
   }
 }
+
+/**
+ * Pull-rebase then push the vault repo so teammates see each other's notes.
+ * Best-effort: no remote / offline / conflicts all degrade to a false return, never a throw —
+ * the vault must keep working fully offline.
+ */
+export function gitPullPush(vaultPath: string): { pulled: boolean; pushed: boolean } {
+  const run = (...args: string[]): boolean => {
+    try {
+      execFileSync('git', args, { cwd: vaultPath, stdio: 'ignore' })
+      return true
+    } catch {
+      return false
+    }
+  }
+  if (!run('rev-parse', '--is-inside-work-tree')) return { pulled: false, pushed: false }
+  const hasRemote = (() => {
+    try {
+      return execFileSync('git', ['remote'], { cwd: vaultPath, encoding: 'utf8' }).trim().length > 0
+    } catch {
+      return false
+    }
+  })()
+  if (!hasRemote) return { pulled: false, pushed: false }
+  const pulled = run('pull', '--rebase', '--autostash')
+  const pushed = run('push')
+  return { pulled, pushed }
+}

@@ -15,6 +15,8 @@ export interface Meta {
   superseded_by?: string
   objective?: string
   source_path?: string
+  from_project?: string
+  to_project?: string
   loredex?: string
 }
 

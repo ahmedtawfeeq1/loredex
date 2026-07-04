@@ -63,6 +63,8 @@ export interface CurateInput {
   projectName: string
   objective?: string
   digest: string
+  /** when set, the brief is written FOR this audience (e.g. a receiving team in a handoff) */
+  audience?: string
 }
 
 function buildPrompt(input: CurateInput): string {
@@ -74,6 +76,7 @@ function buildPrompt(input: CurateInput): string {
     input.objective
       ? `The user's objective: ${input.objective}\nEverything you produce must serve this objective.`
       : 'No objective was given — derive the most plausible current objective from the notes.',
+    input.audience ? `Write the brief for this audience: ${input.audience}` : '',
     'Produce:',
     '- objective: the objective this brief answers (the given one, or the derived one)',
     '- brief: 2-4 markdown paragraphs — what this body of work is, its current state, how it serves the objective',
