@@ -66,6 +66,46 @@ export function filterNotes(notes: ScopedNote[], filters: ScopeFilters): ScopedN
   })
 }
 
+const WIKILINK_TARGET = /\[\[([^[\]|]+?)(?:\|[^[\]]+?)?\]\]/g
+
+/**
+ * Notes nobody links to. Checked against ALL notes in the project (not just scope) since a
+ * reference can live outside the current --since/--topic window; only names within `scope`
+ * (when given) are reported.
+ */
+export function findOrphans(allNotes: ScopedNote[], scope?: Set<string>): string[] {
+  const referenced = new Set<string>()
+  for (const note of allNotes) {
+    for (const match of note.body.matchAll(WIKILINK_TARGET)) {
+      referenced.add((match[1] as string).trim())
+    }
+  }
+  return allNotes
+    .filter((note) => (!scope || scope.has(note.name)) && !referenced.has(note.name))
+    .map((note) => note.name)
+}
+
+/** Stamp drift-flagged notes stale. Mirrors sanitizeNotes: write=false only counts (dry-run). */
+export function stampDrift(
+  notes: ScopedNote[],
+  drift: Array<{ note: string }>,
+  write: boolean,
+): number {
+  const byName = new Map(notes.map((note) => [note.name, note]))
+  let count = 0
+  for (const entry of drift) {
+    const note = byName.get(entry.note)
+    if (!note) continue
+    count++
+    if (write) {
+      const meta: Meta = { ...note.meta, status: 'stale' }
+      writeFileSync(note.path, serializeDoc({ meta, body: note.body }))
+      note.meta = meta
+    }
+  }
+  return count
+}
+
 /** Ghost-link cleanup over scoped notes. write=false only counts (dry-run). */
 export function sanitizeNotes(notes: ScopedNote[], write: boolean): number {
   let total = 0

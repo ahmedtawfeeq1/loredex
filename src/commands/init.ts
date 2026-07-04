@@ -1,11 +1,17 @@
 import { execFileSync } from 'node:child_process'
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join, resolve } from 'node:path'
 import pc from 'picocolors'
 import { type Config, defaultVaultPath, loadConfig, saveConfig } from '../core/config'
 import { detectEditors } from '../core/editors'
 import { inboxPath, scaffoldVault } from '../core/vault'
-import { agentsSnippet, claudePointer, MARKER_START } from '../templates'
+import {
+  agentsSnippet,
+  claudePointer,
+  cursorRuleFrontmatter,
+  cursorRuleSnippet,
+  MARKER_START,
+} from '../templates'
 
 export interface InitOptions {
   vault?: string
@@ -61,7 +67,7 @@ export function runInit(opts: InitOptions): void {
       ),
     )
   }
-  console.log(pc.green('✓'), 'conventions written to AGENTS.md + CLAUDE.md')
+  console.log(pc.green('✓'), 'conventions written to AGENTS.md + CLAUDE.md + .cursor/rules')
   console.log()
   console.log('Next:', pc.bold('npx -y loredex@latest adopt'), 'to organize existing markdown,')
   console.log('      or open the vault folder in Obsidian.')
@@ -97,5 +103,14 @@ function injectConventions(projectRoot: string, projectName: string, inbox: stri
     writeFileSync(claude, claudePointer())
   } else if (!readFileSync(claude, 'utf8').includes(MARKER_START)) {
     appendFileSync(claude, `\n${claudePointer()}`)
+  }
+
+  const cursorRule = join(projectRoot, '.cursor', 'rules', 'loredex.mdc')
+  const ruleBody = cursorRuleSnippet(projectName, inbox)
+  if (!existsSync(cursorRule)) {
+    mkdirSync(join(projectRoot, '.cursor', 'rules'), { recursive: true })
+    writeFileSync(cursorRule, cursorRuleFrontmatter() + ruleBody)
+  } else if (!readFileSync(cursorRule, 'utf8').includes(MARKER_START)) {
+    appendFileSync(cursorRule, `\n${ruleBody}`)
   }
 }

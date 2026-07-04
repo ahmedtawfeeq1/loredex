@@ -7,9 +7,12 @@ import {
   buildDigest,
   collectNotes,
   filterNotes,
+  findOrphans,
   projectDir,
   sanitizeNotes,
+  stampDrift,
 } from '../core/curate'
+import { findDrifted } from '../core/drift'
 import { rebuildIndexes } from '../core/indexer'
 import { gitAutoCommit, knownStructure } from '../core/router'
 import { slugify } from '../core/vault'
@@ -58,6 +61,15 @@ export async function runCurate(
 
   const ghostLinks = sanitizeNotes(notes, false)
   if (ghostLinks > 0) console.log(`ghost wikilinks to clean (e.g. [[x.py]]): ${ghostLinks}`)
+
+  const orphans = findOrphans(all, new Set(notes.map((note) => note.name)))
+  if (orphans.length > 0) console.log(`orphaned (no inbound links): ${orphans.join(', ')}`)
+
+  const drift = findDrifted(notes)
+  if (drift.length > 0) {
+    console.log(`drifted (source changed since filing): ${drift.length}`)
+    for (const entry of drift) console.log(pc.dim(`  ${entry.note} — ${entry.reason}`))
+  }
 
   let plan = null
   if (opts.llm) {
@@ -123,6 +135,11 @@ export async function runCurate(
   if (cleaned > 0) console.log(pc.green('✓'), `rewrote ${cleaned} ghost wikilink(s)`)
 
   if (plan) {
+    // drift is deterministic and already correct — fold it into the LLM's stale list
+    // instead of stamping twice or asking the model to re-derive what git already told us
+    for (const entry of drift) {
+      if (!plan.stale.some((s) => s.note === entry.note)) plan.stale.push(entry)
+    }
     const result = applyCuration(config.vaultPath, project, plan, notes, {
       scoped,
       objective: opts.objective,
@@ -134,6 +151,9 @@ export async function runCurate(
       console.log(pc.green('✓'), `superseded-stamped ${result.duplicatesStamped} duplicate(s)`)
     if (result.relinked > 0)
       console.log(pc.green('✓'), `semantic Related links on ${result.relinked} note(s)`)
+  } else if (drift.length > 0) {
+    const stamped = stampDrift(notes, drift, true)
+    console.log(pc.green('✓'), `stale-stamped ${stamped} drifted note(s)`)
   }
 
   rebuildIndexes(config.vaultPath)

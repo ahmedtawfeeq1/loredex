@@ -8,7 +8,9 @@ import {
   type CurationPlan,
   collectNotes,
   filterNotes,
+  findOrphans,
   sanitizeNotes,
+  stampDrift,
 } from '../src/core/curate'
 import { parseDoc } from '../src/core/frontmatter'
 import { rebuildIndexes } from '../src/core/indexer'
@@ -117,5 +119,62 @@ describe('curate', () => {
     expect(moc).toContain('[[Start Here - demo]]')
     expect(moc).toMatch(/\[\[2026-04-01-old-plan\]\] _\(stale\)_/)
     expect(moc).not.toMatch(/\[\[2026-07-01-core\]\] _\(stale\)_/)
+  })
+})
+
+describe('findOrphans', () => {
+  const vault = mkdtempSync(join(tmpdir(), 'loredex-orphans-'))
+  const proj = join(vault, 'projects', 'orph')
+
+  beforeAll(() => {
+    mkdirSync(join(proj, 'core'), { recursive: true })
+    writeFileSync(join(proj, 'core', 'a-linked.md'), '---\nproject: orph\n---\nno links here\n')
+    writeFileSync(join(proj, 'core', 'b-linker.md'), '---\nproject: orph\n---\nsee [[a-linked]]\n')
+    writeFileSync(
+      join(proj, 'core', 'c-isolated.md'),
+      '---\nproject: orph\n---\nmentions nothing\n',
+    )
+  })
+
+  it('flags notes nobody links to, and only those', () => {
+    const all = collectNotes(vault, 'orph')
+    expect(findOrphans(all).sort()).toEqual(['b-linker', 'c-isolated'])
+  })
+
+  it('narrows to a scope subset while still checking links against everything', () => {
+    const all = collectNotes(vault, 'orph')
+    const scope = new Set(['a-linked', 'c-isolated'])
+    expect(findOrphans(all, scope)).toEqual(['c-isolated'])
+  })
+})
+
+describe('stampDrift', () => {
+  const vault = mkdtempSync(join(tmpdir(), 'loredex-driftstamp-'))
+  const proj = join(vault, 'projects', 'ds')
+
+  beforeAll(() => {
+    mkdirSync(join(proj, 'core'), { recursive: true })
+    writeFileSync(
+      join(proj, 'core', 'note-a.md'),
+      '---\nproject: ds\ndate: "2020-01-01"\n---\nbody\n',
+    )
+  })
+
+  it('only writes when write=true, and only status changes', () => {
+    const notes = collectNotes(vault, 'ds')
+    expect(stampDrift(notes, [{ note: 'note-a' }], false)).toBe(1)
+    expect(
+      parseDoc(readFileSync(join(proj, 'core', 'note-a.md'), 'utf8')).meta.status,
+    ).toBeUndefined()
+
+    expect(stampDrift(notes, [{ note: 'note-a' }], true)).toBe(1)
+    const meta = parseDoc(readFileSync(join(proj, 'core', 'note-a.md'), 'utf8')).meta
+    expect(meta.status).toBe('stale')
+    expect(meta.date).toBe('2020-01-01')
+  })
+
+  it('ignores drift entries for unknown notes', () => {
+    const notes = collectNotes(vault, 'ds')
+    expect(stampDrift(notes, [{ note: 'nonexistent' }], true)).toBe(0)
   })
 })
