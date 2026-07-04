@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.7.0...loredex-v0.8.0) (2026-07-04)
+
+
+### Features
+
+* add missing /loredex-route skill ([60b41ae](https://github.com/ahmedtawfeeq1/loredex/commit/60b41ae63f57a2bc31e0da1fd7db81969b04a0c2))
+* split the monolithic skill into one per action ([9a7420c](https://github.com/ahmedtawfeeq1/loredex/commit/9a7420c2fc634eba4cb96cc0e24f960447320945))
+
+
+### Bug Fixes
+
+* watch crashes with EMFILE on real projects ([87a8f4d](https://github.com/ahmedtawfeeq1/loredex/commit/87a8f4d43b25dea5705a997d9cf80e8717026b70))
+
 ## [0.7.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.6.0...loredex-v0.7.0) (2026-07-04)
 
 
