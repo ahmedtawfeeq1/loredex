@@ -1,6 +1,6 @@
 {
   "name": "loredex",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Auto-organize AI-generated markdown into an Obsidian-compatible vault. Your coding agents write hundreds of files — loredex gives them a brain to put them in.",
   "type": "module",
   "license": "MIT",

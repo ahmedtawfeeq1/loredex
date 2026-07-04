@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.5.0...loredex-v0.6.0) (2026-07-04)
+
+
+### Features
+
+* auto-detect installed editors for code links ([0016c8b](https://github.com/ahmedtawfeeq1/loredex/commit/0016c8bb32bb646a313b066122addd46edc207b7))
+
 ## [0.5.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.4.0...loredex-v0.5.0) (2026-07-04)
 
 
