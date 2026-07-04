@@ -89,15 +89,18 @@ export async function runCurate(
         ),
       )
     }
-    tick()
-    const ticker = setInterval(tick, 1000)
+    // \r line-rewrites only make sense on a real terminal; piped output gets one line
+    const interactive = process.stdout.isTTY === true
+    if (interactive) tick()
+    else console.log(pc.dim(`LLM reading ${notes.length}-note digest and writing the brief…`))
+    const ticker = interactive ? setInterval(tick, 1000) : null
     plan = await curateWithLlm({
       projectName: project,
       objective: opts.objective,
       digest: digest.text,
     })
-    clearInterval(ticker)
-    process.stdout.write(`\r${' '.repeat(90)}\r`)
+    if (ticker) clearInterval(ticker)
+    if (interactive) process.stdout.write(`\r${' '.repeat(90)}\r`)
     if (!plan) {
       console.log(
         pc.yellow('!'),

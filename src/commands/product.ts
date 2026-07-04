@@ -7,6 +7,42 @@ import { serializeDoc } from '../core/frontmatter'
 import { rebuildIndexes } from '../core/indexer'
 import { buildDashboard, PRODUCT_BRIEF_NAME, renderDashboardMarkdown } from '../core/product'
 import { gitAutoCommit, gitPullPush } from '../core/router'
+import { curateProductWithLlm, type ProductPlan } from '../llm/product-curator'
+
+/** The LLM sections of the product brief — rendered above the deterministic dashboard. */
+function renderPlanMarkdown(plan: ProductPlan): string {
+  const lines: string[] = [`**Objective:** ${plan.objective}`, '', plan.brief.trim()]
+  if (plan.project_states.length > 0) {
+    lines.push('', '## Where each project stands', '')
+    for (const state of plan.project_states) {
+      lines.push(`- **${state.project}** — ${state.state} _Next: ${state.next}_`)
+    }
+  }
+  if (plan.reading_order.length > 0) {
+    lines.push('', '## Reading order for the full picture', '')
+    plan.reading_order.forEach((entry, i) => {
+      const note = entry.includes('/') ? (entry.split('/').pop() as string) : entry
+      lines.push(`${i + 1}. [[${note}]] ${entry.includes('/') ? `(${entry.split('/')[0]})` : ''}`)
+    })
+  }
+  if (plan.risks.length > 0) {
+    lines.push('', '## Risks and contradictions (review — not auto-applied)', '')
+    for (const risk of plan.risks) {
+      lines.push(`- ${risk.description} — ${risk.notes.map((n) => `[[${n}]]`).join(', ')}`)
+    }
+  }
+  if (plan.duplicates.length > 0) {
+    lines.push('', '## Duplicate coverage across projects', '')
+    for (const dup of plan.duplicates) {
+      lines.push(`- ${dup.description} — ${dup.notes.map((n) => `[[${n}]]`).join(', ')}`)
+    }
+  }
+  if (plan.next_actions.length > 0) {
+    lines.push('', '## Product next actions', '')
+    for (const action of plan.next_actions) lines.push(`- ${action}`)
+  }
+  return lines.join('\n')
+}
 
 export interface ProductOptions {
   objective?: string
@@ -53,7 +89,45 @@ export async function runCurateProduct(opts: ProductOptions): Promise<void> {
     console.log(`    ${handoff.from} → ${handoff.to} (${handoff.ageDays}d): ${handoff.objective}`)
   }
 
-  const body = ['# Start here — Product', '', renderDashboardMarkdown(dashboard, today)].join('\n')
+  let plan: ProductPlan | null = null
+  if (opts.llm) {
+    const started = Date.now()
+    const tick = () => {
+      const elapsed = Math.round((Date.now() - started) / 1000)
+      process.stdout.write(
+        `\r${pc.dim(`LLM reducing ${dashboard.states.length} project brief(s) into the product view… ${elapsed}s`)}   `,
+      )
+    }
+    // \r line-rewrites only make sense on a real terminal; piped output gets one line
+    const interactive = process.stdout.isTTY === true
+    if (interactive) tick()
+    else console.log(pc.dim('LLM reducing project briefs into the product view…'))
+    const ticker = interactive ? setInterval(tick, 1000) : null
+    plan = await curateProductWithLlm(dashboard, opts.objective)
+    if (ticker) clearInterval(ticker)
+    if (interactive) process.stdout.write(`\r${' '.repeat(100)}\r`)
+    if (plan) {
+      console.log(pc.bold('objective:'), plan.objective)
+      console.log(pc.bold('brief:'), `${plan.brief.replace(/\s+/g, ' ').slice(0, 240)}…`)
+      if (plan.risks.length > 0) {
+        console.log(pc.bold('risks/contradictions:'))
+        for (const risk of plan.risks) console.log(`  - ${risk.description}`)
+      }
+      if (plan.duplicates.length > 0) {
+        console.log(pc.bold('duplicate coverage:'))
+        for (const dup of plan.duplicates) console.log(`  - ${dup.description}`)
+      }
+    } else {
+      console.log(pc.yellow('!'), 'no LLM available or call failed — dashboard-only product brief')
+    }
+  }
+
+  const body = [
+    '# Start here — Product',
+    '',
+    ...(plan ? [renderPlanMarkdown(plan), '', '---', ''] : []),
+    renderDashboardMarkdown(dashboard, today),
+  ].join('\n')
 
   if (opts.dryRun) {
     console.log(pc.dim('dry run — nothing written'))
