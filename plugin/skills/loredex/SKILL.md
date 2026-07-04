@@ -1,6 +1,6 @@
 ---
 name: loredex
-description: Overview and writing conventions for loredex. Use this as the fallback when the user's intent doesn't map to one specific loredex action, and always follow its frontmatter convention when writing research/findings/analysis markdown in a loredex-registered project. For a specific action, prefer the dedicated skill — /loredex-init, /loredex-adopt, /loredex-curate, /loredex-reset, /loredex-status.
+description: Overview and writing conventions for loredex. Use this as the fallback when the user's intent doesn't map to one specific loredex action, and always follow its frontmatter convention when writing research/findings/analysis markdown in a loredex-registered project. For a specific action, prefer the dedicated skill — /loredex-init, /loredex-adopt, /loredex-route, /loredex-curate, /loredex-reset, /loredex-status.
 ---
 
 # Loredex — auto-file research markdown
@@ -12,6 +12,7 @@ its own dedicated skill/slash command:
 |---|---|
 | `/loredex-init` | Set up loredex for this project |
 | `/loredex-adopt` | File a project's existing scattered research into the vault |
+| `/loredex-route` | Force-process the inbox + pending files right now |
 | `/loredex-curate` | Write a Start-Here brief; flag stale/duplicate/orphaned notes |
 | `/loredex-reset` | Rebuild a project's vault copies from scratch |
 | `/loredex-status` | Vault stats + health check (config/editor/classifier) |
