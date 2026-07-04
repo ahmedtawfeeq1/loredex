@@ -39,6 +39,13 @@ describe('drift', () => {
     expect(lastCommitDate(join(tmpdir(), 'not-a-repo-file.ts'))).toBeNull()
   })
 
+  it('rejects non-absolute or empty paths before shelling out', () => {
+    expect(lastCommitDate('')).toBeNull()
+    expect(lastCommitDate('relative/path.ts')).toBeNull()
+    expect(lastCommitDate('../escape.ts')).toBeNull()
+    expect(lastCommitDate('-not-a-flag.ts')).toBeNull()
+  })
+
   it('flags a note whose source changed after it was filed', () => {
     const drifted = findDrifted([
       { name: 'old-note', meta: { source_path: srcPath, date: '2019-01-01' } },

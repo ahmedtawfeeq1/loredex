@@ -1,8 +1,12 @@
 import { execFileSync } from 'node:child_process'
-import { dirname } from 'node:path'
+import { dirname, isAbsolute } from 'node:path'
 
 /** Date (YYYY-MM-DD) of the last commit touching `path`, or null outside git / no history / git unavailable. */
 export function lastCommitDate(path: string): string | null {
+  // source_path comes from note frontmatter — untrusted if a vault note was crafted by
+  // someone else. execFileSync never invokes a shell so injection isn't possible, but a
+  // relative or empty value could still probe an unintended cwd; require a real absolute path.
+  if (!path || !isAbsolute(path)) return null
   try {
     const out = execFileSync('git', ['log', '-1', '--format=%ad', '--date=short', '--', path], {
       cwd: dirname(path),
