@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import { type ClassifyOptions, resolveMeta } from './classify'
 import type { Config } from './config'
@@ -127,6 +134,46 @@ export function gitAutoCommit(vaultPath: string, config: Config, message: string
 }
 
 /**
+ * Generated files (indexes, the product brief) are regenerated wholesale on every run —
+ * merging them line-by-line is meaningless and two teammates syncing concurrently would
+ * conflict on them constantly. Register a keep-local merge driver (`true` = take the
+ * current side, no conflict) for those paths; rebuildIndexes after every sync makes the
+ * content right regardless of which side "won".
+ */
+export function ensureGeneratedMergeDriver(vaultPath: string): void {
+  try {
+    execFileSync('git', ['config', 'merge.loredex-generated.driver', 'true'], {
+      cwd: vaultPath,
+      stdio: 'ignore',
+    })
+    // .git/info/attributes, NOT a worktree .gitattributes: an uncommitted worktree file
+    // would be swept away by pull --rebase --autostash at exactly the moment the rebase
+    // needs it, and repo-local attributes never need committing or syncing
+    const gitDir = execFileSync('git', ['rev-parse', '--absolute-git-dir'], {
+      cwd: vaultPath,
+      encoding: 'utf8',
+    }).trim()
+    const infoDir = join(gitDir, 'info')
+    mkdirSync(infoDir, { recursive: true })
+    const attributesPath = join(infoDir, 'attributes')
+    const rules = [
+      '_index/** merge=loredex-generated',
+      'Start\\ Here\\ -\\ Product.md merge=loredex-generated',
+    ]
+    const existing = existsSync(attributesPath) ? readFileSync(attributesPath, 'utf8') : ''
+    const missing = rules.filter((rule) => !existing.includes(rule))
+    if (missing.length > 0) {
+      writeFileSync(
+        attributesPath,
+        `${existing}${existing.endsWith('\n') || !existing ? '' : '\n'}${missing.join('\n')}\n`,
+      )
+    }
+  } catch {
+    // git missing — sync is best-effort everywhere
+  }
+}
+
+/**
  * Pull-rebase then push the vault repo so teammates see each other's notes.
  * Best-effort: no remote / offline / conflicts all degrade to a false return, never a throw —
  * the vault must keep working fully offline.
@@ -149,6 +196,7 @@ export function gitPullPush(vaultPath: string): { pulled: boolean; pushed: boole
     }
   })()
   if (!hasRemote) return { pulled: false, pushed: false }
+  ensureGeneratedMergeDriver(vaultPath) // idempotent — every pull path gets conflict-free generated files
   const pulled = run('pull', '--rebase', '--autostash')
   const pushed = run('push')
   return { pulled, pushed }

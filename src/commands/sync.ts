@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import pc from 'picocolors'
 import { loadConfig } from '../core/config'
-import { gitAutoCommit, gitPullPush } from '../core/router'
+import { rebuildIndexes } from '../core/indexer'
+import { ensureGeneratedMergeDriver, gitAutoCommit, gitPullPush } from '../core/router'
 
 /** Commit local vault changes, pull teammates' notes, push ours. */
 export function runSync(): void {
@@ -21,8 +22,18 @@ export function runSync(): void {
   }
 
   // force the git path even if config.sync is 'none' — an explicit sync command is consent
-  gitAutoCommit(config.vaultPath, { ...config, sync: 'git' }, 'loredex: sync')
+  const gitConfig = { ...config, sync: 'git' as const }
+  ensureGeneratedMergeDriver(config.vaultPath)
+  gitAutoCommit(config.vaultPath, gitConfig, 'loredex: sync')
   const { pulled, pushed } = gitPullPush(config.vaultPath)
+
+  // whichever side "won" the generated files during the merge, regenerate them from the
+  // actual post-pull vault content so every clone converges on the same indexes
+  if (pulled) {
+    rebuildIndexes(config.vaultPath)
+    gitAutoCommit(config.vaultPath, gitConfig, 'loredex: sync (regenerate indexes)')
+    gitPullPush(config.vaultPath)
+  }
 
   console.log(pc.green('✓'), 'local changes committed')
   if (pulled || pushed) {

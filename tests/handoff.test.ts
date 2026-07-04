@@ -173,4 +173,38 @@ describe('gitPullPush', () => {
     // once the remote has the branch, both sides work
     expect(gitPullPush(clone)).toEqual({ pulled: true, pushed: true })
   })
+
+  it('generated files never conflict — two clones divergently rewriting _index sync cleanly', () => {
+    const base = mkdtempSync(join(tmpdir(), 'loredex-genconflict-'))
+    const remote = join(base, 'remote.git')
+    execFileSync('git', ['init', '-q', '--bare', remote])
+
+    const setupClone = (name: string): string => {
+      const dir = join(base, name)
+      execFileSync('git', ['clone', '-q', remote, dir])
+      execFileSync('git', ['config', 'user.email', 'a@b.c'], { cwd: dir })
+      execFileSync('git', ['config', 'user.name', name], { cwd: dir })
+      return dir
+    }
+    const alice = setupClone('alice')
+    // seed a shared _index file from alice
+    mkdirSync(join(alice, '_index'), { recursive: true })
+    writeFileSync(join(alice, '_index', 'Home.md'), '# Home\nseed\n')
+    execFileSync('git', ['add', '-A'], { cwd: alice })
+    execFileSync('git', ['commit', '-q', '-m', 'seed'], { cwd: alice })
+    expect(gitPullPush(alice).pushed).toBe(true)
+
+    const bob = setupClone('bob')
+    // both divergently regenerate the same generated file
+    writeFileSync(join(alice, '_index', 'Home.md'), '# Home\nalice version\n')
+    execFileSync('git', ['add', '-A'], { cwd: alice })
+    execFileSync('git', ['commit', '-q', '-m', 'alice regen'], { cwd: alice })
+    expect(gitPullPush(alice).pushed).toBe(true)
+
+    writeFileSync(join(bob, '_index', 'Home.md'), '# Home\nbob version\n')
+    execFileSync('git', ['add', '-A'], { cwd: bob })
+    execFileSync('git', ['commit', '-q', '-m', 'bob regen'], { cwd: bob })
+    // without the merge driver this rebase would conflict; with it, pull+push both succeed
+    expect(gitPullPush(bob)).toEqual({ pulled: true, pushed: true })
+  })
 })
