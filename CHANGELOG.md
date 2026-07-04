@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.6.0...loredex-v0.7.0) (2026-07-04)
+
+
+### Features
+
+* orphan detection, git-based drift detection, Cursor governance hook ([d525c97](https://github.com/ahmedtawfeeq1/loredex/commit/d525c9706e3bc75159063b8b362cdad4cf8d3260))
+* tiered digest in curate — bounds prompt size as vaults grow ([d8595d3](https://github.com/ahmedtawfeeq1/loredex/commit/d8595d35444ad2270b2f599fa234044162608fac))
+
+
+### Bug Fixes
+
+* every hint prints a copy-pasteable npx command ([87b7333](https://github.com/ahmedtawfeeq1/loredex/commit/87b7333fc1ae89b0416c8288827c9e615b55af9e))
+* reject non-absolute source_path in drift detection ([fa0b518](https://github.com/ahmedtawfeeq1/loredex/commit/fa0b5188b1bf32823d4a9ab0c091d60e7cb2457e))
+
 ## [0.6.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.5.0...loredex-v0.6.0) (2026-07-04)
 
 
