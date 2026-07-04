@@ -8,6 +8,7 @@ import { rebuildIndexes } from '../core/indexer'
 import { buildDashboard, PRODUCT_BRIEF_NAME, renderDashboardMarkdown } from '../core/product'
 import { gitAutoCommit, gitPullPush } from '../core/router'
 import { curateProductWithLlm, type ProductPlan } from '../llm/product-curator'
+import { runCurate } from './curate'
 
 /** The LLM sections of the product brief — rendered above the deterministic dashboard. */
 function renderPlanMarkdown(plan: ProductPlan): string {
@@ -62,10 +63,26 @@ export async function runCurateProduct(opts: ProductOptions): Promise<void> {
   gitPullPush(config.vaultPath) // see teammates' latest before summarizing the product
 
   const today = new Date().toISOString().slice(0, 10)
-  const dashboard = buildDashboard(config.vaultPath, today)
+  let dashboard = buildDashboard(config.vaultPath, today)
   if (dashboard.states.length === 0) {
     console.log(pc.dim('vault has no projects yet — adopt or route something first'))
     return
+  }
+
+  // incremental map step: only projects whose Start Here brief is missing or older than
+  // their newest note get re-curated; current briefs are reused as-is by the reduce call
+  if (opts.refreshStale && opts.llm && !opts.dryRun) {
+    const stale = dashboard.states.filter(
+      (state) => state.briefPath === null || state.notesNewerThanBrief > 0,
+    )
+    if (stale.length > 0) {
+      console.log(pc.bold(`refreshing ${stale.length} stale project brief(s) first:`))
+      for (const state of stale) {
+        console.log(pc.dim(`  curating ${state.project}…`))
+        await runCurate(state.project, { yes: true, llm: true })
+      }
+      dashboard = buildDashboard(config.vaultPath, today) // re-read with fresh briefs
+    }
   }
 
   // deterministic dashboard always prints — with --no-llm it IS the product view
