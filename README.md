@@ -89,7 +89,7 @@ tags: []
 ---
 ```
 
-No hook system in your agent? Run `loredex watch` (routes on file change) or `loredex route` from cron. The full protocol is one page: [docs/VAULT-SPEC.md](docs/VAULT-SPEC.md).
+No hook system in your agent? Run `loredex watch` (routes on file change) or `loredex route` from cron. The full protocol is one page: [docs/VAULT-SPEC.md](docs/VAULT-SPEC.md). Using BMAD or Spec Kit to manage development? Paste-in snippets that make them consult the vault before planning: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
 ## 📋 Commands
 
