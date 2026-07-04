@@ -8,6 +8,15 @@
   "bin": {
     "loredex": "dist/cli.js"
   },
+  "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib.d.ts",
+      "import": "./dist/lib.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist"
   ],
@@ -25,12 +34,16 @@
   },
   "tsup": {
     "entry": [
-      "src/cli.ts"
+      "src/cli.ts",
+      "src/lib.ts"
     ],
     "format": [
       "esm"
     ],
     "target": "node20",
+    "dts": {
+      "entry": "src/lib.ts"
+    },
     "clean": true
   },
   "keywords": [
