@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs'
-import { basename, join } from 'node:path'
+import { readFileSync, realpathSync } from 'node:fs'
+import { basename, join, resolve, sep } from 'node:path'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import pkg from '../../package.json'
@@ -22,6 +22,23 @@ const DATA_FRAMING =
 
 function text(body: string): { content: Array<{ type: 'text'; text: string }> } {
   return { content: [{ type: 'text' as const, text: DATA_FRAMING + body }] }
+}
+
+/**
+ * Resolve a requested note path to a real file strictly inside the vault, or null.
+ * realpath on both sides defeats ..-segment traversal AND symlinks that point outside.
+ */
+export function resolveNoteInsideVault(vaultPath: string, requested: string): string | null {
+  let vaultRoot: string
+  let resolved: string
+  try {
+    vaultRoot = realpathSync(vaultPath)
+    resolved = realpathSync(resolve(requested))
+  } catch {
+    return null
+  }
+  if (!resolved.endsWith('.md') || !resolved.startsWith(vaultRoot + sep)) return null
+  return resolved
 }
 
 export function createLoredexMcpServer(config: Config): McpServer {
@@ -62,15 +79,14 @@ export function createLoredexMcpServer(config: Config): McpServer {
       inputSchema: { path: z.string().describe('absolute note path inside the vault') },
     },
     async ({ path }) => {
-      // only serve files that are actually inside the vault — no arbitrary filesystem reads
-      const vaultRoot = `${config.vaultPath.replace(/\/$/, '')}/`
-      if (!path.startsWith(vaultRoot) || !path.endsWith('.md')) {
-        return text('Refused: path is outside the vault.')
+      const resolved = resolveNoteInsideVault(config.vaultPath, path)
+      if (!resolved) {
+        return text('Refused: not a readable note inside the vault.')
       }
       try {
-        const doc = parseDoc(readFileSync(path, 'utf8'))
+        const doc = parseDoc(readFileSync(resolved, 'utf8'))
         return text(
-          `# ${basename(path, '.md')}\nfrontmatter: ${JSON.stringify(doc.meta)}\n\n${doc.body.trim()}`,
+          `# ${basename(resolved, '.md')}\nfrontmatter: ${JSON.stringify(doc.meta)}\n\n${doc.body.trim()}`,
         )
       } catch {
         return text('Note not found or unreadable.')

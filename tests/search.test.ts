@@ -70,6 +70,33 @@ describe('searchVault', () => {
   })
 })
 
+describe('resolveNoteInsideVault', () => {
+  const base = mkdtempSync(join(tmpdir(), 'loredex-traversal-'))
+  const vault = join(base, 'vault')
+  const outside = join(base, 'outside-secret.md')
+
+  it('blocks ..-traversal, symlink escapes, and non-md; allows real vault notes', async () => {
+    const { symlinkSync, realpathSync } = await import('node:fs')
+    const { resolveNoteInsideVault } = await import('../src/mcp/server')
+    mkdirSync(join(vault, 'projects', 'p', 't'), { recursive: true })
+    const inside = join(vault, 'projects', 'p', 't', 'real.md')
+    writeFileSync(inside, 'ok')
+    writeFileSync(outside, 'secret')
+    symlinkSync(outside, join(vault, 'projects', 'p', 't', 'escape.md'))
+
+    // legit note resolves (compare realpaths — macOS tmpdir is itself behind a symlink)
+    expect(resolveNoteInsideVault(vault, inside)).toBe(realpathSync(inside))
+    // ..-segment traversal that passes a naive startsWith prefix check
+    expect(resolveNoteInsideVault(vault, join(vault, '..', 'outside-secret.md'))).toBeNull()
+    expect(resolveNoteInsideVault(vault, `${vault}/projects/../../outside-secret.md`)).toBeNull()
+    // symlink inside the vault pointing outside
+    expect(resolveNoteInsideVault(vault, join(vault, 'projects', 'p', 't', 'escape.md'))).toBeNull()
+    // non-markdown and nonexistent
+    expect(resolveNoteInsideVault(vault, join(vault, 'projects', 'p', 't'))).toBeNull()
+    expect(resolveNoteInsideVault(vault, join(vault, 'nope.md'))).toBeNull()
+  })
+})
+
 describe('storeNote', () => {
   const sandbox = mkdtempSync(join(tmpdir(), 'loredex-store-'))
   const vault = join(sandbox, 'vault')
