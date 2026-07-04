@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { findDrifted, lastCommitDate } from '../src/core/drift'
+import { findDrifted, lastCommitDate, resolveSourceAbs } from '../src/core/drift'
 
 function git(cwd: string, ...args: string[]): void {
   execFileSync('git', args, { cwd, stdio: 'ignore' })
@@ -70,5 +70,31 @@ describe('drift', () => {
         { name: 'c', meta: { source_path: srcPath, date: '2019-01-01', status: 'stale' } },
       ]),
     ).toEqual([])
+  })
+
+  it("resolves a teammate's note via source_project + source_rel when source_path is foreign", () => {
+    // source_path points at the AUTHORING machine's path — doesn't exist here
+    const meta = {
+      source_path: '/Users/someone-else/dev/proj/src/agent.ts',
+      source_project: 'proj',
+      source_rel: join('src', 'agent.ts'),
+      date: '2019-01-01',
+    }
+    const resolveRoot = (slug: string) => (slug === 'proj' ? repo : null)
+    expect(resolveSourceAbs(meta, resolveRoot)).toBe(srcPath)
+    expect(findDrifted([{ name: 'remote-note', meta }], resolveRoot)).toEqual([
+      { note: 'remote-note', reason: 'source changed 2020-01-01, filed 2019-01-01' },
+    ])
+    // without a resolver (project not registered on this machine) it degrades silently
+    expect(findDrifted([{ name: 'remote-note', meta }])).toEqual([])
+  })
+
+  it('a crafted source_rel cannot escape the project root', () => {
+    const meta = {
+      source_project: 'proj',
+      source_rel: join('..', '..', 'etc', 'passwd'),
+      date: '2019-01-01',
+    }
+    expect(resolveSourceAbs(meta, () => repo)).toBeNull()
   })
 })

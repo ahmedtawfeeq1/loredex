@@ -15,6 +15,9 @@ export interface Meta {
   superseded_by?: string
   objective?: string
   source_path?: string
+  /** portable provenance: project slug + path relative to that project's root — resolvable on any teammate's machine via their own config.projects */
+  source_project?: string
+  source_rel?: string
   from_project?: string
   to_project?: string
   loredex?: string

@@ -7,7 +7,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from 'node:fs'
-import { basename, dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 import { type ClassifyOptions, resolveMeta } from './classify'
 import type { Config } from './config'
 import { type Meta, parseDoc, serializeDoc } from './frontmatter'
@@ -15,7 +15,7 @@ import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
 import { rewriteLinks } from './relink'
 import { sanitizeWikilinks } from './sanitize'
-import { targetDir, targetName, uniquePath } from './vault'
+import { slugify, targetDir, targetName, uniquePath } from './vault'
 
 export interface PlanItem {
   source: string
@@ -25,6 +25,8 @@ export interface PlanItem {
   mode: 'move' | 'copy'
   destDir: string
   destName: string
+  /** project root the source lives under — enables portable source_rel provenance */
+  sourceRoot?: string
 }
 
 /** Existing project/topic folder names — fed to the classifier so it reuses them. */
@@ -59,6 +61,8 @@ export function planFile(
     mode,
     destDir: targetDir(vaultPath, meta),
     destName: targetName(meta, basename(path)),
+    // copies come from a real project checkout; inbox moves have no meaningful root
+    sourceRoot: mode === 'copy' ? opts.projectRoot : undefined,
   }
 }
 
@@ -89,8 +93,16 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
       source: item.meta.source ?? 'manual',
       loredex: 'routed',
     }
-    // provenance: copies keep a pointer to their origin (inbox moves have none worth keeping)
-    if (item.mode === 'copy') meta.source_path = resolve(item.source)
+    // provenance: copies keep a pointer to their origin (inbox moves have none worth keeping).
+    // source_path is this machine's absolute path (fast, local); source_project+source_rel
+    // are portable — teammates resolve them through their own config.projects roots.
+    if (item.mode === 'copy') {
+      meta.source_path = resolve(item.source)
+      if (item.sourceRoot && meta.project) {
+        meta.source_project = slugify(meta.project)
+        meta.source_rel = relative(resolve(item.sourceRoot), resolve(item.source))
+      }
+    }
 
     // ghost-link hygiene, then rewire links: batch siblings → wikilinks,
     // existing files → editor/file deep links, unresolvable → untouched

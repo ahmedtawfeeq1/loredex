@@ -66,7 +66,12 @@ export async function runCurate(
   const orphans = findOrphans(all, new Set(notes.map((note) => note.name)))
   if (orphans.length > 0) console.log(`orphaned (no inbound links): ${orphans.join(', ')}`)
 
-  const drift = findDrifted(notes)
+  // portable resolution: teammates' notes carry source_project/source_rel, resolved
+  // against THIS machine's registered project roots
+  const rootsBySlug = new Map(
+    Object.entries(config.projects).map(([path, entry]) => [slugify(entry.name), path]),
+  )
+  const drift = findDrifted(notes, (projectSlug) => rootsBySlug.get(projectSlug) ?? null)
   if (drift.length > 0) {
     console.log(`drifted (source changed since filing): ${drift.length}`)
     for (const entry of drift) console.log(pc.dim(`  ${entry.note} — ${entry.reason}`))

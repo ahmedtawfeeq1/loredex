@@ -56,10 +56,13 @@ describe('reset', () => {
     expect(parseDoc(readFileSync(original, 'utf8')).meta.loredex).toBeUndefined()
   })
 
-  it('re-adopt works after reset (round trip)', async () => {
+  it('re-adopt works after reset (round trip), with portable provenance', async () => {
     await runAdopt(project, { yes: true, llm: false })
     expect(walkMarkdown(join(vault, 'projects', 'my-app')).length).toBe(1)
     const copy = walkMarkdown(join(vault, 'projects', 'my-app'))[0] as string
-    expect(parseDoc(readFileSync(copy, 'utf8')).meta.source_path).toBe(original)
+    const meta = parseDoc(readFileSync(copy, 'utf8')).meta
+    expect(meta.source_path).toBe(original)
+    expect(meta.source_project).toBe('my-app')
+    expect(meta.source_rel).toBe(join('docs', 'GAP-ANALYSIS.md'))
   })
 })
