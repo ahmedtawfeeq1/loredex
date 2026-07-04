@@ -147,17 +147,18 @@ No loredex server, no account, no lock-in: **your files, any agent, forever.**
 
 **Do I need an API key?** No. Classification shells out to the `claude` or `codex` CLI you already have. Neither installed → heuristics.
 
-**Do I need Obsidian?** No — the vault is plain markdown and works with any viewer (Logseq, VS Code, `cat`). Obsidian is just the best free graph/backlink experience.
+**Do I need Obsidian?** No — the vault is plain markdown and works with any viewer (Logseq, VS Code, `cat`). Obsidian is just the best free graph/backlink experience. If you do use it, the [loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian) plugin adds a live product dashboard, handoff alerts, and an in-app MCP server.
 
 **What if it files something wrong?** It's a plain folder — move the file, done. The `_index` MOCs regenerate on the next route.
 
 ## 🗺️ Roadmap
 
 - [x] `loredex curate` — objective-driven briefs, stale detection, semantic links (v0.3)
-- [ ] MCP server (`vault_store`, `vault_search`) — agents read the vault as long-term memory
+- [x] Team vaults — handoffs, shared git remote, session-start context pull (v0.7)
+- [x] MCP server (`vault_search`, `vault_store`, `product_state`, …) — agents read the vault as long-term memory (v0.9)
+- [x] Obsidian plugin — dashboard, handoff badge, in-app MCP server: [loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian)
 - [ ] Semantic search over the vault
 - [ ] Cursor-native hook adapter
-- [ ] Team vaults
 
 ## 🛠️ Contributing
 
