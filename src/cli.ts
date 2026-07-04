@@ -6,6 +6,7 @@ import { runCurate } from './commands/curate'
 import { runDoctor } from './commands/doctor'
 import { runHandoff, runHandoffs } from './commands/handoff'
 import { runInit } from './commands/init'
+import { runCurateProduct } from './commands/product'
 import { runReset } from './commands/reset'
 import { runRoute } from './commands/route'
 import { runStatus } from './commands/status'
@@ -61,7 +62,15 @@ program
     'notes that get full excerpt detail before older ones become a metadata-only index (default 60)',
     (value) => Number.parseInt(value, 10),
   )
-  .action((project, opts) => runCurate(project, opts))
+  .option(
+    '--product',
+    'curate the whole product: cross-project dashboard + brief at the vault root',
+  )
+  .option(
+    '--refresh-stale',
+    'with --product: re-curate projects whose Start Here brief is out of date first',
+  )
+  .action((project, opts) => (opts.product ? runCurateProduct(opts) : runCurate(project, opts)))
 
 program
   .command('watch')
