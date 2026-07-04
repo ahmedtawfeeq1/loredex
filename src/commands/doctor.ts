@@ -57,11 +57,14 @@ export function runDoctor(): void {
     )
   }
   if (!config) {
-    console.log(pc.yellow('!'), 'run `loredex init` (or `loredex adopt` in an existing project)')
+    console.log(
+      pc.yellow('!'),
+      'run `npx -y loredex@latest init` (or `adopt` in an existing project)',
+    )
   } else if (!config.editor && editors.length > 0) {
     console.log(
       pc.yellow('!'),
-      `no editor configured — run \`loredex init --editor ${editors[0]?.scheme}\` to open code links in ${editors[0]?.name}`,
+      `no editor configured — run \`npx -y loredex@latest init --editor ${editors[0]?.scheme}\` to open code links in ${editors[0]?.name}`,
     )
   }
 }

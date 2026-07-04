@@ -30,7 +30,7 @@ export async function runCurate(
 ): Promise<void> {
   const config = loadConfig()
   if (!config) {
-    console.error(pc.red('no loredex config — run `loredex init` first'))
+    console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1
     return
   }

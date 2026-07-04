@@ -9,13 +9,13 @@ import { inboxPath } from '../core/vault'
 export function runStatus(): void {
   const config = loadConfig()
   if (!config) {
-    console.error(pc.red('no loredex config — run `loredex init` first'))
+    console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1
     return
   }
   const vault = config.vaultPath
   if (!existsSync(vault)) {
-    console.error(pc.red(`vault missing: ${vault} — run \`loredex init\``))
+    console.error(pc.red(`vault missing: ${vault} — run \`npx -y loredex@latest init\``))
     process.exitCode = 1
     return
   }

@@ -56,12 +56,14 @@ export function runInit(opts: InitOptions): void {
     console.log(
       pc.green('✓'),
       `code links open in: ${config.editor ?? 'system default'}`,
-      pc.dim("(--editor vscode|cursor|windsurf|... — see `loredex doctor` for what's installed)"),
+      pc.dim(
+        "(--editor vscode|cursor|windsurf|... — see `npx -y loredex@latest doctor` for what's installed)",
+      ),
     )
   }
   console.log(pc.green('✓'), 'conventions written to AGENTS.md + CLAUDE.md')
   console.log()
-  console.log('Next:', pc.bold('loredex adopt'), 'to organize existing markdown,')
+  console.log('Next:', pc.bold('npx -y loredex@latest adopt'), 'to organize existing markdown,')
   console.log('      or open the vault folder in Obsidian.')
 }
 

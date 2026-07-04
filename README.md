@@ -108,7 +108,7 @@ No hook system in your agent? Run `loredex watch` (routes on file change) or `lo
 Filing solves storage; `curate` solves *"where do I start?"*:
 
 ```bash
-loredex curate my-app --objective "draft the v2 spec" --since 2026-07-01 --dry-run
+npx -y loredex@latest curate my-app --objective "draft the v2 spec" --since 2026-07-01 --dry-run
 ```
 
 An agent reads a digest of the scoped notes and writes a **`_START-HERE` brief** into the

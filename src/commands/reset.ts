@@ -22,7 +22,7 @@ export interface ResetOptions {
 export async function runReset(projectArg: string, opts: ResetOptions): Promise<void> {
   const config = loadConfig()
   if (!config) {
-    console.error(pc.red('no loredex config — run `loredex init` first'))
+    console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1
     return
   }
@@ -93,5 +93,5 @@ export async function runReset(projectArg: string, opts: ResetOptions): Promise<
     pc.green('✓'),
     `removed ${vaultNotes} vault note(s), unstamped ${toUnstamp.length} original(s)`,
   )
-  console.log('Re-adopt with:', pc.bold('loredex adopt'))
+  console.log('Re-adopt with:', pc.bold('npx -y loredex@latest adopt'))
 }
