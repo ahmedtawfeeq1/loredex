@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.4.0...loredex-v0.5.0) (2026-07-04)
+
+
+### Features
+
+* link provenance — vault notes stay wired to their origins ([100791b](https://github.com/ahmedtawfeeq1/loredex/commit/100791b7a594d1414d25dea1802b4ab64b6f7c31))
+
 ## [0.4.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.3.2...loredex-v0.4.0) (2026-07-03)
 
 
