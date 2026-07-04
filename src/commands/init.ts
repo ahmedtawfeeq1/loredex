@@ -3,6 +3,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs
 import { basename, join, resolve } from 'node:path'
 import pc from 'picocolors'
 import { type Config, defaultVaultPath, loadConfig, saveConfig } from '../core/config'
+import { detectEditors } from '../core/editors'
 import { inboxPath, scaffoldVault } from '../core/vault'
 import { agentsSnippet, claudePointer, MARKER_START } from '../templates'
 
@@ -25,6 +26,17 @@ export function runInit(opts: InitOptions): void {
   if (opts.sync === 'git') config.sync = 'git'
   if (opts.editor) config.editor = opts.editor
 
+  // auto-pick when there's exactly one installed editor and the user hasn't chosen one yet —
+  // ambiguous when several are installed, so leave those to an explicit --editor
+  let autoDetected: string | null = null
+  if (!config.editor) {
+    const editors = detectEditors()
+    if (editors.length === 1) {
+      config.editor = editors[0]?.scheme
+      autoDetected = editors[0]?.name ?? null
+    }
+  }
+
   scaffoldVault(vaultPath)
   saveConfig(config)
 
@@ -34,10 +46,19 @@ export function runInit(opts: InitOptions): void {
   console.log(pc.green('✓'), `vault: ${vaultPath}`)
   console.log(pc.green('✓'), `project registered: ${projectName} (${cwd})`)
   if (config.sync === 'git') console.log(pc.green('✓'), 'git sync: auto-commit after each route')
-  console.log(
-    pc.green('✓'),
-    `code links open in: ${config.editor ?? 'system default'} ${pc.dim('(--editor vscode|cursor|windsurf)')}`,
-  )
+  if (autoDetected) {
+    console.log(
+      pc.green('✓'),
+      `code links open in: ${autoDetected}`,
+      pc.dim('(auto-detected — change with --editor)'),
+    )
+  } else {
+    console.log(
+      pc.green('✓'),
+      `code links open in: ${config.editor ?? 'system default'}`,
+      pc.dim("(--editor vscode|cursor|windsurf|... — see `loredex doctor` for what's installed)"),
+    )
+  }
   console.log(pc.green('✓'), 'conventions written to AGENTS.md + CLAUDE.md')
   console.log()
   console.log('Next:', pc.bold('loredex adopt'), 'to organize existing markdown,')

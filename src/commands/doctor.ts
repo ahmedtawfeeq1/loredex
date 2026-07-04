@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import pc from 'picocolors'
 import { configPath, loadConfig } from '../core/config'
+import { detectEditors } from '../core/editors'
 import { claudeAvailable } from '../llm/claude-cli'
 import { codexAvailable } from '../llm/codex-cli'
 
@@ -23,6 +24,15 @@ export function runDoctor(): void {
       checks.push(['vault git repo', existsSync(join(config.vaultPath, '.git')), ''])
     }
     checks.push(['editor for code links', true, config.editor ?? 'system default'])
+  }
+
+  const editors = detectEditors()
+  if (editors.length > 0) {
+    checks.push([
+      'editors detected',
+      true,
+      editors.map((editor) => `${editor.name} (--editor ${editor.scheme})`).join(', '),
+    ])
   }
   const claude = claudeAvailable()
   const codex = codexAvailable()
@@ -48,5 +58,10 @@ export function runDoctor(): void {
   }
   if (!config) {
     console.log(pc.yellow('!'), 'run `loredex init` (or `loredex adopt` in an existing project)')
+  } else if (!config.editor && editors.length > 0) {
+    console.log(
+      pc.yellow('!'),
+      `no editor configured — run \`loredex init --editor ${editors[0]?.scheme}\` to open code links in ${editors[0]?.name}`,
+    )
   }
 }
