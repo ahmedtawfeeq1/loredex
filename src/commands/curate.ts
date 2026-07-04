@@ -25,6 +25,7 @@ export interface CurateOptions {
   dryRun?: boolean
   yes?: boolean
   llm: boolean
+  maxDetailed?: number
 }
 
 export async function runCurate(
@@ -80,12 +81,20 @@ export async function runCurate(
         `\r${pc.dim(`LLM reading ${notes.length}-note digest and writing the brief… ${elapsed}s (typically 30–90s)`)}   `,
       )
     }
+    const digest = buildDigest(notes, opts.maxDetailed)
+    if (digest.indexOnlyCount > 0) {
+      console.log(
+        pc.dim(
+          `digest: ${digest.detailedCount} note(s) in full, ${digest.indexOnlyCount} older note(s) as metadata-only index`,
+        ),
+      )
+    }
     tick()
     const ticker = setInterval(tick, 1000)
     plan = await curateWithLlm({
       projectName: project,
       objective: opts.objective,
-      digest: buildDigest(notes),
+      digest: digest.text,
     })
     clearInterval(ticker)
     process.stdout.write(`\r${' '.repeat(90)}\r`)

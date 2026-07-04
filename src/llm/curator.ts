@@ -68,7 +68,9 @@ export interface CurateInput {
 function buildPrompt(input: CurateInput): string {
   return [
     `You are curating the research vault of the project "${input.projectName}".`,
-    'Below is a digest of every note in scope (name, metadata, headings, excerpt).',
+    'Below is a digest of the notes in scope. The most recently filed notes are shown in',
+    'full (name, metadata, headings, excerpt); older notes may be listed in a metadata-only',
+    'index instead — follow any instructions embedded in the digest about how to treat those.',
     input.objective
       ? `The user's objective: ${input.objective}\nEverything you produce must serve this objective.`
       : 'No objective was given — derive the most plausible current objective from the notes.',

@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import {
   applyCuration,
   briefFileName,
+  buildDigest,
   type CurationPlan,
   collectNotes,
   filterNotes,
@@ -145,6 +146,43 @@ describe('findOrphans', () => {
     const all = collectNotes(vault, 'orph')
     const scope = new Set(['a-linked', 'c-isolated'])
     expect(findOrphans(all, scope)).toEqual(['c-isolated'])
+  })
+})
+
+describe('buildDigest', () => {
+  const vault = mkdtempSync(join(tmpdir(), 'loredex-digest-'))
+
+  const makeNote = (name: string, date: string) => ({
+    path: join(vault, `${name}.md`),
+    name,
+    topic: 'core',
+    meta: { date },
+    body: `# ${name}\nsome content here`,
+  })
+
+  it('gives every note full detail when the scope fits under the cap', () => {
+    const notes = [makeNote('a', '2026-01-01'), makeNote('b', '2026-01-02')]
+    const digest = buildDigest(notes, 5)
+    expect(digest.detailedCount).toBe(2)
+    expect(digest.indexOnlyCount).toBe(0)
+    expect(digest.text).toContain('excerpt:')
+    expect(digest.text).not.toContain('Index only')
+  })
+
+  it('tiers older notes into a metadata-only index once the scope exceeds the cap', () => {
+    const notes = [
+      makeNote('oldest', '2026-01-01'),
+      makeNote('middle', '2026-01-02'),
+      makeNote('newest', '2026-01-03'),
+    ]
+    const digest = buildDigest(notes, 2)
+    expect(digest.detailedCount).toBe(2)
+    expect(digest.indexOnlyCount).toBe(1)
+    expect(digest.text).toContain('### newest')
+    expect(digest.text).toContain('### middle')
+    expect(digest.text).not.toContain('### oldest')
+    expect(digest.text).toContain('Index only (1 older note')
+    expect(digest.text).toContain('- oldest — topic: core')
   })
 })
 

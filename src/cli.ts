@@ -54,6 +54,11 @@ program
   .option('--dry-run', 'show the plan without writing anything')
   .option('-y, --yes', 'skip the confirmation prompt')
   .option('--no-llm', 'deterministic pass only (ghost-link cleanup, no brief)')
+  .option(
+    '--max-detailed <n>',
+    'notes that get full excerpt detail before older ones become a metadata-only index (default 60)',
+    (value) => Number.parseInt(value, 10),
+  )
   .action((project, opts) => runCurate(project, opts))
 
 program

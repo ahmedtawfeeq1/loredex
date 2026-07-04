@@ -121,28 +121,64 @@ export function sanitizeNotes(notes: ScopedNote[], write: boolean): number {
   return total
 }
 
-/** Compact per-note digest the curator LLM reads instead of the full project. */
-export function buildDigest(notes: ScopedNote[]): string {
-  return notes
-    .map((note) => {
-      const headings = note.body
-        .split('\n')
-        .filter((line) => /^#{1,3} /.test(line))
-        .slice(0, 8)
-        .map((line) => line.replace(/^#+ /, ''))
-        .join(' | ')
-      const excerpt = note.body.replace(/\s+/g, ' ').trim().slice(0, 400)
-      const meta = note.meta
-      return [
-        `### ${note.name}`,
-        `topic: ${note.topic || '-'} · type: ${meta.type ?? '-'} · date: ${meta.date ?? '-'} · status: ${meta.status ?? 'active'}`,
-        headings ? `headings: ${headings}` : '',
-        `excerpt: ${excerpt}`,
-      ]
-        .filter(Boolean)
-        .join('\n')
-    })
-    .join('\n\n')
+export interface DigestResult {
+  text: string
+  detailedCount: number
+  indexOnlyCount: number
+}
+
+export const DEFAULT_MAX_DETAILED = 60
+
+function digestEntry(note: ScopedNote): string {
+  const headings = note.body
+    .split('\n')
+    .filter((line) => /^#{1,3} /.test(line))
+    .slice(0, 8)
+    .map((line) => line.replace(/^#+ /, ''))
+    .join(' | ')
+  const excerpt = note.body.replace(/\s+/g, ' ').trim().slice(0, 400)
+  const meta = note.meta
+  return [
+    `### ${note.name}`,
+    `topic: ${note.topic || '-'} · type: ${meta.type ?? '-'} · date: ${meta.date ?? '-'} · status: ${meta.status ?? 'active'}`,
+    headings ? `headings: ${headings}` : '',
+    `excerpt: ${excerpt}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+/**
+ * Compact per-note digest the curator LLM reads instead of the full project. Bounded so
+ * prompt size stays roughly flat as a vault grows: the `maxDetailed` most recently filed
+ * notes get full headings+excerpt; everything older gets a one-line metadata index entry
+ * instead of its content — the same titles/tags-first, bodies-on-demand shape obsidian-wiki
+ * uses to keep query cost flat from 20 to 2,000 notes.
+ */
+export function buildDigest(notes: ScopedNote[], maxDetailed = DEFAULT_MAX_DETAILED): DigestResult {
+  const ranked = [...notes].sort((a, b) => (b.meta.date ?? '').localeCompare(a.meta.date ?? ''))
+  const detailed = ranked.slice(0, maxDetailed)
+  const indexOnly = ranked.slice(maxDetailed)
+  const detailedText = detailed.map(digestEntry).join('\n\n')
+
+  if (indexOnly.length === 0) {
+    return { text: detailedText, detailedCount: detailed.length, indexOnlyCount: 0 }
+  }
+
+  const indexText = indexOnly
+    .map(
+      (note) =>
+        `- ${note.name} — topic: ${note.topic || '-'}, type: ${note.meta.type ?? '-'}, date: ${note.meta.date ?? '-'}`,
+    )
+    .join('\n')
+  const text = [
+    detailedText,
+    '',
+    `### Index only (${indexOnly.length} older note(s) — metadata only, no content shown)`,
+    "Only place these in reading_order/stale/duplicates if their name, topic, or date alone justifies it — don't invent claims about content you can't see.",
+    indexText,
+  ].join('\n')
+  return { text, detailedCount: detailed.length, indexOnlyCount: indexOnly.length }
 }
 
 // filler words that carry no meaning in a brief filename
