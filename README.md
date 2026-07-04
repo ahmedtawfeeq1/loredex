@@ -98,10 +98,13 @@ No hook system in your agent? Run `loredex watch` (routes on file change) or `lo
 | `loredex init` | Create/register the vault, wire up the current project. `--sync git` enables auto-commit |
 | `loredex adopt [path]` | Classify + file a project's existing markdown. `--dry-run`, `--move`, `-y`, `--no-llm` |
 | `loredex route` | Process the vault inbox + new findings in the current project. `--strict` = frontmatter-only |
-| `loredex curate [project]` | **Agent-driven optimization**: Start-Here brief for an objective, stale/duplicate flags, semantic links. `--objective`, `--since`, `--topic`, `--dry-run` |
+| `loredex curate [project]` | **Agent-driven optimization**: Start-Here brief for an objective, stale/duplicate/orphan/drift flags, semantic links. `--objective`, `--since`, `--topic`, `--max-detailed`, `--dry-run` |
+| `loredex reset <project>` | Remove a project's vault copies and unstamp originals for a clean re-adopt. `--dry-run`, `-y` |
 | `loredex watch` | Daemon: route automatically on file changes |
 | `loredex status` | Vault statistics |
-| `loredex doctor` | Check config, vault, and classifier availability |
+| `loredex doctor` | Check config, vault, editor, and classifier availability |
+
+Full walkthrough of every command plus a guided test checklist: [docs/USER-GUIDE.md](docs/USER-GUIDE.md).
 
 ## 🧭 Curate — from "filed" to "understood"
 
