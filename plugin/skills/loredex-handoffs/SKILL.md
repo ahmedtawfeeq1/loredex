@@ -5,7 +5,14 @@ description: Check for open handoffs addressed to this project before starting w
 
 # /loredex-handoffs
 
-At the start of a work session in a project that receives work from other teams:
+In Claude Code, open handoffs are already injected into your context automatically at
+session start (the plugin's SessionStart hook runs this check for you) — if you saw a
+`[loredex] N open handoff(s)` block when the session began, act on it: read each brief
+before planning related work, and consume after acting. Use this skill explicitly when
+mid-session ("did anything new arrive?"), on an agent without the plugin, or when the user
+asks directly.
+
+To check on demand:
 
 ```bash
 npx -y loredex@latest handoffs

@@ -75,6 +75,19 @@ describe('handoff', () => {
     expect(logs.join('\n')).toContain('1 open handoff(s) for backend')
     expect(logs.join('\n')).toContain('(from ai-engine)')
 
+    // hook mode: agent-directed output including the consume instruction
+    const hookLogs: string[] = []
+    console.log = (...args: unknown[]) => hookLogs.push(args.join(' '))
+    try {
+      runHandoffs({ project: 'backend', quiet: true })
+    } finally {
+      console.log = original
+    }
+    const hookOut = hookLogs.join('\n')
+    expect(hookOut).toContain('[loredex] 1 open handoff(s)')
+    expect(hookOut).toContain('read the full brief before planning')
+    expect(hookOut).toContain('--consume')
+
     const name = walkMarkdown(join(vault, 'projects', 'backend', 'handoffs'))[0] as string
     const noteName = name.split('/').pop()?.replace(/\.md$/, '') as string
     runHandoffs({ project: 'backend', consume: noteName })
@@ -88,6 +101,16 @@ describe('handoff', () => {
       console.log = original
     }
     expect(logs2.join('\n')).toContain('no open handoffs')
+
+    // hook mode with nothing open: total silence — zero context noise per session
+    const silent: string[] = []
+    console.log = (...args: unknown[]) => silent.push(args.join(' '))
+    try {
+      runHandoffs({ project: 'backend', quiet: true })
+    } finally {
+      console.log = original
+    }
+    expect(silent).toEqual([])
   })
 })
 

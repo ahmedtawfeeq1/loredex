@@ -164,6 +164,8 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
 export interface HandoffsOptions {
   project?: string
   consume?: string
+  /** hook mode: print nothing when no handoffs are open (stdout becomes session context) */
+  quiet?: boolean
 }
 
 /** List open handoffs addressed to a project; --consume marks one done. Pulls first so teammates' handoffs appear. */
@@ -178,6 +180,7 @@ export function runHandoffs(opts: HandoffsOptions): void {
 
   const project = opts.project ?? findProject(config, process.cwd())?.name
   if (!project) {
+    if (opts.quiet) return // hook fired outside a registered project — stay silent
     console.error(pc.red('no project given and cwd is not a registered project — pass --project'))
     process.exitCode = 1
     return
@@ -219,7 +222,21 @@ export function runHandoffs(opts: HandoffsOptions): void {
     }
   }
   if (open.length === 0) {
-    console.log(pc.dim(`no open handoffs for ${slugify(project)}`))
+    if (!opts.quiet) console.log(pc.dim(`no open handoffs for ${slugify(project)}`))
+    return
+  }
+  if (opts.quiet) {
+    // hook mode — this output is injected into the agent's context, so speak to the agent
+    console.log(
+      `[loredex] ${open.length} open handoff(s) from other teams are addressed to this project:`,
+    )
+    for (const handoff of open) {
+      console.log(`- ${handoff.name} (from ${handoff.from}): ${handoff.objective}`)
+      console.log(`  read the full brief before planning related work: ${handoff.path}`)
+    }
+    console.log(
+      '[loredex] After acting on a handoff, mark it done: npx -y loredex@latest handoffs --consume <name>',
+    )
     return
   }
   console.log(pc.bold(`${open.length} open handoff(s) for ${slugify(project)}:`))

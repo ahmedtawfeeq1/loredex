@@ -89,6 +89,7 @@ program
   .description('list open handoffs addressed to a project (pulls the vault remote first)')
   .option('--project <name>', 'project to check (default: registered project of cwd)')
   .option('--consume <name>', 'mark a handoff consumed after acting on it')
+  .option('--quiet', 'hook mode: silent when none are open, agent-directed output otherwise')
   .action((opts) => runHandoffs(opts))
 
 program
