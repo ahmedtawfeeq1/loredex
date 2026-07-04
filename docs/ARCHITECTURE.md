@@ -82,3 +82,12 @@ file://, unresolvable → untouched. `src/core/sanitize.ts` exports the shared
 `mapOutsideCode` walker (fence + inline-code aware) both transforms use. Copied notes get
 `source_path` frontmatter. `src/commands/reset.ts` = guarded rebuild path (vault copies
 only, originals just unstamped).
+
+## MCP server (Phase 1, v0.10)
+
+`src/mcp/server.ts` is a fourth shell over the same core (`search`, `store`, `product`,
+handoff collection) — stdio transport via `@modelcontextprotocol/sdk`, spawned per-client
+with `loredex mcp`. Phase 2 re-hosts the identical tool set on Streamable HTTP inside an
+Obsidian plugin (see the proven community pattern); core stays transport-agnostic, so that
+phase is a re-host, not a rewrite. All responses pass sanitizeForContext + data-framing —
+vault content entering agent context is data, never instructions.

@@ -229,3 +229,20 @@ registers a git merge driver that keeps them from ever conflicting between teamm
 routed note now carries portable provenance (`source_project` + `source_rel` alongside the
 machine-local `source_path`), so drift detection works on any teammate's machine, resolved
 through their own registered project paths.
+
+## Live vault access for agents: `loredex mcp`
+
+`init` wires the loredex MCP server into your project's `.mcp.json`, so MCP-capable agents
+(Claude Code, Cursor, Codex, Gemini CLI…) can use the vault mid-task instead of only at
+session boundaries:
+
+- `vault_search` / `vault_note` — "did anyone already research X?" answered in-task, with
+  briefs and handoffs ranked above raw notes and stale notes sunk.
+- `handoffs_open` / `handoff_consume` — the cross-team handoff loop for agents without
+  loredex's Claude Code hooks.
+- `product_state` — the cross-project dashboard on demand.
+- `vault_store` — safe writes: complete frontmatter, routed by the loredex router, never
+  directly into `projects/`, never deletes.
+
+Every response is framed as data authored by vault writers (the same injection-hardening
+principle as the SessionStart hook), and `vault_note` refuses paths outside the vault.

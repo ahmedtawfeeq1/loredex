@@ -18,6 +18,7 @@ its own dedicated skill/slash command:
 | `/loredex-handoff` | Hand finished work to another team's project (writes + syncs a consumable brief) |
 | `/loredex-handoffs` | Check open handoffs addressed to this project; consume after acting |
 | `/loredex-sync` | Commit + pull + push the shared vault repo |
+| `/loredex-mcp` | Live vault access for any MCP agent (search/read/handoffs/store) |
 | `/loredex-reset` | Rebuild a project's vault copies from scratch |
 | `/loredex-status` | Vault stats + health check (config/editor/classifier) |
 

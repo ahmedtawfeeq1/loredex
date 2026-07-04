@@ -6,6 +6,7 @@ import { runCurate } from './commands/curate'
 import { runDoctor } from './commands/doctor'
 import { runHandoff, runHandoffs } from './commands/handoff'
 import { runInit } from './commands/init'
+import { runMcp } from './commands/mcp'
 import { runCurateProduct } from './commands/product'
 import { runReset } from './commands/reset'
 import { runRoute } from './commands/route'
@@ -105,6 +106,13 @@ program
   .command('sync')
   .description("commit local vault changes, pull teammates' notes, push yours")
   .action(runSync)
+
+program
+  .command('mcp')
+  .description(
+    'run the loredex MCP server over stdio (vault_search, handoffs, product_state, vault_store)',
+  )
+  .action(runMcp)
 
 program
   .command('reset <project>')

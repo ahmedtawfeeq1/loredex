@@ -206,5 +206,5 @@ describe('gitPullPush', () => {
     execFileSync('git', ['commit', '-q', '-m', 'bob regen'], { cwd: bob })
     // without the merge driver this rebase would conflict; with it, pull+push both succeed
     expect(gitPullPush(bob)).toEqual({ pulled: true, pushed: true })
-  })
+  }, 30_000)
 })

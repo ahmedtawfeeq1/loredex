@@ -102,6 +102,7 @@ No hook system in your agent? Run `loredex watch` (routes on file change) or `lo
 | `loredex curate --product` | Cross-project product view: dashboard, team flow state, report-only risks/duplicates. `--objective`, `--refresh-stale` |
 | `loredex handoff --to <project>` | Hand finished work to another team: consumable brief with reading order, auto-synced. `--objective`, `--since`, `--dry-run` |
 | `loredex handoffs` | List open handoffs for this project (pulls remote first). `--consume <name>` marks done |
+| `loredex mcp` | MCP server over stdio: `vault_search`, `vault_note`, `handoffs_open/consume`, `product_state`, `vault_store` — wired into `.mcp.json` by `init` |
 | `loredex sync` | Commit local vault changes, pull teammates' notes, push yours |
 | `loredex reset <project>` | Remove a project's vault copies and unstamp originals for a clean re-adopt. `--dry-run`, `-y` |
 | `loredex watch` | Daemon: route automatically on file changes |

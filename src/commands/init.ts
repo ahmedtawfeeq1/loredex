@@ -48,6 +48,7 @@ export function runInit(opts: InitOptions): void {
 
   if (config.sync === 'git') setupGitSync(vaultPath)
   injectConventions(cwd, projectName, inboxPath(vaultPath))
+  const mcpWired = wireMcpServer(cwd)
 
   console.log(pc.green('✓'), `vault: ${vaultPath}`)
   console.log(pc.green('✓'), `project registered: ${projectName} (${cwd})`)
@@ -68,6 +69,12 @@ export function runInit(opts: InitOptions): void {
     )
   }
   console.log(pc.green('✓'), 'conventions written to AGENTS.md + CLAUDE.md + .cursor/rules')
+  if (mcpWired) {
+    console.log(
+      pc.green('✓'),
+      'MCP server wired in .mcp.json — agents get vault_search/handoffs/product_state/vault_store',
+    )
+  }
   console.log()
   console.log('Next:', pc.bold('npx -y loredex@latest adopt'), 'to organize existing markdown,')
   console.log('      or open the vault folder in Obsidian.')
@@ -86,6 +93,29 @@ function setupGitSync(vaultPath: string): void {
   } catch {
     console.error(pc.yellow('!'), 'git not available — sync disabled for now')
   }
+}
+
+/**
+ * Merge the loredex MCP server into the project's .mcp.json (the file Claude Code and
+ * other MCP clients read at the project root). Idempotent; never clobbers other servers.
+ * Returns false when an existing file is unreadable — better to skip than destroy it.
+ */
+function wireMcpServer(projectRoot: string): boolean {
+  const mcpPath = join(projectRoot, '.mcp.json')
+  let json: { mcpServers?: Record<string, unknown> } = {}
+  if (existsSync(mcpPath)) {
+    try {
+      json = JSON.parse(readFileSync(mcpPath, 'utf8'))
+    } catch {
+      console.error(pc.yellow('!'), '.mcp.json exists but is not valid JSON — not touching it')
+      return false
+    }
+  }
+  json.mcpServers ??= {}
+  if (json.mcpServers.loredex) return true // already wired
+  json.mcpServers.loredex = { command: 'npx', args: ['-y', 'loredex@latest', 'mcp'] }
+  writeFileSync(mcpPath, `${JSON.stringify(json, null, 2)}\n`)
+  return true
 }
 
 /** Idempotent: the loredex block is only ever added once per file (marker-guarded). */
