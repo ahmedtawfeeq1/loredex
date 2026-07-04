@@ -5,6 +5,7 @@ import { runAdopt } from './commands/adopt'
 import { runCurate } from './commands/curate'
 import { runDoctor } from './commands/doctor'
 import { runInit } from './commands/init'
+import { runReset } from './commands/reset'
 import { runRoute } from './commands/route'
 import { runStatus } from './commands/status'
 import { runWatch } from './commands/watch'
@@ -22,6 +23,7 @@ program
   .option('--vault <path>', 'vault location (default: ~/Loredex)')
   .option('--project <name>', 'project name (default: directory name)')
   .option('--sync <mode>', 'sync mode: git | none', 'none')
+  .option('--editor <name>', 'open code links in: vscode | cursor | windsurf | system')
   .action((opts) => runInit(opts))
 
 program
@@ -59,6 +61,13 @@ program
   .description('watch registered projects + inbox and route new markdown automatically')
   .option('--no-llm', 'classify with heuristics only (no LLM calls)')
   .action((opts) => runWatch(opts))
+
+program
+  .command('reset <project>')
+  .description("remove a project's vault copies and unstamp originals (for a clean re-adopt)")
+  .option('--dry-run', 'list what would change without touching anything')
+  .option('-y, --yes', 'skip the confirmation prompt')
+  .action((project, opts) => runReset(project, opts))
 
 program.command('status').description('vault statistics').action(runStatus)
 

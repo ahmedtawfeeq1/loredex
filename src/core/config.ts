@@ -5,6 +5,8 @@ import { dirname, join, resolve } from 'node:path'
 export interface Config {
   vaultPath: string
   sync: 'git' | 'none'
+  /** link-target editor: 'system' (file://) or a URI scheme — vscode | cursor | windsurf | custom */
+  editor?: string
   projects: Record<string, { name: string }>
 }
 

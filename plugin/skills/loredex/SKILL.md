@@ -31,10 +31,11 @@ prefers). Never file into the vault's `projects/` tree yourself — the router o
 
 | Intent | Command |
 |---|---|
-| Set up loredex for this project | `npx -y loredex@latest init` (options: `--vault <path>`, `--sync git`) |
+| Set up loredex for this project | `npx -y loredex@latest init` (options: `--vault <path>`, `--sync git`, `--editor <name>`) — ASK the user which editor code links should open in: vscode, cursor, windsurf, or system default |
 | Organize existing markdown in a repo | `npx -y loredex@latest adopt --dry-run` first, show the user the plan, then `npx -y loredex@latest adopt -y` after they confirm |
 | Route pending files now | `npx -y loredex@latest route` |
 | Curate: Start-Here brief, stale flags, semantic links | `npx -y loredex@latest curate <project> --objective "<text>" [--since <date>] [--topic <t>] --dry-run`, then `-y` after the user confirms |
+| Rebuild a project's vault copies from scratch | `npx -y loredex@latest reset <project> --dry-run` first, confirm with the user, then `-y`, then re-adopt. Removes ONLY loredex-owned vault copies and unstamps originals — original files are never deleted |
 | Vault statistics | `npx -y loredex@latest status` |
 | Troubleshoot | `npx -y loredex@latest doctor` |
 
@@ -48,13 +49,25 @@ When the user asks to curate, "make sense of the vault", or "where do I start":
    `--objective` and the LLM derives one.
 2. **Ask the scope** — the whole project, or just a recent task batch? A session that just
    produced N files = task scope: `--since <today/yesterday>` or its `--topic`s. Scoped runs
-   write a separate `_START-HERE-<project>--<objective>.md` brief (a session handoff);
-   full-project runs overwrite the main `_START-HERE-<project>.md`.
+   write a separate `Start Here - <project> - <slug>.md` brief (a session handoff);
+   full-project runs overwrite the main `Start Here - <project>.md`.
 3. Run with `--dry-run`, summarize the plan (brief, reading order, stale flags, merge
    candidates), then apply with `-y` after the user confirms.
 
 Proactively suggest a scoped curate after a session that generated many markdown files —
 it replaces hand-written HANDOFF.md files.
+
+## Link provenance (v0.5+)
+
+Routed notes keep working references: links to files adopted in the same batch become
+vault wikilinks (graph edges); links to other files that exist on disk become editor deep
+links (`cursor://file/<abs>:<line>` — opens the real file at the line) or `file://` for
+binaries, per the `editor` config. Unresolvable links are left untouched. Every copied
+note records its origin as `source_path` frontmatter.
+
+Vaults adopted before v0.5 have broken relative links (clicking them creates empty notes
+in Obsidian): offer `reset <project>` → `adopt` to rebuild cleanly — originals are the
+source of truth, the vault is a derivative.
 
 ## Notes
 

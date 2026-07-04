@@ -10,6 +10,7 @@ export interface InitOptions {
   vault?: string
   project?: string
   sync?: string
+  editor?: string
 }
 
 export function runInit(opts: InitOptions): void {
@@ -22,6 +23,7 @@ export function runInit(opts: InitOptions): void {
   config.vaultPath = vaultPath
   config.projects[cwd] = { name: projectName }
   if (opts.sync === 'git') config.sync = 'git'
+  if (opts.editor) config.editor = opts.editor
 
   scaffoldVault(vaultPath)
   saveConfig(config)
@@ -32,6 +34,10 @@ export function runInit(opts: InitOptions): void {
   console.log(pc.green('✓'), `vault: ${vaultPath}`)
   console.log(pc.green('✓'), `project registered: ${projectName} (${cwd})`)
   if (config.sync === 'git') console.log(pc.green('✓'), 'git sync: auto-commit after each route')
+  console.log(
+    pc.green('✓'),
+    `code links open in: ${config.editor ?? 'system default'} ${pc.dim('(--editor vscode|cursor|windsurf)')}`,
+  )
   console.log(pc.green('✓'), 'conventions written to AGENTS.md + CLAUDE.md')
   console.log()
   console.log('Next:', pc.bold('loredex adopt'), 'to organize existing markdown,')

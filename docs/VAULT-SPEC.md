@@ -75,3 +75,26 @@ is overwritten per full-project run; scoped briefs accumulate as session handoff
 Ghost-link rule: wikilinks whose target has a non-`.md` extension (`[[chat.py]]`) are
 rewritten to inline code at routing time and by curate — they can never resolve to a note
 and only pollute the graph.
+
+## Link provenance (v0.5)
+
+Copied notes record their origin:
+
+```yaml
+source_path: /abs/path/to/original.md   # copy-mode routes only
+```
+
+Link rewrite policy at routing time (prose only — fenced/inline code untouched):
+
+| Original link target | Becomes |
+|---|---|
+| file adopted in the same batch | `[[new-note-name\|original text]]` — vault wikilink |
+| existing text/code file | `<editor>://file/<abs>:<line>` deep link (line kept from `#L123`/`:123`) |
+| existing binary/other file | `file://<abs>` — device default app |
+| http(s)/mailto/anchors/images/missing files | untouched — links are never invented |
+
+`editor` config value: `system` (default, `file://`) or a URI scheme: `vscode`, `cursor`,
+`windsurf`, or any custom scheme. Set via `loredex init --editor <name>`.
+
+`loredex reset <project>` removes a project's vault copies and unstamps originals for a
+clean re-adopt (migration path for pre-v0.5 vaults). Originals are never deleted.

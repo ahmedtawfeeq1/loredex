@@ -6,6 +6,28 @@ function isGhostTarget(target: string): boolean {
   return match !== null && match[1]?.toLowerCase() !== 'md'
 }
 
+/**
+ * Apply fn to the parts of the body that are prose — skips fenced code blocks
+ * and inline code spans, so link/wikilink rewrites never touch code examples.
+ */
+export function mapOutsideCode(body: string, fn: (segment: string) => string): string {
+  let inFence = false
+  return body
+    .split('\n')
+    .map((line) => {
+      if (/^\s*(```|~~~)/.test(line)) {
+        inFence = !inFence
+        return line
+      }
+      if (inFence) return line
+      return line
+        .split(/(`[^`]*`)/)
+        .map((part) => (part.startsWith('`') ? part : fn(part)))
+        .join('')
+    })
+    .join('\n')
+}
+
 export interface SanitizeResult {
   body: string
   changed: number
@@ -13,22 +35,16 @@ export interface SanitizeResult {
 
 /**
  * Rewrite wikilinks pointing at non-markdown files ([[x.py]] → `x.py`) so they stop
- * rendering as ghost nodes in Obsidian's graph. Fence-aware: fenced code blocks untouched.
+ * rendering as ghost nodes in Obsidian's graph.
  */
 export function sanitizeWikilinks(body: string): SanitizeResult {
   let changed = 0
-  let inFence = false
-  const lines = body.split('\n').map((line) => {
-    if (/^\s*(```|~~~)/.test(line)) {
-      inFence = !inFence
-      return line
-    }
-    if (inFence) return line
-    return line.replace(WIKILINK, (full, target: string, alias?: string) => {
+  const result = mapOutsideCode(body, (segment) =>
+    segment.replace(WIKILINK, (full, target: string, alias?: string) => {
       if (!isGhostTarget(target)) return full
       changed++
       return `\`${(alias ?? target).trim()}\``
-    })
-  })
-  return { body: lines.join('\n'), changed }
+    }),
+  )
+  return { body: result, changed }
 }

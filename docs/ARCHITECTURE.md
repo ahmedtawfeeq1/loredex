@@ -73,3 +73,12 @@ loredex curate <project> [--objective ...] [--since/--topic scope]
    └─ apply (non-destructive): _START-HERE brief note, frontmatter stamps,
        Related sections rewritten from clusters, indexes rebuilt, git commit
 ```
+
+## Link provenance (v0.5)
+
+`src/core/relink.ts` rewires links in `executePlan`: batch-sibling links → wikilinks
+(mapping built from all PlanItems before writing), existing files → editor deep links or
+file://, unresolvable → untouched. `src/core/sanitize.ts` exports the shared
+`mapOutsideCode` walker (fence + inline-code aware) both transforms use. Copied notes get
+`source_path` frontmatter. `src/commands/reset.ts` = guarded rebuild path (vault copies
+only, originals just unstamped).

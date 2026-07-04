@@ -1,11 +1,12 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs'
-import { basename, join } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { type ClassifyOptions, resolveMeta } from './classify'
 import type { Config } from './config'
 import { type Meta, parseDoc, serializeDoc } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
+import { rewriteLinks } from './relink'
 import { sanitizeWikilinks } from './sanitize'
 import { targetDir, targetName, uniquePath } from './vault'
 
@@ -59,17 +60,42 @@ export interface ExecuteResult {
 }
 
 export function executePlan(items: PlanItem[], vaultPath: string, config: Config): ExecuteResult {
+  // resolve every destination first so same-batch collisions suffix correctly and
+  // cross-references between adopted files can be rewritten to vault wikilinks
+  const taken = new Set<string>()
+  const dests = items.map((item) => {
+    const dest = uniquePath(item.destDir, item.destName, taken)
+    taken.add(dest)
+    return dest
+  })
+  const mapping = new Map<string, string>()
+  for (const [index, item] of items.entries()) {
+    mapping.set(resolve(item.source), basename(dests[index] as string, '.md'))
+  }
+  const editor = config.editor ?? 'system'
+
   const written: string[] = []
-  for (const item of items) {
+  for (const [index, item] of items.entries()) {
     const { body } = parseDoc(item.raw)
     const meta: Meta = {
       ...item.meta,
       source: item.meta.source ?? 'manual',
       loredex: 'routed',
     }
-    const dest = uniquePath(item.destDir, item.destName)
-    // ghost-link hygiene: [[x.py]] wikilinks would render as fake graph nodes in Obsidian
-    writeFileSync(dest, serializeDoc({ meta, body: sanitizeWikilinks(body).body }))
+    // provenance: copies keep a pointer to their origin (inbox moves have none worth keeping)
+    if (item.mode === 'copy') meta.source_path = resolve(item.source)
+
+    // ghost-link hygiene, then rewire links: batch siblings → wikilinks,
+    // existing files → editor/file deep links, unresolvable → untouched
+    const cleaned = sanitizeWikilinks(body).body
+    const relinked = rewriteLinks(cleaned, {
+      sourceDir: dirname(resolve(item.source)),
+      mapping,
+      editor,
+    }).body
+
+    const dest = dests[index] as string
+    writeFileSync(dest, serializeDoc({ meta, body: relinked }))
     if (item.mode === 'move') {
       unlinkSync(item.source)
     } else {

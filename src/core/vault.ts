@@ -40,11 +40,11 @@ export function targetName(meta: Meta, originalName: string): string {
   return `${date}-${base}.md`
 }
 
-/** First non-colliding path for `name` inside `dir`; creates the directory. */
-export function uniquePath(dir: string, name: string): string {
+/** First non-colliding path for `name` inside `dir`; creates the directory. `taken` guards same-batch collisions. */
+export function uniquePath(dir: string, name: string, taken?: Set<string>): string {
   mkdirSync(dir, { recursive: true })
   let candidate = join(dir, name)
-  for (let i = 2; existsSync(candidate); i++) {
+  for (let i = 2; existsSync(candidate) || taken?.has(candidate); i++) {
     candidate = join(dir, name.replace(/\.md$/, `-${i}.md`))
   }
   return candidate

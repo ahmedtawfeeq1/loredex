@@ -22,6 +22,7 @@ export function runDoctor(): void {
     if (config.sync === 'git') {
       checks.push(['vault git repo', existsSync(join(config.vaultPath, '.git')), ''])
     }
+    checks.push(['editor for code links', true, config.editor ?? 'system default'])
   }
   const claude = claudeAvailable()
   const codex = codexAvailable()
