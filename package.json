@@ -42,7 +42,10 @@
     ],
     "target": "node20",
     "dts": {
-      "entry": "src/lib.ts"
+      "entry": "src/lib.ts",
+      "compilerOptions": {
+        "ignoreDeprecations": "6.0"
+      }
     },
     "clean": true
   },
