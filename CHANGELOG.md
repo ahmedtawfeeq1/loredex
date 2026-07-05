@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.0.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.8.0...loredex-v1.0.0) (2026-07-05)
+
+
+### Features
+
+* conflict-free generated files for team vaults ([03943b4](https://github.com/ahmedtawfeeq1/loredex/commit/03943b4ad93b0ab2e412c070447c3e24e446c085))
+* curate --product --refresh-stale — incremental map step ([f22bb71](https://github.com/ahmedtawfeeq1/loredex/commit/f22bb71b01914435567ff16b479b495e853ca917))
+* curate --product — deterministic cross-project dashboard ([a7f9395](https://github.com/ahmedtawfeeq1/loredex/commit/a7f9395f93a4c746d19f57c4b77ef052c5ef7ab0))
+* library entry point — embed loredex core in other hosts ([db264c4](https://github.com/ahmedtawfeeq1/loredex/commit/db264c43261148d1999ff3859a7c3103f9c7907f))
+* LLM reduce step for curate --product — narrative, risks, duplicates ([6efc76d](https://github.com/ahmedtawfeeq1/loredex/commit/6efc76d3cb8b4031bfe03e6dbc4b754375c1bc54))
+* MCP server — live vault access for any MCP agent ([24d41b4](https://github.com/ahmedtawfeeq1/loredex/commit/24d41b47bcdb06369bfc4b8bd566fb6d7ac0c916))
+* portable source provenance — drift detection works on any teammate's machine ([d333569](https://github.com/ahmedtawfeeq1/loredex/commit/d333569524c176f2b73a64a737473234cf946dcc))
+* SessionStart hook auto-surfaces open handoffs into session context ([e902461](https://github.com/ahmedtawfeeq1/loredex/commit/e902461292629de54fcb6df59d98cd090610961e))
+* team handoffs + vault sync — cross-project flow for multi-repo products ([b467ab9](https://github.com/ahmedtawfeeq1/loredex/commit/b467ab9bcae02dd46ffdc2902f8e1e31869e421c))
+
+
+### Bug Fixes
+
+* realpath containment for vault_note — blocks traversal and symlink escapes ([140d0b0](https://github.com/ahmedtawfeeq1/loredex/commit/140d0b0362b0e2b17d6103380049504e9411b776))
+* sanitize handoff frontmatter before injecting into session context ([daed4e7](https://github.com/ahmedtawfeeq1/loredex/commit/daed4e7d043879b06d3afac3c4b9a17afd5fccbc))
+* scope ignoreDeprecations to tsup dts pass — IDE tsconfig stays valid for TS 5.x ([27e2606](https://github.com/ahmedtawfeeq1/loredex/commit/27e26062106e1bdeac054f0cec4a0c72b06bf3c2))
+
+
+### Miscellaneous Chores
+
+* cut 1.0.0 — CLI, Claude Code plugin, team vaults, product view, MCP server ([6d1b9d0](https://github.com/ahmedtawfeeq1/loredex/commit/6d1b9d0034accb9e610b20d53d4061cde585df01))
+
 ## [0.8.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.7.0...loredex-v0.8.0) (2026-07-04)
 
 
