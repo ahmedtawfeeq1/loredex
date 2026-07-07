@@ -75,8 +75,16 @@ export function rebuildIndexes(vaultPath: string): void {
       }
       moc.push('')
     }
-    for (const [topic, files] of [...topics].sort((a, b) => a[0].localeCompare(b[0]))) {
-      moc.push(`## ${topic}`, '')
+    // most recently active topic first — note names start with YYYY-MM-DD, so the
+    // lexicographic max of a topic's names is its latest note
+    const latest = (files: NoteEntry[]) =>
+      files.reduce((max, entry) => (entry.name > max ? entry.name : max), '')
+    const byActivity = [...topics].sort(
+      (a, b) => latest(b[1]).localeCompare(latest(a[1])) || a[0].localeCompare(b[0]),
+    )
+    for (const [topic, files] of byActivity) {
+      const date = latest(files).match(/^\d{4}-\d{2}-\d{2}/)?.[0]
+      moc.push(`## ${topic}${date ? ` — ${date}` : ''}`, '')
       for (const entry of [...files].sort((a, b) => b.name.localeCompare(a.name))) {
         moc.push(`- [[${entry.name}]]${entry.stale ? ' _(stale)_' : ''}`)
       }
