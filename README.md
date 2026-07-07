@@ -28,6 +28,10 @@ notes/llm-pricing.md                        research/llm-tools/2026-06-28-llm-pr
                                             _index/Home.md          ← vault-wide index
 ```
 
+> **Habit:** pin `_index/<project>.md` and read from there — topics are ordered by latest
+> activity (newest first, date in every heading). The folder tree is just storage;
+> Obsidian sorts folders alphabetically and always will.
+
 ## ⚡ Quickstart — organize an existing project in 60 seconds
 
 ```bash
@@ -150,6 +154,8 @@ No loredex server, no account, no lock-in: **your files, any agent, forever.**
 **Do I need Obsidian?** No — the vault is plain markdown and works with any viewer (Logseq, VS Code, `cat`). Obsidian is just the best free graph/backlink experience. If you do use it, the [loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian) plugin adds a live product dashboard, handoff alerts, and an in-app MCP server.
 
 **What if it files something wrong?** It's a plain folder — move the file, done. The `_index` MOCs regenerate on the next route.
+
+**Why isn't my newest topic at the top of Obsidian's file tree?** Obsidian sorts folders alphabetically — no setting changes that. Use `_index/<project>.md` instead: topics there are ordered newest-activity-first with the date in each heading.
 
 ## 🗺️ Roadmap
 

@@ -11,7 +11,9 @@ agent.
   _inbox/                     # agents drop files here; route moves them out
   _index/                     # auto-generated MOCs — never edit by hand
     Home.md                   # vault-wide index
-    <project>.md              # per-project map of content
+    <project>.md              # per-project map of content; topics ordered by latest
+                              #   activity (newest first, date in heading), notes
+                              #   newest-first within each topic
   projects/
     <project>/<topic>/        # kebab-case slugs
       YYYY-MM-DD-<slug>.md

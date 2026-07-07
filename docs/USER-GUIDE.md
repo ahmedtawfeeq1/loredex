@@ -23,6 +23,13 @@ Four stages: **set up** a project once, **fill** the vault as agents write, **un
 what's in there with `curate`, **maintain** it as things change. One command per stage
 covers the common case; everything else is for specific situations.
 
+**Read the MOC, not the folder tree.** Obsidian sorts folders alphabetically and that
+can't be changed — so don't browse `projects/` by hand. Pin `_index/<project>.md`
+instead: topics are ordered by latest activity (newest first, date in every heading),
+notes inside each topic are newest-first, stale notes are marked, and the Start Here
+briefs sit on top. It regenerates on every route/sync, so it is always current. The
+folder tree is storage; the MOC is the front door.
+
 ## Command reference
 
 ### Setup — once per project

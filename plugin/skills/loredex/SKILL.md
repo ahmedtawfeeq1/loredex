@@ -52,6 +52,8 @@ is only the lane for files that don't start inside a registered project.
 
 ## Notes
 
+- When pointing the user at the vault, link `_index/<project>.md` (topics ordered by
+  latest activity, newest first) — not the folder tree, which Obsidian sorts alphabetically.
 - `adopt` copies by default (originals stay, stamped `loredex: routed`); `--move` relocates.
 - Every command that writes supports `--dry-run` — show the user a dry run before applying.
 - No LLM installed? Everything still works — classification/curation fall back to
