@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v1.0.0...loredex-v1.1.0) (2026-07-07)
+
+
+### Features
+
+* order MOC topics by recency — newest activity first, date in heading ([d00199e](https://github.com/ahmedtawfeeq1/loredex/commit/d00199e969e3511f5cca54e0526b9b78675fd52f))
+
+
+### Bug Fixes
+
+* document routing lanes and forbid agent self-stamping loredex: routed ([84da0b5](https://github.com/ahmedtawfeeq1/loredex/commit/84da0b512c64571fa544bb2123210717e387e89a))
+
 ## [1.0.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v0.8.0...loredex-v1.0.0) (2026-07-05)
 
 
