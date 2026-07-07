@@ -54,6 +54,20 @@ This is what the Claude Code plugin's Stop hook runs automatically after every s
 you rarely need to call it by hand unless you're on an agent without a hook (see `watch`
 below) or want to force a pass right now.
 
+**Two lanes, one destination.** A frontmattered file inside a registered project routes
+**directly** to `projects/<project>/<topic>/YYYY-MM-DD-slug.md` — copied, original stamped
+`loredex: routed`, inbox never touched. `_inbox/` is only the lane for files that *don't*
+start inside a registered project (dropped there by you, an agent, or the MCP `vault_store`
+tool); those get classified and **moved** out on the next route. An empty inbox is a
+healthy inbox. And note the stamp is the router's signature — an agent must never write
+`loredex: routed` itself, or the file is skipped as already-filed.
+
+**Where hooks work.** Claude Code's hooks fire wherever Claude Code runs — a plain
+terminal, or the terminal panel inside VS Code, Cursor, Antigravity, any IDE. Filing is
+fully automatic there. Only *native* IDE agents (Cursor Composer, Antigravity's side
+panel, etc.) have no hook: the conventions file still makes them write correct
+frontmatter, then `loredex watch`, an agent-run `route`, or the next manual pass files it.
+
 ### Understand the vault
 
 ```bash

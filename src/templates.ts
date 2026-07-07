@@ -21,6 +21,9 @@ tags: []
 
 Write such files into the vault inbox at \`${inboxPath}\`, or into this
 project's \`docs/\` — \`loredex route\` picks up both.
+
+Never add \`loredex: routed\` yourself — the router stamps it after filing.
+A pre-stamped file is skipped as already-filed and will never reach the vault.
 ${MARKER_END}
 `
 }
@@ -46,6 +49,9 @@ tags: []
 Write it into this project's \`docs/\` directory or the vault inbox at
 \`${inboxPath}\`. Run \`npx -y loredex@latest route\` to file it, or leave it for
 the next \`loredex adopt\`.
+
+Never add \`loredex: routed\` yourself — the router stamps it after filing.
+A pre-stamped file is skipped as already-filed and will never reach the vault.
 ${MARKER_END}
 `
 }

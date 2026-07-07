@@ -45,6 +45,11 @@ Write it into the project's `docs/` directory (or the vault `_inbox/` if the use
 Never write into the vault's `projects/` tree yourself — the router owns that, and it will
 rewrite the file's links when it moves.
 
+Never add `loredex: routed` to a file yourself — the router stamps it after filing. A
+pre-stamped file is skipped as already-filed and will never reach the vault. Project files
+route **directly** to `projects/<project>/<topic>/` (copied, original stamped); `_inbox/`
+is only the lane for files that don't start inside a registered project.
+
 ## Notes
 
 - `adopt` copies by default (originals stay, stamped `loredex: routed`); `--move` relocates.
