@@ -15,6 +15,8 @@
 
 ---
 
+![loredex — every project's agents write markdown; loredex classifies, files, indexes, and hands it off between projects, automatically](docs/assets/loredex-hero.gif)
+
 Claude Code, Codex, and Cursor generate research, findings, gap analyses, and plans as markdown — scattered across repos and sessions, never organized, never findable again. **Loredex automatically classifies and files all of it into one [Obsidian](https://obsidian.md)-compatible vault**: consistent structure, frontmatter, wikilinks, and auto-generated indexes. You never decide which folder anything goes in.
 
 ```text
