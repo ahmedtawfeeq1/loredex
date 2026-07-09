@@ -11,7 +11,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path'
 import { type ClassifyOptions, resolveMeta } from './classify'
 import type { Config } from './config'
 import { emitLoredexEvent } from './events'
-import { type Meta, parseDoc, serializeDoc } from './frontmatter'
+import { type Meta, parseDoc, serializeDoc, stampSchema } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
 import { rewriteLinks } from './relink'
@@ -89,11 +89,11 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
   const written: string[] = []
   for (const [index, item] of items.entries()) {
     const { body } = parseDoc(item.raw)
-    const meta: Meta = {
+    const meta: Meta = stampSchema({
       ...item.meta,
       source: item.meta.source ?? 'manual',
       loredex: 'routed',
-    }
+    })
     // provenance: copies keep a pointer to their origin (inbox moves have none worth keeping).
     // source_path is this machine's absolute path (fast, local); source_project+source_rel
     // are portable — teammates resolve them through their own config.projects roots.

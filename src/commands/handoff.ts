@@ -1,8 +1,9 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { basename, join } from 'node:path'
+import { existsSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import pc from 'picocolors'
 import { findProject, loadConfig } from '../core/config'
+import { ambientGitIdentity, consumeHandoff } from '../core/consume'
 import {
   buildDigest,
   type CurationPlan,
@@ -11,11 +12,10 @@ import {
   projectDir,
   type ScopedNote,
 } from '../core/curate'
-import { type Meta, parseDoc, serializeDoc } from '../core/frontmatter'
+import { type Meta, serializeDoc, stampSchema } from '../core/frontmatter'
 import { rebuildIndexes } from '../core/indexer'
 import { listHandoffs } from '../core/product'
 import { gitAutoCommit, gitPullPush, knownStructure } from '../core/router'
-import { walkMarkdown } from '../core/scan'
 import { slugify, uniquePath } from '../core/vault'
 import { curateWithLlm } from '../llm/curator'
 
@@ -133,7 +133,7 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
     }
   }
 
-  const meta: Meta = {
+  const meta: Meta = stampSchema({
     project: opts.to,
     topic: 'handoffs',
     type: 'handoff',
@@ -144,7 +144,7 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
     status: 'open',
     source: 'loredex',
     loredex: 'routed',
-  }
+  })
   const dest = uniquePath(
     join(config.vaultPath, 'projects', to, 'handoffs'),
     `${today}-handoff-${slugify(from)}.md`,
@@ -189,19 +189,15 @@ export function runHandoffs(opts: HandoffsOptions): void {
   const dir = join(config.vaultPath, 'projects', slugify(project), 'handoffs')
 
   if (opts.consume) {
-    const target = walkMarkdown(dir).find((file) => basename(file, '.md') === opts.consume)
-    if (!target) {
+    try {
+      consumeHandoff(config.vaultPath, config, opts.consume, ambientGitIdentity(config.vaultPath), {
+        project,
+      })
+    } catch {
       console.error(pc.red(`no handoff named "${opts.consume}" in ${dir}`))
       process.exitCode = 1
       return
     }
-    const doc = parseDoc(readFileSync(target, 'utf8'))
-    writeFileSync(
-      target,
-      serializeDoc({ meta: { ...doc.meta, status: 'consumed' }, body: doc.body }),
-    )
-    gitAutoCommit(config.vaultPath, config, `loredex: consume handoff ${opts.consume}`)
-    gitPullPush(config.vaultPath)
     console.log(pc.green('✓'), `consumed: ${opts.consume}`)
     return
   }

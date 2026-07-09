@@ -4,6 +4,13 @@
  */
 export { type Config, defaultVaultPath, loadConfig, saveConfig } from './core/config'
 export {
+  ambientGitIdentity,
+  type ConsumeReceipt,
+  consumeHandoff,
+  type VaultSchemaStatus,
+  vaultSchemaStatus,
+} from './core/consume'
+export {
   type Identity,
   type LoredexEmitter,
   type LoredexEventKind,
@@ -13,9 +20,11 @@ export {
 } from './core/events'
 export {
   type Doc,
+  LOREDEX_SCHEMA,
   type Meta,
   parseDoc,
   serializeDoc,
+  stampSchema,
 } from './core/frontmatter'
 export { rebuildIndexes } from './core/indexer'
 export {

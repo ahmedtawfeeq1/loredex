@@ -1,13 +1,13 @@
 import { readFileSync, realpathSync } from 'node:fs'
-import { basename, join, resolve, sep } from 'node:path'
+import { basename, resolve, sep } from 'node:path'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
 import pkg from '../../package.json'
 import type { Config } from '../core/config'
-import { parseDoc, serializeDoc } from '../core/frontmatter'
+import { ambientGitIdentity, consumeHandoff } from '../core/consume'
+import { parseDoc } from '../core/frontmatter'
 import { buildDashboard, listHandoffs, renderDashboardMarkdown } from '../core/product'
-import { gitAutoCommit, gitPullPush } from '../core/router'
-import { walkMarkdown } from '../core/scan'
+import { gitPullPush } from '../core/router'
 import { sanitizeForContext, searchVault } from '../core/search'
 import { storeNote } from '../core/store'
 import { slugify } from '../core/vault'
@@ -132,17 +132,13 @@ export function createLoredexMcpServer(config: Config): McpServer {
       },
     },
     async ({ project, name }) => {
-      const dir = join(config.vaultPath, 'projects', slugify(project), 'handoffs')
-      const target = walkMarkdown(dir).find((file) => basename(file, '.md') === name)
-      if (!target) return text(`No handoff named "${sanitizeForContext(name, 80)}".`)
-      const doc = parseDoc(readFileSync(target, 'utf8'))
-      const { writeFileSync } = await import('node:fs')
-      writeFileSync(
-        target,
-        serializeDoc({ meta: { ...doc.meta, status: 'consumed' }, body: doc.body }),
-      )
-      gitAutoCommit(config.vaultPath, config, `loredex: consume handoff ${name}`)
-      gitPullPush(config.vaultPath)
+      try {
+        consumeHandoff(config.vaultPath, config, name, ambientGitIdentity(config.vaultPath), {
+          project,
+        })
+      } catch {
+        return text(`No handoff named "${sanitizeForContext(name, 80)}".`)
+      }
       return text(`Consumed: ${sanitizeForContext(name, 80)}.`)
     },
   )

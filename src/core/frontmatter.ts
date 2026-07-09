@@ -3,6 +3,18 @@ import matter from 'gray-matter'
 export const TYPES = ['research', 'finding', 'analysis', 'snapshot', 'note'] as const
 export type FindingType = (typeof TYPES)[number]
 
+/**
+ * Frontmatter schema version this engine writes. v1 = the first versioned schema
+ * (adds consume attribution: consumed_by/consumed_at). Notes without a
+ * `loredex_schema` key predate versioning and are always readable.
+ */
+export const LOREDEX_SCHEMA = 1
+
+/** Stamp engine-written frontmatter with the schema version it conforms to. */
+export function stampSchema(meta: Meta): Meta {
+  return { ...meta, loredex_schema: LOREDEX_SCHEMA }
+}
+
 export interface Meta {
   project?: string
   topic?: string
@@ -21,6 +33,10 @@ export interface Meta {
   from_project?: string
   to_project?: string
   loredex?: string
+  /** consume attribution — closed vocabulary, one writer per transition (schema v1) */
+  consumed_by?: string
+  consumed_at?: string
+  loredex_schema?: number
 }
 
 export interface Doc {

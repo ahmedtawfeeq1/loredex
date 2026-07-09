@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import pc from 'picocolors'
 import { configPath, loadConfig } from '../core/config'
+import { vaultSchemaStatus } from '../core/consume'
 import { detectEditors } from '../core/editors'
 import { claudeAvailable } from '../llm/claude-cli'
 import { codexAvailable } from '../llm/codex-cli'
@@ -24,6 +25,20 @@ export function runDoctor(): void {
       checks.push(['vault git repo', existsSync(join(config.vaultPath, '.git')), ''])
     }
     checks.push(['editor for code links', true, config.editor ?? 'system default'])
+    if (existsSync(config.vaultPath)) {
+      const schema = vaultSchemaStatus(config.vaultPath)
+      checks.push([
+        'frontmatter schema',
+        schema.ok,
+        `vault declares ${schema.declared ?? 'unversioned'}, engine supports ${schema.supported}`,
+      ])
+      if (!schema.ok) {
+        console.log(
+          pc.yellow('!'),
+          `vault notes declare loredex_schema ${schema.declared} but this engine supports ${schema.supported} — update loredex before writing to this vault`,
+        )
+      }
+    }
   }
 
   const editors = detectEditors()
