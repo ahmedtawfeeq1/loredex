@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v1.1.0...loredex-v2.0.0) (2026-07-09)
+
+
+### Features
+
+* generate _index/Dashboard.base — native Obsidian database dashboard ([e66462c](https://github.com/ahmedtawfeeq1/loredex/commit/e66462ccb4f4c485aa4550a64a7711f71e86471c))
+
+
+### Miscellaneous Chores
+
+* cut 2.0.0 — the ecosystem release ([1c93abf](https://github.com/ahmedtawfeeq1/loredex/commit/1c93abf2a18620990905b431874acb5d5a274ba4))
+
 ## [1.1.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v1.0.0...loredex-v1.1.0) (2026-07-07)
 
 
