@@ -37,10 +37,7 @@ const BROKEN_RULE = 'Start\\ Here\\ -\\ Product.md merge=loredex-generated'
  * never writes. Ahead/behind counts are measured against the last-fetched remote ref,
  * so freshness equals the caller's last `git fetch`; callers decide when to fetch.
  */
-export function syncStatus(
-  vaultPath: string,
-  opts: { remoteTimeoutMs?: number } = {},
-): SyncHealth {
+export function syncStatus(vaultPath: string, opts: { remoteTimeoutMs?: number } = {}): SyncHealth {
   const warnings: string[] = []
   const git = (args: string[], timeout?: number): string | null => {
     try {
@@ -79,14 +76,18 @@ export function syncStatus(
       git(['ls-remote', '--heads', health.remote], opts.remoteTimeoutMs ?? 5000) !== null
     if (!health.remoteReachable) warnings.push(`remote "${health.remote}" is not reachable`)
 
-    const remoteHead = git(['symbolic-ref', '--quiet', '--short', `refs/remotes/${health.remote}/HEAD`])
+    const remoteHead = git([
+      'symbolic-ref',
+      '--quiet',
+      '--short',
+      `refs/remotes/${health.remote}/HEAD`,
+    ])
     health.canonicalBranch = remoteHead ? remoteHead.slice(health.remote.length + 1) : null
   } else {
     warnings.push('no git remote configured — vault is local-only')
   }
 
-  health.branchMatches =
-    health.canonicalBranch === null || health.branch === health.canonicalBranch
+  health.branchMatches = health.canonicalBranch === null || health.branch === health.canonicalBranch
   if (!health.branchMatches) {
     warnings.push(
       `on branch "${health.branch}" but the team branch is "${health.canonicalBranch}" — syncs will miss teammates' notes`,
