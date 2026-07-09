@@ -145,6 +145,16 @@ The vault is a plain markdown folder — every sync tool already works:
 
 No loredex server, no account, no lock-in: **your files, any agent, forever.**
 
+## 🔀 One product, many repos — context that follows you
+
+Finish work in the frontend repo, open the mobile-app repo, and the agent already knows
+what was decided. Handoffs carry the baton; hooks do the filing; the MCP server answers
+questions mid-task:
+
+![How context flows from one repo's agent to another through the loredex vault](docs/assets/loredex-flow-guide.gif)
+
+Full walkthrough: [USER-GUIDE — multi-project products](docs/USER-GUIDE.md#multi-project-products-handoffs-between-teams).
+
 ## ❓ FAQ
 
 **Does it delete or rewrite my files?** Never deletes. `adopt` copies by default and stamps originals; `--move` is opt-in. Name collisions get suffixes.
