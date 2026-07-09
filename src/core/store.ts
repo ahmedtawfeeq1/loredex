@@ -1,5 +1,6 @@
 import { writeFileSync } from 'node:fs'
 import type { Config } from './config'
+import { emitLoredexEvent } from './events'
 import { serializeDoc } from './frontmatter'
 import { executePlan, knownStructure, planFile } from './router'
 import { inboxPath, slugify, uniquePath } from './vault'
@@ -46,5 +47,7 @@ export function storeNote(config: Config, input: StoreInput): string {
     knownTopics: known.topics,
   })
   const { written } = executePlan([plan], config.vaultPath, config)
-  return written[0] ?? draft
+  const path = written[0] ?? draft
+  emitLoredexEvent('store', { path })
+  return path
 }

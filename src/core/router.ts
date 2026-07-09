@@ -10,6 +10,7 @@ import {
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { type ClassifyOptions, resolveMeta } from './classify'
 import type { Config } from './config'
+import { emitLoredexEvent } from './events'
 import { type Meta, parseDoc, serializeDoc } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
@@ -131,6 +132,7 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
   if (written.length > 0) {
     rebuildIndexes(vaultPath)
     gitAutoCommit(vaultPath, config, `loredex: route ${written.length} note(s)`)
+    emitLoredexEvent('route', { paths: written })
   }
   return { written }
 }
@@ -220,5 +222,6 @@ export function gitPullPush(vaultPath: string): { pulled: boolean; pushed: boole
   ensureGeneratedMergeDriver(vaultPath) // idempotent — every pull path gets conflict-free generated files
   const pulled = run('pull', '--rebase', '--autostash')
   const pushed = run('push')
+  emitLoredexEvent('sync', { pulled, pushed })
   return { pulled, pushed }
 }

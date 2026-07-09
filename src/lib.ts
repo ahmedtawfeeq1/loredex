@@ -4,6 +4,14 @@
  */
 export { type Config, defaultVaultPath, loadConfig, saveConfig } from './core/config'
 export {
+  type Identity,
+  type LoredexEmitter,
+  type LoredexEventKind,
+  type LoredexEventMap,
+  noopEmitter,
+  setLoredexEmitter,
+} from './core/events'
+export {
   type Doc,
   type Meta,
   parseDoc,
