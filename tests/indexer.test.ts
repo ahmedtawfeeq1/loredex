@@ -33,3 +33,15 @@ describe('indexer', () => {
     expect(moc.indexOf('2026-07-07-third')).toBeLessThan(moc.indexOf('2026-06-05-earlier'))
   })
 })
+
+describe('bases', () => {
+  it('writes Dashboard.base with the core views', () => {
+    const vault = mkdtempSync(join(tmpdir(), 'loredex-base-'))
+    note(vault, 'app', 'topic-a', '2026-07-01-note')
+    rebuildIndexes(vault)
+    const base = readFileSync(join(vault, '_index', 'Dashboard.base'), 'utf8')
+    for (const needle of ['Latest notes', 'Open handoffs', 'By project', 'Stale or superseded'])
+      expect(base).toContain(needle)
+    expect(readFileSync(join(vault, '_index', 'Home.md'), 'utf8')).toContain('Dashboard.base')
+  })
+})
