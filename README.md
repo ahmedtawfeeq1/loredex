@@ -18,7 +18,7 @@
 
 ![loredex — every project's agents write markdown; loredex classifies, files, indexes, and hands it off between projects, automatically](docs/assets/loredex-hero.gif)
 
-Loredex gives coding agents **shared memory, cross-project handoffs, research and validation context, and MCP + [Obsidian](https://obsidian.md) dashboards** so any agent can open any repo, inherit the full story, and start working without a fresh briefing.
+Loredex is a shared memory and control system for coding-agent teamwork across products, projects, and repos. It captures research, findings, validations, decisions, and handoffs in one connected knowledge layer that agents can read through MCP and teams can manage through [Obsidian](https://obsidian.md) dashboards. The result is simple: any agent can open any repo, inherit the full working context, and keep moving from context instead of guesswork.
 
 ## 🚀 Quick Actions
 
