@@ -20,12 +20,24 @@
 
 Claude Code, Codex, and Cursor generate research, findings, gap analyses, and plans as markdown — scattered across repos and sessions, never organized, never findable again. **Loredex automatically classifies and files all of it into one [Obsidian](https://obsidian.md)-compatible vault**: consistent structure, frontmatter, wikilinks, and auto-generated indexes. You never decide which folder anything goes in.
 
-## 📑 Contents
+## 🚀 Quick Actions
 
+| I want to... | Go here |
+|---|---|
+| Understand the problem and the solution fast | [Visual overview](#-visual-overview) |
+| Organize an existing project right now | [Quickstart](#-quickstart) |
+| Install the Claude Code plugin | [Install for Claude Code](#-install-for-claude-code) |
+| Use loredex inside Obsidian | [loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian) |
+| See the full public infographic story | [docs/INFOGRAPHICS.md](docs/INFOGRAPHICS.md) |
+| Learn the full workflow and commands | [docs/USER-GUIDE.md](docs/USER-GUIDE.md) |
+
+## 📑 Table of Contents
+
+- [Quick Actions](#-quick-actions)
+- [Visual overview](#-visual-overview)
 - [Quickstart](#-quickstart)
 - [How it works](#-how-it-works)
 - [The ecosystem](#-the-ecosystem)
-- [Infographics](#-infographics)
 - [Features](#-features)
 - [Install for Claude Code](#-install-for-claude-code)
 - [Works with any agent](#-works-with-any-agent)
@@ -40,6 +52,26 @@ Claude Code, Codex, and Cursor generate research, findings, gap analyses, and pl
 - [Documentation](#-documentation)
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
+
+## 🖼️ Visual Overview
+
+**The problem:** coding agents are productive, but their knowledge ends up scattered across repos, sessions, and random markdown files.
+
+![The problem Loredex solves](docs/assets/02-the-problem.png)
+
+**The solution:** loredex gives every agent a shared filing system, shared memory shape, and shared retrieval layer.
+
+![Loredex architecture](docs/assets/03-architecture.png)
+
+**The outcome:** instead of disconnected notes, you get one navigable vault with indexes, handoffs, and reusable context.
+
+![Before and after comparison](docs/assets/10-before-after.png)
+
+**The fastest way to start:** initialize once, adopt existing markdown, and open the vault in Obsidian.
+
+![Get started flow](docs/assets/09-get-started.png)
+
+Want the full narrative, including design principles, security, curation, MCP, and multi-agent usage? Open [docs/INFOGRAPHICS.md](docs/INFOGRAPHICS.md).
 
 ## ⚡ Quickstart
 
@@ -100,10 +132,6 @@ One core, four shells — same vault, same rules everywhere:
 | **Obsidian plugin** | Native Bases dashboard, open-handoff badge, vault sync, in-app MCP server with `active_note` | **[ahmedtawfeeq1/loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian)** |
 
 The Obsidian plugin embeds this package as a library (`import { createLoredexMcpServer } from 'loredex'`) — one implementation of routing, indexing, and security, re-hosted per surface.
-
-## 🖼️ Infographics
-
-The complete announcement-ready infographic set is in [docs/INFOGRAPHICS.md](docs/INFOGRAPHICS.md). All 13 PNGs live in [`docs/assets/`](docs/assets/) and are ready for GitHub previews, launch posts, and documentation reuse.
 
 ## ✨ Features
 
