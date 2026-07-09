@@ -110,7 +110,7 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
       : []),
     '',
     '---',
-    `_Consume with:_ \`npx -y loredex@latest handoffs --consume <this note's name>\``,
+    `_Consume with:_ \`loredex handoffs --consume <this note's name>\` (use this project's own loredex invocation — do not switch to a global install)`,
   ].join('\n')
 
   console.log()
@@ -252,7 +252,7 @@ export function runHandoffs(opts: HandoffsOptions): void {
       console.log(`  read the full brief before planning related work: ${handoff.path}`)
     }
     console.log(
-      '[loredex] After acting on a handoff, mark it done: npx -y loredex@latest handoffs --consume <name>',
+      '[loredex] After acting on a handoff, mark it done with this project\'s loredex: loredex handoffs --consume <name>',
     )
     return
   }

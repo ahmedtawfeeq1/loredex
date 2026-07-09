@@ -168,11 +168,20 @@ export function ensureGeneratedMergeDriver(vaultPath: string): void {
     const infoDir = join(gitDir, 'info')
     mkdirSync(infoDir, { recursive: true })
     const attributesPath = join(infoDir, 'attributes')
+    // gitattributes has no backslash-escape for spaces — patterns with spaces must be quoted
     const rules = [
       '_index/** merge=loredex-generated',
-      'Start\\ Here\\ -\\ Product.md merge=loredex-generated',
+      '"Start Here - Product.md" merge=loredex-generated',
     ]
-    const existing = existsSync(attributesPath) ? readFileSync(attributesPath, 'utf8') : ''
+    const brokenRule = 'Start\\ Here\\ -\\ Product.md merge=loredex-generated'
+    let existing = existsSync(attributesPath) ? readFileSync(attributesPath, 'utf8') : ''
+    if (existing.includes(brokenRule)) {
+      existing = existing
+        .split('\n')
+        .filter((line) => line.trim() !== brokenRule)
+        .join('\n')
+      writeFileSync(attributesPath, existing)
+    }
     const missing = rules.filter((rule) => !existing.includes(rule))
     if (missing.length > 0) {
       writeFileSync(
