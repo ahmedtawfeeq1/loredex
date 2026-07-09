@@ -2,7 +2,7 @@
 
 # 📖 loredex
 
-**Your coding agents write hundreds of markdown files.<br>Loredex gives them a brain to put them in.**
+**The universal control system for coding-agent teamwork across products, projects, and repos.**
 
 [![CI](https://github.com/ahmedtawfeeq1/loredex/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmedtawfeeq1/loredex/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/loredex?color=cb3837)](https://www.npmjs.com/package/loredex)
@@ -18,7 +18,7 @@
 
 ![loredex — every project's agents write markdown; loredex classifies, files, indexes, and hands it off between projects, automatically](docs/assets/loredex-hero.gif)
 
-Claude Code, Codex, and Cursor generate research, findings, gap analyses, and plans as markdown — scattered across repos and sessions, never organized, never findable again. **Loredex automatically classifies and files all of it into one [Obsidian](https://obsidian.md)-compatible vault**: consistent structure, frontmatter, wikilinks, and auto-generated indexes. You never decide which folder anything goes in.
+Loredex gives coding agents **shared memory, cross-project handoffs, research and validation context, and MCP + [Obsidian](https://obsidian.md) dashboards** so any agent can open any repo, inherit the full story, and start working without a fresh briefing.
 
 ## 🚀 Quick Actions
 

@@ -1,7 +1,7 @@
 {
   "name": "loredex",
   "version": "2.0.0",
-  "description": "Auto-organize AI-generated markdown into an Obsidian-compatible vault. Your coding agents write hundreds of files — loredex gives them a brain to put them in.",
+  "description": "Universal control system for coding agents: shared memory, cross-project handoffs, research management, and MCP + Obsidian dashboards across products and repos.",
   "type": "module",
   "license": "MIT",
   "author": "Ahmed Tawfeeq",
