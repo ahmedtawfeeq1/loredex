@@ -20,6 +20,7 @@
 
 Loredex is a shared memory and control system for coding-agent teamwork across products, projects, and repos. It captures research, findings, validations, decisions, and handoffs in one connected knowledge layer that agents can read through MCP and teams can manage through [Obsidian](https://obsidian.md) dashboards. The result is simple: any agent can open any repo, inherit the full working context, and keep moving from context instead of guesswork.
 
+<a id="quick-actions"></a>
 ## 🚀 Quick Actions
 
 | I want to... | Go here |
@@ -31,6 +32,7 @@ Loredex is a shared memory and control system for coding-agent teamwork across p
 | See the full public infographic story | [docs/INFOGRAPHICS.md](docs/INFOGRAPHICS.md) |
 | Learn the full workflow and commands | [docs/USER-GUIDE.md](docs/USER-GUIDE.md) |
 
+<a id="table-of-contents"></a>
 ## 📑 Table of Contents
 
 - [Quick Actions](#quick-actions)
@@ -53,6 +55,7 @@ Loredex is a shared memory and control system for coding-agent teamwork across p
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 
+<a id="visual-overview"></a>
 ## 🖼️ Visual Overview
 
 **The problem:** coding agents are productive, but their knowledge ends up scattered across repos, sessions, and random markdown files.
@@ -73,6 +76,7 @@ Loredex is a shared memory and control system for coding-agent teamwork across p
 
 Want the full narrative, including design principles, security, curation, MCP, and multi-agent usage? Open [docs/INFOGRAPHICS.md](docs/INFOGRAPHICS.md).
 
+<a id="quickstart"></a>
 ## ⚡ Quickstart
 
 Organize an existing project in 60 seconds:
@@ -102,6 +106,7 @@ Originals stay in place (stamped with `loredex: routed` so they're never re-adop
 > [!TIP]
 > **Read the index, not the folder tree.** Pin `_index/<project>.md` — topics are ordered by latest activity (newest first, date in every heading) — or open `_index/Dashboard.base` for a native, sortable database of every note. Obsidian sorts folders alphabetically and always will; the indexes are the front door.
 
+<a id="how-it-works"></a>
 ## 🧠 How it works
 
 ```text
@@ -120,6 +125,7 @@ Originals stay in place (stamped with `loredex: routed` so they're never re-adop
 
 **Design guarantees:** never deletes anything · idempotent (run twice, nothing changes) · plain markdown, zero lock-in.
 
+<a id="the-ecosystem"></a>
 ## 🧩 The ecosystem
 
 One core, four shells — same vault, same rules everywhere:
@@ -133,6 +139,7 @@ One core, four shells — same vault, same rules everywhere:
 
 The Obsidian plugin embeds this package as a library (`import { createLoredexMcpServer } from 'loredex'`) — one implementation of routing, indexing, and security, re-hosted per surface.
 
+<a id="features"></a>
 ## ✨ Features
 
 <details>
@@ -187,6 +194,7 @@ The Obsidian plugin embeds this package as a library (`import { createLoredexMcp
 
 </details>
 
+<a id="install-for-claude-code"></a>
 ## 🔌 Install for Claude Code
 
 ```text
@@ -202,6 +210,7 @@ The plugin adds:
 
 Then once per project: `npx loredex init`. Forget about filing forever.
 
+<a id="works-with-any-agent"></a>
 ## 🤝 Works with any agent
 
 Loredex operates on **files, not agent APIs**. `loredex init` writes the conventions into `AGENTS.md` (read by Codex, Cursor, Copilot, and friends), `CLAUDE.md`, and `.cursor/rules/`. Any tool that writes markdown with this frontmatter participates:
@@ -222,6 +231,7 @@ tags: []
 
 Claude Code's hooks fire in any IDE-hosted terminal (VS Code, Cursor, Antigravity). Native IDE side-panel agents have no hooks — for those, run `loredex watch` (routes on change) or `loredex route` manually. The full protocol is one page: [docs/VAULT-SPEC.md](docs/VAULT-SPEC.md). Using BMAD or Spec Kit? Paste-in snippets: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
+<a id="commands"></a>
 ## 📋 Commands
 
 | Command | What it does |
@@ -242,6 +252,7 @@ Claude Code's hooks fire in any IDE-hosted terminal (VS Code, Cursor, Antigravit
 
 Full walkthrough of every command plus a guided test checklist: [docs/USER-GUIDE.md](docs/USER-GUIDE.md).
 
+<a id="curate"></a>
 ## 🧭 Curate
 
 Filing solves storage; `curate` solves *"where do I start?"*:
@@ -254,6 +265,7 @@ An agent reads a tiered digest of the scoped notes and writes a **Start Here bri
 
 Same safety rules: dry-run first, never deletes, merge suggestions are flags — you decide.
 
+<a id="one-product-many-repos"></a>
 ## 🔀 One product, many repos
 
 Finish work in the frontend repo, open the mobile-app repo, and the agent already knows what was decided. Handoffs carry the baton; hooks do the filing; the MCP server answers questions mid-task:
@@ -262,6 +274,7 @@ Finish work in the frontend repo, open the mobile-app repo, and the agent alread
 
 Full walkthrough: [USER-GUIDE — multi-project products](docs/USER-GUIDE.md#multi-project-products-handoffs-between-teams).
 
+<a id="agents-read-the-vault-mcp"></a>
 ## 🤖 Agents read the vault: MCP
 
 `loredex init` wires an MCP entry into your project's `.mcp.json` — agents get six tools mid-task instead of asking you to re-explain:
@@ -274,6 +287,7 @@ Full walkthrough: [USER-GUIDE — multi-project products](docs/USER-GUIDE.md#mul
 
 Every response is length-bounded, control-character-stripped, and framed as *data, never instructions*.
 
+<a id="browse-it-obsidian"></a>
 ## 🔮 Browse it: Obsidian
 
 The vault is Obsidian-native out of the box — graph view, backlinks, properties. Two levels:
@@ -281,6 +295,7 @@ The vault is Obsidian-native out of the box — graph view, backlinks, propertie
 1. **No plugin needed**: open `_index/Dashboard.base` — a native Bases database (Obsidian ≥ 1.9) with latest-notes, open-handoffs, by-project, and stale views. Regenerated by loredex, queried live by Obsidian.
 2. **[loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian)** plugin adds: one-click dashboard (ribbon + command), an **open-handoff badge** in the status bar, **vault sync** from inside Obsidian, and an **MCP server inside the app** — agents get everything above plus `active_note`, the note you're looking at right now. Install via [BRAT](https://obsidian.md/plugins?id=obsidian42-brat) → `ahmedtawfeeq1/loredex-obsidian`.
 
+<a id="sync-across-devices"></a>
 ## ☁️ Sync across devices
 
 The vault is a plain markdown folder — every sync tool already works:
@@ -293,6 +308,7 @@ The vault is a plain markdown folder — every sync tool already works:
 
 No loredex server, no account, no lock-in: **your files, any agent, forever.**
 
+<a id="security-model"></a>
 ## 🔒 Security model
 
 Vault content is treated as **untrusted input** end to end:
@@ -302,6 +318,7 @@ Vault content is treated as **untrusted input** end to end:
 - `source_path` from frontmatter never reaches a shell — array-args `execFile` only, absolute-path guarded
 - Nothing is ever deleted; `reset` removes only vault-owned copies
 
+<a id="faq"></a>
 ## ❓ FAQ
 
 **Does it delete or rewrite my files?** Never deletes. `adopt` copies by default and stamps originals; `--move` is opt-in. Name collisions get suffixes.
@@ -314,6 +331,7 @@ Vault content is treated as **untrusted input** end to end:
 
 **Why isn't my newest topic at the top of Obsidian's file tree?** Obsidian sorts folders alphabetically — no setting changes that. Use `_index/<project>.md` (topics newest-first with dates) or the Dashboard base.
 
+<a id="documentation"></a>
 ## 📚 Documentation
 
 | Doc | What's in it |
@@ -325,6 +343,7 @@ Vault content is treated as **untrusted input** end to end:
 | [INTEGRATIONS](docs/INTEGRATIONS.md) | BMAD + Spec Kit paste-in snippets |
 | [loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian) | The Obsidian plugin — install, settings, network disclosure |
 
+<a id="roadmap"></a>
 ## 🗺️ Roadmap
 
 - [x] `curate` — objective-driven briefs, stale/drift/orphan detection, semantic links
@@ -336,6 +355,7 @@ Vault content is treated as **untrusted input** end to end:
 - [ ] Semantic search over the vault
 - [ ] Cursor-native hook adapter
 
+<a id="contributing"></a>
 ## 🛠️ Contributing
 
 PRs welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (the whole design fits on one page). Good first issues are labeled [`good first issue`](https://github.com/ahmedtawfeeq1/loredex/labels/good%20first%20issue).
