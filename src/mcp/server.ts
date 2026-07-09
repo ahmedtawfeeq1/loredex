@@ -5,7 +5,7 @@ import { z } from 'zod'
 import pkg from '../../package.json'
 import type { Config } from '../core/config'
 import { parseDoc, serializeDoc } from '../core/frontmatter'
-import { buildDashboard, collectProductHandoffs, renderDashboardMarkdown } from '../core/product'
+import { buildDashboard, listHandoffs, renderDashboardMarkdown } from '../core/product'
 import { gitAutoCommit, gitPullPush } from '../core/router'
 import { walkMarkdown } from '../core/scan'
 import { sanitizeForContext, searchVault } from '../core/search'
@@ -105,9 +105,11 @@ export function createLoredexMcpServer(config: Config): McpServer {
       gitPullPush(config.vaultPath)
       const today = new Date().toISOString().slice(0, 10)
       const slug = slugify(project)
-      const open = collectProductHandoffs(config.vaultPath, today).filter(
-        (handoff) => handoff.status === 'open' && handoff.to === slug,
-      )
+      const open = listHandoffs(
+        config.vaultPath,
+        { direction: 'inbox', project: slug },
+        today,
+      ).filter((handoff) => handoff.status === 'open')
       if (open.length === 0) return text(`No open handoffs for ${slug}.`)
       const lines = open.map(
         (handoff) =>

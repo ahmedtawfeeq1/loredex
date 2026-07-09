@@ -13,6 +13,7 @@ import {
 } from '../core/curate'
 import { type Meta, parseDoc, serializeDoc } from '../core/frontmatter'
 import { rebuildIndexes } from '../core/indexer'
+import { listHandoffs } from '../core/product'
 import { gitAutoCommit, gitPullPush, knownStructure } from '../core/router'
 import { walkMarkdown } from '../core/scan'
 import { slugify, uniquePath } from '../core/vault'
@@ -217,22 +218,16 @@ export function runHandoffs(opts: HandoffsOptions): void {
       .trim()
       .slice(0, max)
 
-  const open: Array<{ name: string; from: string; objective: string; path: string }> = []
-  for (const file of walkMarkdown(dir)) {
-    try {
-      const meta = parseDoc(readFileSync(file, 'utf8')).meta
-      if (meta.status === 'open') {
-        open.push({
-          name: clean(basename(file, '.md'), 80),
-          from: clean(meta.from_project ?? '?', 80),
-          objective: clean(meta.objective ?? '', 200),
-          path: file,
-        })
-      }
-    } catch {
-      // unreadable note — skip
-    }
-  }
+  // one collector for CLI, MCP, and app — path-sorted to match the old walk order
+  const open = listHandoffs(config.vaultPath, { direction: 'inbox', project })
+    .filter((card) => card.status === 'open')
+    .sort((a, b) => a.path.localeCompare(b.path))
+    .map((card) => ({
+      name: clean(card.name, 80),
+      from: clean(card.from, 80),
+      objective: clean(card.objective, 200),
+      path: card.path,
+    }))
   if (open.length === 0) {
     if (!opts.quiet) console.log(pc.dim(`no open handoffs for ${slugify(project)}`))
     return
@@ -252,7 +247,7 @@ export function runHandoffs(opts: HandoffsOptions): void {
       console.log(`  read the full brief before planning related work: ${handoff.path}`)
     }
     console.log(
-      '[loredex] After acting on a handoff, mark it done with this project\'s loredex: loredex handoffs --consume <name>',
+      "[loredex] After acting on a handoff, mark it done with this project's loredex: loredex handoffs --consume <name>",
     )
     return
   }

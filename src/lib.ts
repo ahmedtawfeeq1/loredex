@@ -21,6 +21,9 @@ export { rebuildIndexes } from './core/indexer'
 export {
   buildDashboard,
   collectProductHandoffs,
+  type HandoffCard,
+  type HandoffScope,
+  listHandoffs,
   listProjects,
   PRODUCT_BRIEF_NAME,
   type ProductDashboard,
