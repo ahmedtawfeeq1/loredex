@@ -155,7 +155,8 @@ describe('gitPullPush', () => {
     expect(gitPullPush(notRepo)).toEqual({ pulled: false, pushed: false })
   })
 
-  it('pulls and pushes when a remote exists', () => {
+  // many git spawns — generous timeout for parallel-suite contention
+  it('pulls and pushes when a remote exists', { timeout: 30_000 }, () => {
     const base = mkdtempSync(join(tmpdir(), 'loredex-sync2-'))
     const remote = join(base, 'remote.git')
     const clone = join(base, 'clone')

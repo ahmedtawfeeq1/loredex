@@ -43,6 +43,7 @@ export {
 } from './core/product'
 export { ensureGeneratedMergeDriver, gitAutoCommit, gitPullPush } from './core/router'
 export { type SearchHit, sanitizeForContext, searchVault } from './core/search'
+export { type SyncHealth, syncStatus } from './core/sync-status'
 export { type StoreInput, storeNote } from './core/store'
 export { inboxPath, scaffoldVault, slugify } from './core/vault'
 export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'
