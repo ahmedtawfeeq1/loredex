@@ -24,34 +24,34 @@ Claude Code, Codex, and Cursor generate research, findings, gap analyses, and pl
 
 | I want to... | Go here |
 |---|---|
-| Understand the problem and the solution fast | [Visual overview](#-visual-overview) |
-| Organize an existing project right now | [Quickstart](#-quickstart) |
-| Install the Claude Code plugin | [Install for Claude Code](#-install-for-claude-code) |
+| Understand the problem and the solution fast | [Visual overview](#visual-overview) |
+| Organize an existing project right now | [Quickstart](#quickstart) |
+| Install the Claude Code plugin | [Install for Claude Code](#install-for-claude-code) |
 | Use loredex inside Obsidian | [loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian) |
 | See the full public infographic story | [docs/INFOGRAPHICS.md](docs/INFOGRAPHICS.md) |
 | Learn the full workflow and commands | [docs/USER-GUIDE.md](docs/USER-GUIDE.md) |
 
 ## 📑 Table of Contents
 
-- [Quick Actions](#-quick-actions)
-- [Visual overview](#-visual-overview)
-- [Quickstart](#-quickstart)
-- [How it works](#-how-it-works)
-- [The ecosystem](#-the-ecosystem)
-- [Features](#-features)
-- [Install for Claude Code](#-install-for-claude-code)
-- [Works with any agent](#-works-with-any-agent)
-- [Commands](#-commands)
-- [Curate](#-curate)
-- [One product, many repos](#-one-product-many-repos)
-- [Agents read the vault: MCP](#-agents-read-the-vault-mcp)
-- [Browse it: Obsidian](#-browse-it-obsidian)
-- [Sync across devices](#-sync-across-devices)
-- [Security model](#-security-model)
-- [FAQ](#-faq)
-- [Documentation](#-documentation)
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
+- [Quick Actions](#quick-actions)
+- [Visual overview](#visual-overview)
+- [Quickstart](#quickstart)
+- [How it works](#how-it-works)
+- [The ecosystem](#the-ecosystem)
+- [Features](#features)
+- [Install for Claude Code](#install-for-claude-code)
+- [Works with any agent](#works-with-any-agent)
+- [Commands](#commands)
+- [Curate](#curate)
+- [One product, many repos](#one-product-many-repos)
+- [Agents read the vault: MCP](#agents-read-the-vault-mcp)
+- [Browse it: Obsidian](#browse-it-obsidian)
+- [Sync across devices](#sync-across-devices)
+- [Security model](#security-model)
+- [FAQ](#faq)
+- [Documentation](#documentation)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
 
 ## 🖼️ Visual Overview
 
