@@ -25,6 +25,7 @@ Claude Code, Codex, and Cursor generate research, findings, gap analyses, and pl
 - [Quickstart](#-quickstart)
 - [How it works](#-how-it-works)
 - [The ecosystem](#-the-ecosystem)
+- [Infographics](#-infographics)
 - [Features](#-features)
 - [Install for Claude Code](#-install-for-claude-code)
 - [Works with any agent](#-works-with-any-agent)
@@ -99,6 +100,10 @@ One core, four shells — same vault, same rules everywhere:
 | **Obsidian plugin** | Native Bases dashboard, open-handoff badge, vault sync, in-app MCP server with `active_note` | **[ahmedtawfeeq1/loredex-obsidian](https://github.com/ahmedtawfeeq1/loredex-obsidian)** |
 
 The Obsidian plugin embeds this package as a library (`import { createLoredexMcpServer } from 'loredex'`) — one implementation of routing, indexing, and security, re-hosted per surface.
+
+## 🖼️ Infographics
+
+The complete announcement-ready infographic set is in [docs/INFOGRAPHICS.md](docs/INFOGRAPHICS.md). All 13 PNGs live in [`docs/assets/`](docs/assets/) and are ready for GitHub previews, launch posts, and documentation reuse.
 
 ## ✨ Features
 
@@ -285,6 +290,7 @@ Vault content is treated as **untrusted input** end to end:
 
 | Doc | What's in it |
 |---|---|
+| [INFOGRAPHICS](docs/INFOGRAPHICS.md) | Full visual walkthrough of the product story with all 13 announcement-ready PNGs |
 | [USER-GUIDE](docs/USER-GUIDE.md) | Every command, lifecycle-organized, plus a guided test-drive and the multi-repo team walkthrough |
 | [VAULT-SPEC](docs/VAULT-SPEC.md) | The one-page protocol: layout, frontmatter contract, link policy, provenance |
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | Design on one page — core modules, four shells, decisions |
