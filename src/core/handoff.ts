@@ -131,10 +131,11 @@ export function createHandoff(
     '',
     `**Objective:** ${input.objective}`,
     ...(input.body ? ['', input.body.trim()] : []),
-    '',
-    '## Reading order',
-    '',
-    ...input.notes.map((name, i) => `${i + 1}. [[${name}]]`),
+    // no notes (replies often carry none) → no section: an empty "## Reading
+    // order" renders as a silent empty list in every reader (desktop 16.1)
+    ...(input.notes.length > 0
+      ? ['', '## Reading order', '', ...input.notes.map((name, i) => `${i + 1}. [[${name}]]`)]
+      : []),
     ...(input.nextActions?.length
       ? ['', '## Next actions', '', ...input.nextActions.map((action) => `- ${action}`)]
       : []),

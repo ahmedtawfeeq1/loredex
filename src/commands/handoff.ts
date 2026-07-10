@@ -100,18 +100,18 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
 
   const known = new Set(notes.map((note) => note.name))
   const today = new Date().toISOString().slice(0, 10)
+  // unknown LLM names are dropped; if that empties the list, write NO section —
+  // an empty "## Reading order" renders as a silent empty list (desktop 16.1)
+  const readingOrder = plan.reading_order.filter((name) => known.has(name))
   const body = [
     `# Handoff — ${slugify(from)} → ${to}`,
     '',
     `**Objective:** ${plan.objective}`,
     '',
     plan.brief.trim(),
-    '',
-    '## Reading order',
-    '',
-    ...plan.reading_order
-      .filter((name) => known.has(name))
-      .map((name, i) => `${i + 1}. [[${name}]]`),
+    ...(readingOrder.length > 0
+      ? ['', '## Reading order', '', ...readingOrder.map((name, i) => `${i + 1}. [[${name}]]`)]
+      : []),
     ...(plan.next_actions.length > 0
       ? ['', '## Next actions', '', ...plan.next_actions.map((a) => `- ${a}`)]
       : []),
@@ -123,7 +123,7 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
   console.log()
   console.log(pc.bold('objective:'), plan.objective)
   console.log(pc.bold('brief:'), `${plan.brief.replace(/\s+/g, ' ').slice(0, 240)}…`)
-  console.log(pc.bold('reading order:'), plan.reading_order.filter((n) => known.has(n)).join(', '))
+  console.log(pc.bold('reading order:'), readingOrder.join(', ') || pc.dim('(none in scope)'))
 
   if (opts.dryRun) {
     console.log(pc.dim('dry run — nothing written'))

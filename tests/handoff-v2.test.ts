@@ -148,6 +148,26 @@ describe('handoff write APIs (schema v2)', () => {
       expect(existsSync(join(vault, 'projects', 'backend'))).toBe(false)
     })
 
+    it('omits the Reading order section entirely when no notes are named (desktop 16.1)', () => {
+      // regression: reply handoffs with notes: [] used to write an empty
+      // "## Reading order" heading that rendered as a silent empty list
+      const result = createHandoff(
+        vault,
+        config,
+        {
+          fromProject: 'ai-engine',
+          toProject: 'backend',
+          objective: 'status only — nothing to read',
+          kind: 'delivery',
+          notes: [],
+        },
+        IDENTITY,
+      )
+      const doc = parseDoc(readFileSync(result.path, 'utf8'))
+      expect(doc.body).not.toContain('## Reading order')
+      expect(doc.body).toContain('**Objective:** status only — nothing to read')
+    })
+
     it('suffixes same-day collisions instead of overwriting', () => {
       const input = {
         fromProject: 'ai-engine',
