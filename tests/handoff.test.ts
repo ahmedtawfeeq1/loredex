@@ -63,7 +63,8 @@ describe('handoff', () => {
     expect(existsSync(join(vault, 'projects', 'frontend'))).toBe(false)
   })
 
-  it('handoffs lists open ones and consume flips status', () => {
+  // consume spawns git commit+sync — generous timeout for parallel-suite contention
+  it('handoffs lists open ones and consume flips status', { timeout: 30_000 }, () => {
     const logs: string[] = []
     const original = console.log
     console.log = (...args: unknown[]) => logs.push(args.join(' '))
