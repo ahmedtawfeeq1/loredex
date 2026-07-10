@@ -35,9 +35,12 @@ export {
   HandoffError,
   type HandoffErrorCode,
   type HandoffTransition,
+  previewRoute,
   replyToHandoff,
   resolveHandoffPath,
   routeFile,
+  type RouteOptions,
+  type RoutePlanPreview,
   type StatusReceipt,
   setHandoffStatus,
 } from './core/handoff'

@@ -10,6 +10,7 @@ import {
   annotateHandoff,
   createHandoff,
   HandoffError,
+  previewRoute,
   replyToHandoff,
   resolveHandoffPath,
   routeFile,
@@ -464,6 +465,45 @@ describe('handoff write APIs (schema v2)', () => {
       const meta = parseDoc(readFileSync(written[0] as string, 'utf8')).meta
       expect(meta.loredex).toBe('routed')
       expect(meta.loredex_schema).toBe(LOREDEX_SCHEMA)
+    })
+
+    it('previewRoute shows the executor-exact destination + frontmatter without writing', () => {
+      const src = join(sandbox, 'preview-finding.md')
+      writeFileSync(
+        src,
+        '---\nproject: backend\ntopic: api\ntype: finding\ndate: "2026-07-03"\n---\n# finding\n',
+      )
+      const preview = previewRoute(vault, src, { mode: 'move' })
+      expect(preview.destination).toContain(join('projects', 'backend', 'api'))
+      expect(preview.meta.loredex).toBe('routed')
+      expect(preview.meta.loredex_schema).toBe(LOREDEX_SCHEMA)
+      // read-only: nothing written, no directory invented, source untouched
+      expect(existsSync(preview.destination)).toBe(false)
+      expect(existsSync(join(vault, 'projects', 'backend', 'api'))).toBe(false)
+      expect(parseDoc(readFileSync(src, 'utf8')).meta.loredex).toBeUndefined()
+
+      // executing the same options lands exactly where the preview said
+      const { written } = routeFile(vault, config, src, { mode: 'move' })
+      expect(written).toEqual([preview.destination])
+    })
+
+    it('previewRoute suffixes collisions exactly like the executor', () => {
+      // fixture note 2026-07-01-endpoints.md exists in ai-engine/api; collide with it
+      const clash = join(sandbox, 'endpoints.md')
+      writeFileSync(
+        clash,
+        '---\nproject: ai-engine\ntopic: api\ntype: finding\ndate: "2026-07-01"\n---\n# clash\n',
+      )
+      const preview = previewRoute(vault, clash, { mode: 'copy', projectRoot: sandbox })
+      expect(preview.destination.endsWith('2026-07-01-endpoints-2.md')).toBe(true)
+    })
+
+    it('previewRoute without a project falls back to research/ — the ambiguity signal', () => {
+      const src = join(sandbox, 'orphan.md')
+      writeFileSync(src, '# no frontmatter at all\n')
+      const preview = previewRoute(vault, src, { mode: 'move' })
+      expect(preview.meta.project).toBeFalsy()
+      expect(preview.destination).toContain(join(vault, 'research'))
     })
 
     it('copy mode stamps the original as routed and keeps it in place', () => {

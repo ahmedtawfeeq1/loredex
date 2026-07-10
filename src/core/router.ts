@@ -71,6 +71,30 @@ export interface ExecuteResult {
   written: string[]
 }
 
+/**
+ * The exact frontmatter `executePlan` writes for one plan item — shared with read-only
+ * previews (`previewRoute`) so what a host confirms is what the executor stamps.
+ * Provenance: copies keep a pointer to their origin (inbox moves have none worth
+ * keeping). source_path is this machine's absolute path (fast, local);
+ * source_project+source_rel are portable — teammates resolve them through their own
+ * config.projects roots.
+ */
+export function plannedMeta(item: PlanItem): Meta {
+  const meta: Meta = stampSchema({
+    ...item.meta,
+    source: item.meta.source ?? 'manual',
+    loredex: 'routed',
+  })
+  if (item.mode === 'copy') {
+    meta.source_path = resolve(item.source)
+    if (item.sourceRoot && meta.project) {
+      meta.source_project = slugify(meta.project)
+      meta.source_rel = relative(resolve(item.sourceRoot), resolve(item.source))
+    }
+  }
+  return meta
+}
+
 export function executePlan(items: PlanItem[], vaultPath: string, config: Config): ExecuteResult {
   // resolve every destination first so same-batch collisions suffix correctly and
   // cross-references between adopted files can be rewritten to vault wikilinks
@@ -89,21 +113,7 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
   const written: string[] = []
   for (const [index, item] of items.entries()) {
     const { body } = parseDoc(item.raw)
-    const meta: Meta = stampSchema({
-      ...item.meta,
-      source: item.meta.source ?? 'manual',
-      loredex: 'routed',
-    })
-    // provenance: copies keep a pointer to their origin (inbox moves have none worth keeping).
-    // source_path is this machine's absolute path (fast, local); source_project+source_rel
-    // are portable — teammates resolve them through their own config.projects roots.
-    if (item.mode === 'copy') {
-      meta.source_path = resolve(item.source)
-      if (item.sourceRoot && meta.project) {
-        meta.source_project = slugify(meta.project)
-        meta.source_rel = relative(resolve(item.sourceRoot), resolve(item.source))
-      }
-    }
+    const meta = plannedMeta(item)
 
     // ghost-link hygiene, then rewire links: batch siblings → wikilinks,
     // existing files → editor/file deep links, unresolvable → untouched

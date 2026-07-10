@@ -4,7 +4,7 @@
  * desktop app) flows through these — the anti-second-engine rule. NO LLM anywhere:
  * briefs are assembled verbatim from caller inputs.
  */
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import type { Config } from './config'
 import { collectNotes } from './curate'
@@ -12,7 +12,15 @@ import { emitLoredexEvent, type Identity } from './events'
 import { type Meta, parseDoc, serializeDoc, stampSchema } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { listProjects } from './product'
-import { executePlan, gitAutoCommit, gitPullPush, knownStructure, planFile } from './router'
+import {
+  executePlan,
+  gitAutoCommit,
+  gitPullPush,
+  knownStructure,
+  planFile,
+  type PlanItem,
+  plannedMeta,
+} from './router'
 import { walkMarkdown } from './scan'
 import { slugify, stampEngineSchema, uniquePath } from './vault'
 
@@ -323,6 +331,49 @@ export function annotateHandoff(
   return { id: basename(dest, '.md'), path: dest, pushed }
 }
 
+export interface RouteOptions {
+  mode: 'move' | 'copy'
+  projectName?: string
+  projectRoot?: string
+}
+
+function buildRoutePlan(vaultPath: string, path: string, opts: RouteOptions): PlanItem {
+  const raw = readFileSync(path, 'utf8')
+  const known = knownStructure(vaultPath)
+  return planFile(path, raw, opts.mode, vaultPath, {
+    projectRoot: opts.projectRoot ?? dirname(path),
+    projectName: opts.projectName ?? '',
+    useLlm: false,
+    knownProjects: known.projects,
+    knownTopics: known.topics,
+  })
+}
+
+export interface RoutePlanPreview {
+  /** absolute destination path, collision-suffixed exactly like the executor would */
+  destination: string
+  /** the exact frontmatter the route would stamp (shared with executePlan) */
+  meta: Meta
+}
+
+/**
+ * The plan half of `routeFile`, read-only: destination + invented frontmatter so a
+ * host can show a confirm step before anything is written. Same collision walk as
+ * `uniquePath`, minus the mkdir — a preview must not touch the vault.
+ */
+export function previewRoute(
+  vaultPath: string,
+  path: string,
+  opts: RouteOptions,
+): RoutePlanPreview {
+  const plan = buildRoutePlan(vaultPath, path, opts)
+  let destination = join(plan.destDir, plan.destName)
+  for (let i = 2; existsSync(destination); i++) {
+    destination = join(plan.destDir, plan.destName.replace(/\.md$/, `-${i}.md`))
+  }
+  return { destination, meta: plannedMeta(plan) }
+}
+
 /**
  * Route one file into the vault, plan+execute in one call — pure composition of the
  * router (`knownStructure` + `planFile` + `executePlan`), heuristics only (no LLM).
@@ -331,16 +382,7 @@ export function routeFile(
   vaultPath: string,
   config: Config,
   path: string,
-  opts: { mode: 'move' | 'copy'; projectName?: string; projectRoot?: string },
+  opts: RouteOptions,
 ): { written: string[] } {
-  const raw = readFileSync(path, 'utf8')
-  const known = knownStructure(vaultPath)
-  const plan = planFile(path, raw, opts.mode, vaultPath, {
-    projectRoot: opts.projectRoot ?? dirname(path),
-    projectName: opts.projectName ?? '',
-    useLlm: false,
-    knownProjects: known.projects,
-    knownTopics: known.topics,
-  })
-  return executePlan([plan], vaultPath, config)
+  return executePlan([buildRoutePlan(vaultPath, path, opts)], vaultPath, config)
 }
