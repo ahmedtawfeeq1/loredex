@@ -7,6 +7,8 @@ on:
 
 jobs:
   test:
+    # release-please's PR only bumps version/changelog — CI on it is noise ("Action required" gate)
+    if: ${{ !startsWith(github.head_ref, 'release-please--') }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
