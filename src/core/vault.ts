@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
-import type { Meta } from './frontmatter'
+import { LOREDEX_SCHEMA, type Meta } from './frontmatter'
 
 export function scaffoldVault(vaultPath: string): void {
   for (const dir of ['_inbox', '_index', 'projects', 'research']) {
@@ -9,6 +9,27 @@ export function scaffoldVault(vaultPath: string): void {
   const home = join(vaultPath, '_index', 'Home.md')
   if (!existsSync(home)) {
     writeFileSync(home, '# Home\n\nIndexes are rebuilt by `loredex route`.\n')
+  }
+  stampEngineSchema(vaultPath)
+}
+
+/**
+ * Team-visible engine declaration: `.loredex/engine.json` records the newest frontmatter
+ * schema any engine has written into this vault, so older engines (and `loredex doctor`)
+ * can warn before writing. Written on scaffold and on every versioned write; only ever
+ * moves forward, and never breaks a vault operation.
+ */
+export function stampEngineSchema(vaultPath: string): void {
+  const file = join(vaultPath, '.loredex', 'engine.json')
+  try {
+    if (existsSync(file)) {
+      const current = JSON.parse(readFileSync(file, 'utf8')) as { schema?: number }
+      if (typeof current.schema === 'number' && current.schema >= LOREDEX_SCHEMA) return
+    }
+    mkdirSync(join(vaultPath, '.loredex'), { recursive: true })
+    writeFileSync(file, `${JSON.stringify({ schema: LOREDEX_SCHEMA }, null, 2)}\n`)
+  } catch {
+    // the declaration is advisory — never fail a vault write over it
   }
 }
 

@@ -27,6 +27,20 @@ export {
   serializeDoc,
   stampSchema,
 } from './core/frontmatter'
+export {
+  annotateHandoff,
+  type CreateHandoffInput,
+  createHandoff,
+  type HandoffCreateResult,
+  HandoffError,
+  type HandoffErrorCode,
+  type HandoffTransition,
+  replyToHandoff,
+  resolveHandoffPath,
+  routeFile,
+  type StatusReceipt,
+  setHandoffStatus,
+} from './core/handoff'
 export { rebuildIndexes } from './core/indexer'
 export {
   buildDashboard,
@@ -46,5 +60,5 @@ export { ensureGeneratedMergeDriver, gitAutoCommit, gitPullPush } from './core/r
 export { type SearchHit, sanitizeForContext, searchVault } from './core/search'
 export { type StoreInput, storeNote } from './core/store'
 export { type SyncHealth, syncStatus } from './core/sync-status'
-export { inboxPath, scaffoldVault, slugify } from './core/vault'
+export { inboxPath, scaffoldVault, slugify, stampEngineSchema } from './core/vault'
 export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'

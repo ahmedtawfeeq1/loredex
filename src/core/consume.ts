@@ -4,10 +4,10 @@ import { basename, join } from 'node:path'
 import type { Config } from './config'
 import { emitLoredexEvent, type Identity } from './events'
 import { LOREDEX_SCHEMA, type Meta, parseDoc, serializeDoc, stampSchema } from './frontmatter'
-import { listProjects } from './product'
+import { resolveHandoffPath } from './handoff'
 import { gitAutoCommit, gitPullPush } from './router'
 import { walkMarkdown } from './scan'
-import { slugify } from './vault'
+import { stampEngineSchema } from './vault'
 
 export type { Identity }
 
@@ -38,7 +38,8 @@ export function ambientGitIdentity(cwd: string): Identity {
 /**
  * Mark a handoff consumed: stamps who/when (+ `loredex_schema`) into the note's
  * frontmatter, commits, and best-effort syncs. The one consume writer shared by
- * CLI, MCP, and embedding hosts. Throws if no handoff named `id` exists in scope.
+ * CLI, MCP, and embedding hosts. Resolves `id` via the shared finder — qualified
+ * `"<project>/<name>"` ids disambiguate collisions; unknown/ambiguous ids throw.
  */
 export function consumeHandoff(
   vaultPath: string,
@@ -47,12 +48,7 @@ export function consumeHandoff(
   identity: Identity,
   opts: { project?: string } = {},
 ): ConsumeReceipt {
-  const projects = opts.project ? [slugify(opts.project)] : listProjects(vaultPath)
-  const target = projects
-    .flatMap((project) => walkMarkdown(join(vaultPath, 'projects', project, 'handoffs')))
-    .find((file) => basename(file, '.md') === id)
-  if (!target) throw new Error(`no handoff named "${id}"`)
-
+  const target = resolveHandoffPath(vaultPath, id, opts)
   const doc = parseDoc(readFileSync(target, 'utf8'))
   const before = { ...doc.meta }
   const at = new Date().toISOString()
@@ -63,10 +59,12 @@ export function consumeHandoff(
     consumed_at: at,
   })
   writeFileSync(target, serializeDoc({ meta: after, body: doc.body }))
-  gitAutoCommit(vaultPath, config, `loredex: consume handoff ${id}`)
+  stampEngineSchema(vaultPath)
+  const name = basename(target, '.md')
+  gitAutoCommit(vaultPath, config, `loredex: consume handoff ${name}`)
   const { pushed } = gitPullPush(vaultPath)
-  emitLoredexEvent('consume', { handoffId: id, path: target, by: identity, at })
-  return { handoffId: id, path: target, by: identity, at, before, after, pushed }
+  emitLoredexEvent('consume', { handoffId: name, path: target, by: identity, at })
+  return { handoffId: name, path: target, by: identity, at, before, after, pushed }
 }
 
 export interface VaultSchemaStatus {

@@ -16,6 +16,16 @@ export interface LoredexEventMap {
   store: { path: string }
   consume: { handoffId: string; path: string; by: Identity; at: string }
   sync: { pulled: boolean; pushed: boolean }
+  'handoff.created': { id: string; path: string; from: string; to: string; kind: string }
+  'handoff.status': {
+    id: string
+    path: string
+    /** status before / after the transition */
+    from: string
+    to: string
+    by: Identity
+    at: string
+  }
 }
 
 export type LoredexEventKind = keyof LoredexEventMap

@@ -13,10 +13,16 @@ import {
   type ScopedNote,
 } from '../core/curate'
 import { type Meta, serializeDoc, stampSchema } from '../core/frontmatter'
+import {
+  annotateHandoff,
+  HandoffError,
+  type HandoffTransition,
+  setHandoffStatus,
+} from '../core/handoff'
 import { rebuildIndexes } from '../core/indexer'
 import { listHandoffs } from '../core/product'
 import { gitAutoCommit, gitPullPush, knownStructure } from '../core/router'
-import { slugify, uniquePath } from '../core/vault'
+import { slugify, stampEngineSchema, uniquePath } from '../core/vault'
 import { curateWithLlm } from '../llm/curator'
 
 export interface HandoffOptions {
@@ -142,6 +148,7 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
     to_project: to,
     objective: plan.objective,
     status: 'open',
+    kind: 'delivery',
     source: 'loredex',
     loredex: 'routed',
   })
@@ -150,6 +157,7 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
     `${today}-handoff-${slugify(from)}.md`,
   )
   writeFileSync(dest, serializeDoc({ meta, body: `${body}\n` }))
+  stampEngineSchema(config.vaultPath)
   rebuildIndexes(config.vaultPath)
   gitAutoCommit(config.vaultPath, config, `loredex: handoff ${slugify(from)} -> ${to}`)
   const { pushed } = gitPullPush(config.vaultPath)
@@ -165,6 +173,17 @@ export async function runHandoff(opts: HandoffOptions): Promise<void> {
 export interface HandoffsOptions {
   project?: string
   consume?: string
+  /** lifecycle v2 transitions — each takes a handoff name (or "<project>/<name>") */
+  accept?: string
+  decline?: string
+  reason?: string
+  snooze?: string
+  until?: string
+  reopen?: string
+  /** attach a comment note to a handoff (with --message, optional --title) */
+  annotate?: string
+  title?: string
+  message?: string
   /** hook mode: print nothing when no handoffs are open (stdout becomes session context) */
   quiet?: boolean
 }
@@ -193,12 +212,70 @@ export function runHandoffs(opts: HandoffsOptions): void {
       consumeHandoff(config.vaultPath, config, opts.consume, ambientGitIdentity(config.vaultPath), {
         project,
       })
-    } catch {
-      console.error(pc.red(`no handoff named "${opts.consume}" in ${dir}`))
+    } catch (error) {
+      console.error(
+        pc.red(
+          error instanceof HandoffError
+            ? error.message
+            : `no handoff named "${opts.consume}" in ${dir}`,
+        ),
+      )
       process.exitCode = 1
       return
     }
     console.log(pc.green('✓'), `consumed: ${opts.consume}`)
+    return
+  }
+
+  // lifecycle v2: one transition per invocation, same writer the app uses
+  const transition: { id: string; move: HandoffTransition } | null = opts.accept
+    ? { id: opts.accept, move: { to: 'accepted' } }
+    : opts.decline
+      ? { id: opts.decline, move: { to: 'declined', reason: opts.reason ?? '' } }
+      : opts.snooze
+        ? { id: opts.snooze, move: { to: 'snoozed', until: opts.until ?? '' } }
+        : opts.reopen
+          ? { id: opts.reopen, move: { to: 'open' } }
+          : null
+  if (transition) {
+    try {
+      const receipt = setHandoffStatus(
+        config.vaultPath,
+        config,
+        transition.id,
+        transition.move,
+        ambientGitIdentity(config.vaultPath),
+      )
+      console.log(
+        pc.green('✓'),
+        `${receipt.handoffId}: ${receipt.before.status} → ${transition.move.to}`,
+      )
+    } catch (error) {
+      console.error(pc.red(error instanceof Error ? error.message : String(error)))
+      process.exitCode = 1
+    }
+    return
+  }
+
+  if (opts.annotate) {
+    if (!opts.message) {
+      console.error(pc.red('--annotate requires --message <text>'))
+      process.exitCode = 1
+      return
+    }
+    try {
+      const result = annotateHandoff(
+        config.vaultPath,
+        config,
+        opts.annotate,
+        { title: opts.title ?? `Comment on ${opts.annotate}`, body: opts.message },
+        ambientGitIdentity(config.vaultPath),
+      )
+      console.log(pc.green('✓'), `comment written: ${result.path}`)
+    } catch (error) {
+      console.error(pc.red(error instanceof Error ? error.message : String(error)))
+      process.exitCode = 1
+    }
     return
   }
 

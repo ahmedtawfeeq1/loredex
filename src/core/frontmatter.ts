@@ -5,10 +5,12 @@ export type FindingType = (typeof TYPES)[number]
 
 /**
  * Frontmatter schema version this engine writes. v1 = the first versioned schema
- * (adds consume attribution: consumed_by/consumed_at). Notes without a
- * `loredex_schema` key predate versioning and are always readable.
+ * (adds consume attribution: consumed_by/consumed_at). v2 = the handoff lifecycle
+ * (kind/replies_to/fulfills + accepted/declined/snoozed transitions, each attributed).
+ * Notes without a `loredex_schema` key predate versioning and are always readable;
+ * all v2 fields are additive so v1 engines keep reading and round-tripping them.
  */
-export const LOREDEX_SCHEMA = 1
+export const LOREDEX_SCHEMA = 2
 
 /** Stamp engine-written frontmatter with the schema version it conforms to. */
 export function stampSchema(meta: Meta): Meta {
@@ -36,6 +38,21 @@ export interface Meta {
   /** consume attribution — closed vocabulary, one writer per transition (schema v1) */
   consumed_by?: string
   consumed_at?: string
+  /** handoff lifecycle v2 (all additive; absent = the documented defaults) */
+  kind?: string
+  /** note name (no .md, no path) of the handoff this note replies to */
+  replies_to?: string
+  /** note name of the request handoff this delivery fulfills */
+  fulfills?: string
+  declined_reason?: string
+  /** YYYY-MM-DD; readers derive "expired" when < today — never auto-written back */
+  snoozed_until?: string
+  accepted_by?: string
+  accepted_at?: string
+  declined_by?: string
+  declined_at?: string
+  snoozed_by?: string
+  snoozed_at?: string
   loredex_schema?: number
 }
 
