@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import {
   existsSync,
   mkdirSync,
@@ -16,9 +16,11 @@ import { emitLoredexEvent } from './events'
 import { type Meta, parseDoc, serializeDoc, stampSchema } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
+import { loadReceipt, type RouteReceipt, RouteUndoError, writeReceipt } from './receipts'
 import { rewriteLinks } from './relink'
 import { sanitizeWikilinks } from './sanitize'
 import { findRouted, walkMarkdown } from './scan'
+import { matchNeverRoute, RouteScopeError } from './scope'
 import { slugify, targetDir, targetName, uniquePath } from './vault'
 
 export interface PlanItem {
@@ -72,6 +74,8 @@ export function planFile(
 
 export interface ExecuteResult {
   written: string[]
+  /** id of the persisted receipt (present whenever anything was written) — PR-3 undo key */
+  receiptId?: string
 }
 
 /**
@@ -105,6 +109,20 @@ export function hashBody(body: string): string {
 }
 
 export function executePlan(items: PlanItem[], vaultPath: string, config: Config): ExecuteResult {
+  // filing-scope policy (PR-3): one enforcement chokepoint — no route surface can
+  // bypass never-route globs. A blocked route throws loudly, never a silent skip.
+  const neverRoute = config.neverRoute ?? []
+  for (const item of items) {
+    const glob = matchNeverRoute(neverRoute, item.source)
+    if (glob) throw new RouteScopeError(item.source, glob)
+  }
+  // capture each source's exact pre-route bytes BEFORE any write, so undo can
+  // restore byte-identical state (move: recreate the deleted source; copy: revert
+  // the routed stamp). null = the source did not exist (nothing to restore).
+  const priorSources = items.map((item) => ({
+    path: resolve(item.source),
+    priorContent: existsSync(item.source) ? readFileSync(item.source, 'utf8') : null,
+  }))
   // resolve every destination first so same-batch collisions suffix correctly and
   // cross-references between adopted files can be rewritten to vault wikilinks
   const taken = new Set<string>()
@@ -151,11 +169,63 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
     written.push(dest)
   }
   if (written.length > 0) {
+    // persist the receipt BEFORE committing so it rides the route's own git commit
+    // (.loredex/ is tracked) — CLI and app then share one reversible history.
+    const receipt: RouteReceipt = {
+      id: randomUUID(),
+      appliedAt: new Date().toISOString(),
+      mode: items[0]?.mode ?? 'copy',
+      contentHash: hashBody(parseDoc(items[0]?.raw ?? '').body),
+      written,
+      sources: priorSources,
+    }
+    writeReceipt(vaultPath, receipt)
     rebuildIndexes(vaultPath)
     gitAutoCommit(vaultPath, config, `loredex: route ${written.length} note(s)`)
     emitLoredexEvent('route', { paths: written })
+    return { written, receiptId: receipt.id }
   }
   return { written }
+}
+
+/**
+ * Reverse a route (PR-3): delete the vault copies it created and restore every
+ * source to its exact pre-route bytes, then regenerate indexes and commit — the
+ * result is byte-identical to before the route (F4: no irreversible write).
+ * Receipts are append-only history, so undo marks the receipt `undone` (a second
+ * undo throws) rather than deleting it. The undone flag is written before the
+ * commit so it rides the same commit and the working tree stays clean.
+ */
+export function undoRoute(
+  vaultPath: string,
+  config: Config,
+  receiptId: string,
+): { removed: string[]; restored: string[] } {
+  const receipt = loadReceipt(vaultPath, receiptId)
+  if (!receipt) throw new RouteUndoError(`no route receipt ${receiptId}`, 'RECEIPT_NOT_FOUND')
+  if (receipt.undone) {
+    throw new RouteUndoError(`route ${receiptId} was already undone`, 'ALREADY_UNDONE')
+  }
+
+  const removed: string[] = []
+  for (const w of receipt.written) {
+    if (existsSync(w)) {
+      unlinkSync(w)
+      removed.push(w)
+    }
+  }
+  const restored: string[] = []
+  for (const s of receipt.sources) {
+    if (s.priorContent !== null) {
+      writeFileSync(s.path, s.priorContent)
+      restored.push(s.path)
+    }
+  }
+  writeReceipt(vaultPath, { ...receipt, undone: true })
+  rebuildIndexes(vaultPath)
+  gitAutoCommit(vaultPath, config, `loredex: undo route (${receipt.written.length} note(s))`)
+  emitLoredexEvent('route', { paths: receipt.written })
+  return { removed, restored }
 }
 
 /**

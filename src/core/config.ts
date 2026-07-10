@@ -7,6 +7,13 @@ export interface Config {
   sync: 'git' | 'none'
   /** link-target editor: 'system' (file://) or a URI scheme — vscode | cursor | windsurf | custom */
   editor?: string
+  /**
+   * "Internal, never route" globs (PR-3, epic4.story3): sources matching any of
+   * these are refused by `executePlan` so scratch/internal files can't be filed
+   * into the shared vault. Team-visible routing policy, so it lives here (shared
+   * config the CLI honors), not in a host-local store. Minimatch-ish (see scope.ts).
+   */
+  neverRoute?: string[]
   projects: Record<string, { name: string }>
 }
 

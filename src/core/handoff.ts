@@ -384,6 +384,6 @@ export function routeFile(
   config: Config,
   path: string,
   opts: RouteOptions,
-): { written: string[] } {
+): { written: string[]; receiptId?: string } {
   return executePlan([buildRoutePlan(vaultPath, path, opts)], vaultPath, config)
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.2.0...loredex-v2.3.0) (2026-07-11)
+
+
+### Features
+
+* route receipts + undo, never-route filing-scope globs (PR-3, epic4) — every route persists a reversible receipt under `.loredex/receipts/`; `undoRoute` restores byte-identical state (delete vault copies, restore sources); `executePlan` refuses sources matching `Config.neverRoute` globs at a single chokepoint (app + CLI honor it); exports `undoRoute`, `listReceipts`, `loadReceipt`, `RouteReceipt`, `RouteUndoError`, `matchNeverRoute`, `RouteScopeError`; `routeFile`/`executePlan` now return `receiptId`.
+
 ## [2.2.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.1.0...loredex-v2.2.0) (2026-07-10)
 
 
