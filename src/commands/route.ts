@@ -4,7 +4,7 @@ import pc from 'picocolors'
 import { findProject, loadConfig } from '../core/config'
 import { isRoutable, isRouted, parseDoc } from '../core/frontmatter'
 import type { PlanItem } from '../core/router'
-import { executePlan, knownStructure, planFile } from '../core/router'
+import { executePlan, knownStructure, planFile, refreshRoutedCopies } from '../core/router'
 import { findCandidates, walkMarkdown } from '../core/scan'
 import { inboxPath } from '../core/vault'
 
@@ -61,6 +61,13 @@ export function runRoute(opts: RouteOptions): void {
         }),
       )
     }
+  }
+
+  // already-routed sources whose content changed since routing — vault copies go stale otherwise
+  if (project && !opts.dryRun) {
+    const refreshed = refreshRoutedCopies(project.path, config.vaultPath, config)
+    if (refreshed.length > 0)
+      log(pc.green('✓'), `refreshed ${refreshed.length} stale vault note(s)`)
   }
 
   if (items.length === 0) {

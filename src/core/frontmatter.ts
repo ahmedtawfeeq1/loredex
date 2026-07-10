@@ -29,6 +29,8 @@ export interface Meta {
   superseded_by?: string
   objective?: string
   source_path?: string
+  /** sha256 of the source body at route time — lets route detect and refresh stale vault copies */
+  source_hash?: string
   /** portable provenance: project slug + path relative to that project's root — resolvable on any teammate's machine via their own config.projects */
   source_project?: string
   source_rel?: string

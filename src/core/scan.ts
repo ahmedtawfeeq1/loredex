@@ -51,6 +51,26 @@ export interface Candidate {
   raw: string
 }
 
+/** Already-routed markdown files under root — candidates for a vault-copy freshness check. */
+export function findRouted(root: string): Candidate[] {
+  const out: Candidate[] = []
+  for (const path of walkMarkdown(root)) {
+    if (SKIP_FILES.test(basename(path))) continue
+    let raw: string
+    try {
+      raw = readFileSync(path, 'utf8')
+    } catch {
+      continue
+    }
+    try {
+      if (isRouted(parseDoc(raw).meta)) out.push({ path, raw })
+    } catch {
+      // broken frontmatter — leave the file alone
+    }
+  }
+  return out
+}
+
 /** Markdown files that look research-shaped (frontmatter, signal name, or signal dir) and are not yet routed. */
 export function findCandidates(root: string): Candidate[] {
   const out: Candidate[] = []

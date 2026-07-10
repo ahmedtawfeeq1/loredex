@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import {
   existsSync,
   mkdirSync,
@@ -10,12 +11,14 @@ import {
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { type ClassifyOptions, resolveMeta } from './classify'
 import type { Config } from './config'
+import { resolveSourceAbs } from './drift'
 import { emitLoredexEvent } from './events'
 import { type Meta, parseDoc, serializeDoc, stampSchema } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
 import { rewriteLinks } from './relink'
 import { sanitizeWikilinks } from './sanitize'
+import { findRouted, walkMarkdown } from './scan'
 import { slugify, targetDir, targetName, uniquePath } from './vault'
 
 export interface PlanItem {
@@ -87,12 +90,18 @@ export function plannedMeta(item: PlanItem): Meta {
   })
   if (item.mode === 'copy') {
     meta.source_path = resolve(item.source)
+    meta.source_hash = hashBody(parseDoc(item.raw).body)
     if (item.sourceRoot && meta.project) {
       meta.source_project = slugify(meta.project)
       meta.source_rel = relative(resolve(item.sourceRoot), resolve(item.source))
     }
   }
   return meta
+}
+
+/** Content identity of a source body — what route stamps and refresh compares. */
+export function hashBody(body: string): string {
+  return createHash('sha256').update(body.trim()).digest('hex')
 }
 
 export function executePlan(items: PlanItem[], vaultPath: string, config: Config): ExecuteResult {
@@ -128,12 +137,14 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
     writeFileSync(dest, serializeDoc({ meta, body: relinked }))
     if (item.mode === 'move') {
       unlinkSync(item.source)
-    } else {
-      // stamp the original so it is never re-adopted; content stays put
-      const original = parseDoc(item.raw)
+    } else if (existsSync(item.source)) {
+      // stamp the original so it is never re-adopted — reread from disk, never item.raw:
+      // the source may have been edited between planning and now, and writing the stale
+      // snapshot back would silently destroy those edits
+      const latest = parseDoc(readFileSync(item.source, 'utf8'))
       writeFileSync(
         item.source,
-        serializeDoc({ meta: { ...original.meta, loredex: 'routed' }, body: original.body }),
+        serializeDoc({ meta: { ...latest.meta, loredex: 'routed' }, body: latest.body }),
       )
     }
     addRelatedLinks(dest)
@@ -145,6 +156,79 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
     emitLoredexEvent('route', { paths: written })
   }
   return { written }
+}
+
+/**
+ * Re-sync vault copies of already-routed sources that changed since routing.
+ * A routed source is skipped by findCandidates forever, so without this pass an
+ * edit to an already-routed file never reaches its vault note — the copy goes
+ * stale under the same name. Detection is source_hash (stamped at route time);
+ * notes routed before source_hash existed fall back to a body comparison.
+ */
+export function refreshRoutedCopies(
+  projectRoot: string,
+  vaultPath: string,
+  config: Config,
+): string[] {
+  // vault index: this-machine source path → vault notes copied from it
+  const bySource = new Map<string, string[]>()
+  const rootsBySlug = new Map(
+    Object.entries(config.projects).map(([path, entry]) => [slugify(entry.name), path]),
+  )
+  for (const notePath of walkMarkdown(join(vaultPath, 'projects'))) {
+    let meta: Meta
+    try {
+      meta = parseDoc(readFileSync(notePath, 'utf8')).meta
+    } catch {
+      continue
+    }
+    const abs = resolveSourceAbs(meta, (slug) => rootsBySlug.get(slug) ?? null)
+    if (!abs) continue
+    const notes = bySource.get(resolve(abs)) ?? []
+    notes.push(notePath)
+    bySource.set(resolve(abs), notes)
+  }
+
+  const editor = config.editor ?? 'system'
+  const refreshed: string[] = []
+  for (const { path, raw } of findRouted(projectRoot)) {
+    const notes = bySource.get(resolve(path))
+    if (!notes) continue
+    const sourceBody = parseDoc(raw).body
+    const hash = hashBody(sourceBody)
+    // recompute the vault body the way route would (no batch mapping on a refresh)
+    const cleaned = sanitizeWikilinks(sourceBody).body
+    const newBody = rewriteLinks(cleaned, {
+      sourceDir: dirname(resolve(path)),
+      mapping: new Map(),
+      editor,
+    }).body
+    for (const notePath of notes) {
+      const note = parseDoc(readFileSync(notePath, 'utf8'))
+      if (note.meta.source_hash === hash) continue
+      // pre-source_hash notes: compare bodies (minus the generated Related section)
+      if (!note.meta.source_hash && stripRelated(note.body) === newBody.trim()) continue
+      // ponytail: source wins — curated body edits to the vault copy are overwritten;
+      // keep curation in frontmatter/Related, or edit the source instead
+      writeFileSync(
+        notePath,
+        serializeDoc({ meta: { ...note.meta, source_hash: hash }, body: newBody }),
+      )
+      addRelatedLinks(notePath)
+      refreshed.push(notePath)
+    }
+  }
+  if (refreshed.length > 0) {
+    rebuildIndexes(vaultPath)
+    gitAutoCommit(vaultPath, config, `loredex: refresh ${refreshed.length} note(s)`)
+    emitLoredexEvent('route', { paths: refreshed })
+  }
+  return refreshed
+}
+
+function stripRelated(body: string): string {
+  const index = body.indexOf('## Related')
+  return (index === -1 ? body : body.slice(0, index)).trim()
 }
 
 export function gitAutoCommit(vaultPath: string, config: Config, message: string): void {
