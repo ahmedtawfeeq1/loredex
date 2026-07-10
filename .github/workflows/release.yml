@@ -3,6 +3,9 @@ name: Release
 on:
   push:
     branches: [main]
+  # manual re-publish after a failed publish job (checks out main, which
+  # already carries the released version bump)
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,7 +23,7 @@ jobs:
 
   publish:
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    if: needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +31,10 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
-      # trusted publishing (OIDC) needs npm >= 11.5 — no token, no secret
-      - run: npm install -g npm@latest
+      # trusted publishing (OIDC) needs npm >= 11.5 — no token, no secret.
+      # Pinned: npm@latest currently ships without the sigstore module and
+      # provenance publish dies with MODULE_NOT_FOUND (hit 2026-07-10);
+      # 11.5.2 is the version this pipeline was verified with.
+      - run: npm install -g npm@11.5.2
       - run: npm ci
       - run: npm publish
