@@ -17,8 +17,8 @@ import {
   gitAutoCommit,
   gitPullPush,
   knownStructure,
-  planFile,
   type PlanItem,
+  planFile,
   plannedMeta,
 } from './router'
 import { walkMarkdown } from './scan'

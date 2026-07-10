@@ -36,11 +36,11 @@ export {
   type HandoffErrorCode,
   type HandoffTransition,
   previewRoute,
+  type RouteOptions,
+  type RoutePlanPreview,
   replyToHandoff,
   resolveHandoffPath,
   routeFile,
-  type RouteOptions,
-  type RoutePlanPreview,
   type StatusReceipt,
   setHandoffStatus,
 } from './core/handoff'
