@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.1.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.0.0...loredex-v2.1.0) (2026-07-10)
+
+
+### Features
+
+* consumeHandoff + loredex_schema versioning (epic3.story3 / PR-2) ([928f13b](https://github.com/ahmedtawfeeq1/loredex/commit/928f13b5b2ae99262f44060ee72072c891f71bcb))
+* injectable typed event emitter (PR-8 subset for epic1.story5) ([99a134d](https://github.com/ahmedtawfeeq1/loredex/commit/99a134d81b5860f2146b015e1041b3e6f6d8e2d3))
+* listHandoffs(scope) + HandoffCard — one handoff collector (epic3.story1 / PR-1) ([e9e8601](https://github.com/ahmedtawfeeq1/loredex/commit/e9e8601e590c00dbca02ce4f970ac5bdffcc49cf))
+* parseActivity + ActivityEvent — shared activity grammar (epic6.story1 / PR-6) ([95c04cc](https://github.com/ahmedtawfeeq1/loredex/commit/95c04cc18a71dd787574f83dcdd11d3c2f9ff879))
+* read-only syncStatus() + SyncHealth (epic5.story1 / PR-4) ([d0dbfb6](https://github.com/ahmedtawfeeq1/loredex/commit/d0dbfb6e50b643ba542b77dd1e8c19e44f6b2a69))
+
+
+### Bug Fixes
+
+* valid gitattributes pattern for Start Here - Product.md + invocation-agnostic handoff footers ([c1fa833](https://github.com/ahmedtawfeeq1/loredex/commit/c1fa833e1e1ac50dad0128add3118e0362694f1a))
+
 ## [2.0.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v1.1.0...loredex-v2.0.0) (2026-07-09)
 
 
