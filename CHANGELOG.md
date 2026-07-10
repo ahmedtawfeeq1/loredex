@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.1.0...loredex-v2.2.0) (2026-07-10)
+
+
+### Features
+
+* handoff write APIs + frontmatter schema v2 (PR-11, epic7.story1) ([d92146d](https://github.com/ahmedtawfeeq1/loredex/commit/d92146da2e4aaa6ca76aed1e7ea7b487532b8e8a))
+* previewRoute — read-only route plan (destination + planned frontmatter) ([7d7b9a6](https://github.com/ahmedtawfeeq1/loredex/commit/7d7b9a6f9bfb51aee5745e15a3839a6ad381604e))
+
 ## [2.1.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.0.0...loredex-v2.1.0) (2026-07-10)
 
 
