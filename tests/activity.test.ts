@@ -76,6 +76,43 @@ describe('parseActivity', () => {
     expect(sync?.subject).toEqual({})
   })
 
+  it('types PR-11 write commits: author-suffixed handoff and status transitions', () => {
+    const log = [
+      record({
+        sha: '7'.repeat(40),
+        name: 'Dana',
+        email: 'dana@nimbus.dev',
+        summary: 'loredex: handoff backend -> frontend (Dana Reyes)',
+        files: ['projects/frontend/handoffs/2026-07-10-handoff-backend.md'],
+      }),
+      record({
+        sha: '8'.repeat(40),
+        name: 'Omar',
+        email: 'omar@nimbus.dev',
+        summary: 'loredex: handoff 2026-07-10-handoff-backend open -> accepted',
+        files: ['projects/frontend/handoffs/2026-07-10-handoff-backend.md'],
+      }),
+      record({
+        sha: '9'.repeat(40),
+        summary: 'loredex: handoff 2026-07-10-handoff-backend accepted -> snoozed',
+      }),
+    ].join('')
+
+    const events = parseActivity(log)
+    expect(events.map((event) => event.kind)).toEqual(['handoff', 'status', 'status'])
+
+    const [created, accepted, snoozed] = events
+    expect(created?.subject).toEqual({
+      path: 'projects/frontend/handoffs/2026-07-10-handoff-backend.md',
+      project: 'frontend',
+      handoffId: '2026-07-10-handoff-backend',
+    })
+    expect(accepted?.subject.handoffId).toBe('2026-07-10-handoff-backend')
+    expect(accepted?.actor).toEqual({ name: 'Omar', email: 'omar@nimbus.dev' })
+    // status commits carry the id in the summary even without a changed-file line
+    expect(snoozed?.subject.handoffId).toBe('2026-07-10-handoff-backend')
+  })
+
   it('unknown commits become generic sync events, never dropped silently', () => {
     const events = parseActivity(
       record({ summary: 'Merge branch main', files: ['projects/backend/notes/x.md'] }),

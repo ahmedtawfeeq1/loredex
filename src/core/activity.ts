@@ -9,7 +9,8 @@ import type { Identity } from './events'
  *
  *   `loredex: route <n> note(s)`          → route
  *   `loredex: consume handoff <id>`       → consume
- *   `loredex: handoff <from> -> <to>`     → handoff
+ *   `loredex: handoff <from> -> <to>[ (<author>)]` → handoff
+ *   `loredex: handoff <id> <from-status> -> <to-status>` → status (PR-11 setHandoffStatus)
  *   anything else                         → sync (generic engine/teammate activity — never dropped)
  *
  * Identity attribution comes from the commit author (`-c` injection in hosts, ambient
@@ -24,7 +25,7 @@ export const ACTIVITY_LOG_ARGS = [
 ] as const
 
 export interface ActivityEvent {
-  kind: 'route' | 'consume' | 'handoff' | 'sync'
+  kind: 'route' | 'consume' | 'handoff' | 'status' | 'sync'
   actor: Identity
   /** ISO author date — also the day-grouping key (slice to 10) */
   at: string
@@ -35,7 +36,12 @@ export interface ActivityEvent {
 
 const HEADER_FIELDS = 5
 const CONSUME = /^loredex: consume handoff (.+)$/
-const HANDOFF = /^loredex: handoff (\S+) -> (\S+)$/
+// PR-11's createHandoff appends the author: `loredex: handoff <from> -> <to> (<name>)`.
+// The optional suffix keeps every history parseable — pre-PR-11 and post-PR-11 alike.
+const HANDOFF = /^loredex: handoff (\S+) -> (\S+)(?: \(.+\))?$/
+// PR-11's setHandoffStatus writes `loredex: handoff <id> <from> -> <to>` — the extra
+// token before the arrow keeps it disjoint from HANDOFF (\S+ never spans a space).
+const STATUS = /^loredex: handoff (\S+) (\S+) -> (\S+)$/
 const ROUTE = /^loredex: route \d+ note\(s\)$/
 
 /**
@@ -68,10 +74,14 @@ export function parseActivity(gitLog: string): ActivityEvent[] {
 
     let kind: ActivityEvent['kind'] = 'sync'
     const consume = summary.match(CONSUME)
+    const status = summary.match(STATUS)
     const handoff = summary.match(HANDOFF)
     if (consume) {
       kind = 'consume'
       subject.handoffId = consume[1] as string
+    } else if (status) {
+      kind = 'status'
+      subject.handoffId = status[1] as string
     } else if (handoff) {
       kind = 'handoff'
       subject.project = handoff[2] as string
