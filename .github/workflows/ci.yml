@@ -4,6 +4,15 @@ on:
   push:
     branches: [main]
   pull_request:
+    # skip run creation entirely for release-please PRs (they sit as "Action required"
+    # noise otherwise — the approval gate fires before any job-level `if` can).
+    # ponytail: a human PR touching ONLY these five files also skips CI; that shape is a release PR
+    paths-ignore:
+      - '.release-please-manifest.json'
+      - 'CHANGELOG.md'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'plugin/.claude-plugin/plugin.json'
 
 jobs:
   test:
