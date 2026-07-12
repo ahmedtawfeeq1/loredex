@@ -28,6 +28,11 @@ export function resolveMeta(path: string, raw: string, opts: ClassifyOptions): M
       knownProjects: opts.knownProjects,
       knownTopics: opts.knownTopics,
     })
+    // A registered project root is ground truth: the LLM picks topic/type/tags, never
+    // the project — letting it guess scatters one repo across invented project names
+    // (genudo-mcp, genudo-platform-front...). Only inbox routing (no root, projectName
+    // '') lets its guess stand. Explicit file frontmatter still wins via ...meta below.
+    if (llm && opts.projectName) delete llm.project
   }
   const merged: Meta = { ...base, ...llm, ...meta }
   merged.type = normalizeType(meta.type ?? llm?.type ?? base.type)
