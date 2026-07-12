@@ -21,11 +21,13 @@ No Obsidian, no server, no account. The vault stays a plain markdown folder in g
 
 Grab the installer for your OS from the **[latest release](https://github.com/ahmedtawfeeq1/loredex-desktop/releases/latest)**. Builds are **unsigned** for now (code signing + notarization is on the roadmap), so each OS shows a first-launch warning you clear once — steps below.
 
+> Filenames below use the current release, **0.2.1**. If a newer version is out, the release page shows the matching name — swap the number.
+
 ### macOS
 
 Apple Silicon (M1 or newer), macOS 14+.
 
-1. Download `Loredex-<version>-arm64.dmg`, open it, drag **Loredex** to Applications.
+1. Download `Loredex-0.2.1-arm64.dmg`, open it, drag **Loredex** to Applications.
 2. Because it's unsigned, Gatekeeper may say the app "is damaged." It isn't — that's macOS quarantining an unsigned download. Clear it once in Terminal:
    ```sh
    xattr -dr com.apple.quarantine /Applications/Loredex.app
@@ -36,7 +38,7 @@ Apple Silicon (M1 or newer), macOS 14+.
 
 Windows 10/11 (x64).
 
-1. Download `Loredex.Setup.<version>.exe` and run it.
+1. Download `Loredex.Setup.0.2.1.exe` and run it.
 2. SmartScreen will warn "Windows protected your PC" (unsigned). Click **More info → Run anyway**.
 3. The installer lets you pick the install folder (per-user, no admin needed). Launch from the Start menu.
 
@@ -46,14 +48,14 @@ x64. Two formats:
 
 **AppImage** (works on any distro — no install):
 ```sh
-chmod +x Loredex-<version>.AppImage
-./Loredex-<version>.AppImage
+chmod +x Loredex-0.2.1.AppImage
+./Loredex-0.2.1.AppImage
 ```
 If it won't launch, install FUSE (`sudo apt install libfuse2` on Debian/Ubuntu) or run with `--appimage-extract-and-run`.
 
 **Debian / Ubuntu** (`.deb`):
 ```sh
-sudo dpkg -i loredex-desktop_<version>_amd64.deb
+sudo dpkg -i loredex-desktop_0.2.1_amd64.deb
 sudo apt-get install -f   # pull any missing deps
 ```
 Launch from your app menu or run `loredex`.

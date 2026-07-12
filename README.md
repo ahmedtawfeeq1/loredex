@@ -306,8 +306,8 @@ Prefer a purpose-built native app over Obsidian? **[Loredex Desktop](https://git
 
 | OS | File | First launch (unsigned) |
 |---|---|---|
-| **macOS** (Apple Silicon, 14+) | `Loredex-<ver>-arm64.dmg` | `xattr -dr com.apple.quarantine /Applications/Loredex.app` |
-| **Windows** (10/11, x64) | `Loredex.Setup.<ver>.exe` | SmartScreen → **More info → Run anyway** |
+| **macOS** (Apple Silicon, 14+) | `Loredex-0.2.1-arm64.dmg` | `xattr -dr com.apple.quarantine /Applications/Loredex.app` |
+| **Windows** (10/11, x64) | `Loredex.Setup.0.2.1.exe` | SmartScreen → **More info → Run anyway** |
 | **Linux** (x64) | `.AppImage` (any distro) or `.deb` (Debian/Ubuntu) | `chmod +x *.AppImage` and run |
 
 It embeds the same `loredex` package the CLI and agents use — one engine, in-process — and adds a handoff inbox/outbox board (accept / decline / snooze / consume, replies, threads), a zoomable **Atlas** graph, an API-contract change timeline, live team sync against your git remote, and an in-app MCP server agents auto-discover. No Obsidian, no plugins, no account.
