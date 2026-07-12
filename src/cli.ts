@@ -27,7 +27,10 @@ program
   .option('--vault <path>', 'vault location (default: ~/Loredex)')
   .option('--project <name>', 'project name (default: directory name)')
   .option('--sync <mode>', 'sync mode: git | none', 'none')
-  .option('--editor <name>', 'open code links in: vscode | cursor | windsurf | system')
+  .option(
+    '--editor <name>',
+    'open code links in: vscode | cursor | windsurf | antigravity-ide | system (default: auto-detect installed editor)',
+  )
   .action((opts) => runInit(opts))
 
 program
