@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.3.1...loredex-v2.3.2) (2026-07-12)
+
+
+### Bug Fixes
+
+* **plugin:** pin hooks to loredex@latest so pushes reach users automatically ([f0d960e](https://github.com/ahmedtawfeeq1/loredex/commit/f0d960e3dd532f99c511fe9ccc6d64a850d17a85))
+
 ## [2.3.1](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.3.0...loredex-v2.3.1) (2026-07-12)
 
 
