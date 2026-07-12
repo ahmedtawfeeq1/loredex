@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.1](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.3.0...loredex-v2.3.1) (2026-07-12)
+
+
+### Bug Fixes
+
+* **classify:** pin project to the registered root, not the LLM guess ([51c1f5f](https://github.com/ahmedtawfeeq1/loredex/commit/51c1f5fd92d6f207597c2adda7a5544004e5f9be))
+* **cli:** list antigravity in --editor help + note auto-detect ([6cec446](https://github.com/ahmedtawfeeq1/loredex/commit/6cec4465fb670dd056c7c9dd36e314332bc8db82))
+
 ## [2.3.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.2.0...loredex-v2.3.0) (2026-07-11)
 
 
