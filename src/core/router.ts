@@ -16,6 +16,7 @@ import { emitLoredexEvent } from './events'
 import { type Meta, parseDoc, serializeDoc, stampSchema } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
+import { loadProducts, productOf } from './products'
 import { loadReceipt, type RouteReceipt, RouteUndoError, writeReceipt } from './receipts'
 import { rewriteLinks } from './relink'
 import { sanitizeWikilinks } from './sanitize'
@@ -86,12 +87,15 @@ export interface ExecuteResult {
  * source_project+source_rel are portable — teammates resolve them through their own
  * config.projects roots.
  */
-export function plannedMeta(item: PlanItem): Meta {
+export function plannedMeta(item: PlanItem, product?: string | null): Meta {
   const meta: Meta = stampSchema({
     ...item.meta,
     source: item.meta.source ?? 'manual',
     loredex: 'routed',
   })
+  // mirror the project's product into frontmatter so Obsidian's dashboard can
+  // group by it (the manifest stays authoritative for the CLI/desktop)
+  if (product) meta.product = product
   if (item.mode === 'copy') {
     meta.source_path = resolve(item.source)
     meta.source_hash = hashBody(parseDoc(item.raw).body)
@@ -136,11 +140,15 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
     mapping.set(resolve(item.source), basename(dests[index] as string, '.md'))
   }
   const editor = config.editor ?? 'system'
+  const products = loadProducts(vaultPath)
 
   const written: string[] = []
   for (const [index, item] of items.entries()) {
     const { body } = parseDoc(item.raw)
-    const meta = plannedMeta(item)
+    const meta = plannedMeta(
+      item,
+      item.meta.project ? productOf(products, slugify(item.meta.project)) : null,
+    )
 
     // ghost-link hygiene, then rewire links: batch siblings → wikilinks,
     // existing files → editor/file deep links, unresolvable → untouched

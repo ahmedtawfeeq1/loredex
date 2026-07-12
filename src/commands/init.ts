@@ -4,7 +4,8 @@ import { basename, join, resolve } from 'node:path'
 import pc from 'picocolors'
 import { type Config, defaultVaultPath, loadConfig, saveConfig } from '../core/config'
 import { detectEditors } from '../core/editors'
-import { inboxPath, scaffoldVault } from '../core/vault'
+import { setProduct } from '../core/products'
+import { inboxPath, scaffoldVault, slugify } from '../core/vault'
 import {
   agentsSnippet,
   claudePointer,
@@ -18,6 +19,7 @@ export interface InitOptions {
   project?: string
   sync?: string
   editor?: string
+  product?: string
 }
 
 export function runInit(opts: InitOptions): void {
@@ -45,6 +47,10 @@ export function runInit(opts: InitOptions): void {
 
   scaffoldVault(vaultPath)
   saveConfig(config)
+
+  // product grouping (view layer): file this project under a product in the
+  // vault's shared manifest. Slug-keyed to match the projects/<slug>/ dirs.
+  if (opts.product) setProduct(vaultPath, slugify(projectName), opts.product)
 
   if (config.sync === 'git') setupGitSync(vaultPath)
   injectConventions(cwd, projectName, inboxPath(vaultPath))

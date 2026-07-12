@@ -19,6 +19,8 @@ export function stampSchema(meta: Meta): Meta {
 
 export interface Meta {
   project?: string
+  /** the product this project belongs to (view grouping); mirror of `_index/products.json` */
+  product?: string
   topic?: string
   type?: string
   date?: string

@@ -3,6 +3,7 @@ import { basename, join, relative, sep } from 'node:path'
 import { writeDashboardBase } from './bases'
 import { isBriefName } from './curate'
 import { parseDoc } from './frontmatter'
+import { groupProjects, loadProducts } from './products'
 import { walkMarkdown } from './scan'
 
 interface NoteEntry {
@@ -64,11 +65,11 @@ export function rebuildIndexes(vaultPath: string): void {
     home.push('**[[Start Here - Product]]** — the cross-project product view', '')
   }
   const allProjects = new Set([...byProject.keys(), ...briefsByProject.keys()])
-  for (const project of [...allProjects].sort((a, b) => a.localeCompare(b))) {
+
+  // Emit one project's MOC (per-topic, recency-ordered) and return its note count.
+  const emitProjectMoc = (project: string): number => {
     const topics = byProject.get(project) ?? new Map<string, NoteEntry[]>()
     const count = [...topics.values()].reduce((total, files) => total + files.length, 0)
-    home.push(`- [[${project}]] — ${count} notes`)
-
     const moc: string[] = [
       `# ${project}`,
       '',
@@ -100,6 +101,19 @@ export function rebuildIndexes(vaultPath: string): void {
       moc.push('')
     }
     writeFileSync(join(indexDir, `${project}.md`), `${moc.join('\n').trimEnd()}\n`)
+    return count
+  }
+
+  // Group Home by product (Product → Project). With no products defined, the one
+  // group is Ungrouped → render a flat project list (unchanged pre-product layout).
+  const groups = groupProjects(loadProducts(vaultPath), [...allProjects])
+  const grouped = groups.length > 1 || (groups[0] && groups[0].product !== null)
+  for (const group of groups) {
+    if (grouped) home.push(`## ${group.product ?? 'Ungrouped'}`, '')
+    for (const project of group.projects) {
+      home.push(`- [[${project}]] — ${emitProjectMoc(project)} notes`)
+    }
+    if (grouped) home.push('')
   }
 
   const researchDir = join(vaultPath, 'research')

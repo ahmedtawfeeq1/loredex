@@ -8,6 +8,7 @@ import { runHandoff, runHandoffs } from './commands/handoff'
 import { runInit } from './commands/init'
 import { runMcp } from './commands/mcp'
 import { runCurateProduct } from './commands/product'
+import { runProducts } from './commands/products'
 import { runReset } from './commands/reset'
 import { runRoute } from './commands/route'
 import { runStatus } from './commands/status'
@@ -30,6 +31,10 @@ program
   .option(
     '--editor <name>',
     'open code links in: vscode | cursor | windsurf | antigravity-ide | system (default: auto-detect installed editor)',
+  )
+  .option(
+    '--product <name>',
+    'group this project under a product (Product → Project → Topic → Note)',
   )
   .action((opts) => runInit(opts))
 
@@ -134,6 +139,12 @@ program
   .action((project, opts) => runReset(project, opts))
 
 program.command('status').description('vault statistics').action(runStatus)
+
+program
+  .command('products [action] [args...]')
+  .description('group projects into products: list (default) | set <project> <product> | infer')
+  .option('-y, --yes', 'apply inferred assignments (with `infer`)')
+  .action((action, args, opts) => runProducts(action, args ?? [], opts))
 
 program
   .command('doctor')

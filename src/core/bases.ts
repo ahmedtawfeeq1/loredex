@@ -43,6 +43,19 @@ views:
       - property: date
         direction: DESC
   - type: cards
+    name: By product
+    groupBy:
+      property: note.product
+      direction: ASC
+    order:
+      - file.name
+      - project
+      - topic
+      - date
+    sort:
+      - property: date
+        direction: DESC
+  - type: cards
     name: By project
     groupBy:
       property: note.project

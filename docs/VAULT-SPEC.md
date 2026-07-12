@@ -10,7 +10,9 @@ agent.
 <vault>/                      # default ~/Loredex, configurable
   _inbox/                     # agents drop files here; route moves them out
   _index/                     # auto-generated MOCs — never edit by hand
-    Home.md                   # vault-wide index
+    Home.md                   # vault-wide index (projects grouped by product)
+    Dashboard.base            # Obsidian Bases database (incl. a By-product view)
+    products.json             # product → [projects] grouping (committed, team-shared)
     <project>.md              # per-project map of content; topics ordered by latest
                               #   activity (newest first, date in heading), notes
                               #   newest-first within each topic
@@ -21,11 +23,20 @@ agent.
     <topic>/                  # notes with no project
 ```
 
+**Product scoping.** A project belongs to at most one product; `_index/products.json`
+(`{"products": {"<product>": ["<project-slug>", …]}}`) holds the grouping and is committed
+with the vault so a team sees the same layers everywhere. Views render **Product → Project →
+Topic → Note**; projects absent from the manifest are "Ungrouped" (so pre-product vaults are
+unchanged). Assign with `loredex init --product <name>`, `loredex products set <project>
+<product>`, or `loredex products infer` (guess from shared name prefixes).
+
 ## Frontmatter contract
 
 ```yaml
 ---
 project: my-app               # required for deterministic filing
+product: my-product           # optional — the product this project groups under; the router
+                              #   mirrors it from _index/products.json so Obsidian can group by it
 topic: gap-analysis           # required for deterministic filing
 type: research | finding | analysis | snapshot | note   # default: note
 date: 2026-07-03              # default: file mtime

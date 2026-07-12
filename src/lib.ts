@@ -60,6 +60,14 @@ export {
   renderDashboardMarkdown,
 } from './core/product'
 export {
+  groupProjects,
+  inferProducts,
+  loadProducts,
+  type ProductMap,
+  productOf,
+  setProduct,
+} from './core/products'
+export {
   listReceipts,
   loadReceipt,
   type RouteReceipt,

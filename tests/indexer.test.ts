@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { rebuildIndexes } from '../src/core/indexer'
+import { setProduct } from '../src/core/products'
 
 function note(vault: string, project: string, topic: string, name: string): void {
   const dir = join(vault, 'projects', project, topic)
@@ -43,5 +44,31 @@ describe('bases', () => {
     for (const needle of ['Latest notes', 'Open handoffs', 'By project', 'Stale or superseded'])
       expect(base).toContain(needle)
     expect(readFileSync(join(vault, '_index', 'Home.md'), 'utf8')).toContain('Dashboard.base')
+  })
+})
+
+describe('indexer product grouping', () => {
+  it('groups Home under product headings when a manifest exists', () => {
+    const vault = mkdtempSync(join(tmpdir(), 'loredex-idx-prod-'))
+    note(vault, 'genudo-ai-engine', 'auth', '2026-07-01-a')
+    note(vault, 'loredex-desktop', 'ui', '2026-07-02-b')
+    setProduct(vault, 'genudo-ai-engine', 'genudo')
+    setProduct(vault, 'loredex-desktop', 'loredex')
+    rebuildIndexes(vault)
+
+    const home = readFileSync(join(vault, '_index', 'Home.md'), 'utf8')
+    expect(home).toContain('## genudo')
+    expect(home).toContain('## loredex')
+    // product heading precedes its project
+    expect(home.indexOf('## genudo')).toBeLessThan(home.indexOf('[[genudo-ai-engine]]'))
+  })
+
+  it('stays flat (no headings) when no products are defined', () => {
+    const vault = mkdtempSync(join(tmpdir(), 'loredex-idx-flat-'))
+    note(vault, 'solo', 'x', '2026-07-01-a')
+    rebuildIndexes(vault)
+    const home = readFileSync(join(vault, '_index', 'Home.md'), 'utf8')
+    expect(home).toContain('[[solo]]')
+    expect(home).not.toContain('## Ungrouped')
   })
 })
