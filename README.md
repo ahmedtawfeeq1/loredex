@@ -41,6 +41,7 @@ Loredex is a shared memory and control system for coding-agent teamwork across p
 - [Visual overview](#visual-overview)
 - [Quickstart](#quickstart)
 - [How it works](#how-it-works)
+- [How it compares](#how-it-compares)
 - [The ecosystem](#the-ecosystem)
 - [Features](#features)
 - [Install for Claude Code](#install-for-claude-code)
@@ -127,6 +128,35 @@ Originals stay in place (stamped with `loredex: routed` so they're never re-adop
 3. **Heuristics last** — no LLM installed? Filename and path rules still file everything sanely (`--no-llm` forces this).
 
 **Design guarantees:** never deletes anything · idempotent (run twice, nothing changes) · plain markdown, zero lock-in.
+
+<a id="how-it-compares"></a>
+## 🆚 How it compares
+
+**"Why not just tell my agent to write frontmatter to a folder and open Obsidian?"**
+
+That convention *is* loredex — the difference is loredex makes it **automatic, enforced, and queryable**:
+
+- **Automatic, not remembered.** The Claude Code Stop hook files every finding when the turn ends. A hand-rolled convention depends on the agent remembering to write to the right place every single time — and agents drift. Miss it once and the note is lost again.
+- **Cross-project, not one folder.** `handoff --to <project>` routes an audience-aware brief into another repo's lane, with status and attribution. A folder can't hand work between teams.
+- **Agent-readable memory.** Agents query the vault mid-task over MCP (`vault_search`, `vault_note`, `product_state`) — the vault is live memory, not a graveyard you scroll.
+- **Kept honest.** `curate` writes Start Here briefs, flags stale/superseded notes, detects drift from source files via git, and finds orphans. A folder rots silently.
+- **One writer.** CLI, hooks, agents, and app all write through the same `loredex` engine — nobody files "their own way." A convention is enforced by no one.
+
+You keep everything good about the folder (plain markdown, git, zero lock-in — move any file by hand) and lose the part that never actually happens on its own: the filing.
+
+| | **loredex** | Folder + convention | ADR tools (adr-tools / log4brains) | Notion / Confluence | GitHub wiki | obsidian-wiki |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|
+| Captures agent output automatically | ✅ hook per turn | ❌ must remember | ❌ manual `adr new` | ❌ manual | ❌ manual | ~ skill-invoked |
+| Agent-native (any CLI, via files) | ✅ | ~ if you wire it | ❌ | ❌ (API only) | ❌ | ✅ |
+| Cross-project handoffs | ✅ | ❌ | ❌ | ~ pages | ❌ | ❌ |
+| Agents read it back (MCP) | ✅ | ❌ | ❌ | ❌ | ❌ | ~ MCP |
+| Plain markdown, no lock-in | ✅ | ✅ | ✅ | ❌ | ~ | ✅ |
+| Team sync (git, built-in) | ✅ | ~ DIY | ~ DIY | ✅ hosted | ✅ hosted | ~ |
+| Stale / drift detection | ✅ | ❌ | ❌ | ❌ | ❌ | ~ lint |
+
+*(~ = partial or needs setup. obsidian-wiki is the closest peer — single-user, ingestion is skill-invoked; loredex's edge is automatic hook capture plus the team/handoff/desktop layer.)*
+
+> **On search:** knowledge comes *back out* mainly through **agents querying over MCP** — the app and Obsidian search views are secondary, for humans browsing. That search is deterministic term-ranking today (semantic search is on the [roadmap](#roadmap)); since MCP uses the same engine, that applies to the agent path too.
 
 <a id="the-ecosystem"></a>
 ## 🧩 The ecosystem
