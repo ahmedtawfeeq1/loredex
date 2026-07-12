@@ -13,5 +13,5 @@ command -v npx >/dev/null 2>&1 || exit 0
 
 # --strict: only files with complete frontmatter (agents following the skill
 # conventions produce those); no LLM calls from inside a hook.
-npx -y loredex route --from "$dir" --strict --quiet >/dev/null 2>&1 || true
+npx -y loredex@latest route --from "$dir" --strict --quiet >/dev/null 2>&1 || true
 exit 0

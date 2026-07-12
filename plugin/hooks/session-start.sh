@@ -16,5 +16,5 @@ command -v npx >/dev/null 2>&1 || exit 0
 cd "$dir" || exit 0
 # --quiet: prints nothing when no handoffs are open, so sessions without pending
 # cross-team work get zero context noise
-npx -y loredex handoffs --quiet 2>/dev/null || true
+npx -y loredex@latest handoffs --quiet 2>/dev/null || true
 exit 0
