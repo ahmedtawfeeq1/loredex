@@ -1,7 +1,7 @@
 {
   "name": "loredex",
   "description": "Auto-file AI-generated research markdown into your Obsidian-compatible vault",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "author": {
     "name": "Ahmed Tawfeeq"
   },
