@@ -13,6 +13,8 @@
 
 *lore* — everything your agents learn &nbsp;·&nbsp; *dex* — an index that records it automatically
 
+**loredex ecosystem** &nbsp;·&nbsp; **📖 loredex (CLI + core)** (you are here) &nbsp;·&nbsp; [🖥️ Desktop app](https://github.com/ahmedtawfeeq1/loredex-desktop) &nbsp;·&nbsp; [🔮 Obsidian plugin](https://github.com/ahmedtawfeeq1/loredex-obsidian)
+
 </div>
 
 ---
