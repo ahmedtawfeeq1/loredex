@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.4.0...loredex-v2.4.1) (2026-07-13)
+
+
+### Bug Fixes
+
+* **router:** surgical no-reflow source stamp instead of full reserialize ([ad1d29a](https://github.com/ahmedtawfeeq1/loredex/commit/ad1d29a3d0c3972e3772d67ce230899b5b26884e))
+
 ## [2.3.2](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.3.1...loredex-v2.3.2) (2026-07-12)
 
 
