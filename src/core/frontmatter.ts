@@ -76,6 +76,31 @@ export function serializeDoc(doc: Doc): string {
   return matter.stringify(doc.body, doc.meta)
 }
 
+/**
+ * Set one top-level frontmatter key on a source file WITHOUT reserializing the rest.
+ * serializeDoc round-trips the whole YAML through js-yaml, which reflows long scalars
+ * into `>-` blocks and drops blank lines — cosmetic churn in the user's own repo every
+ * time we stamp `loredex: routed`. This edits the raw text: replace the key's line if
+ * present, else insert it before the closing fence; every other byte is preserved.
+ * ponytail: matches only a top-level `key:` inside the fence (indented/nested keys are
+ * left alone); a fence-open with no close falls through to prepend (malformed input).
+ */
+export function stampFrontmatterKey(raw: string, key: string, value: string): string {
+  const nl = raw.includes('\r\n') ? '\r\n' : '\n'
+  const lines = raw.split(/\r?\n/)
+  const keyLine = new RegExp(`^${key}\\s*:`)
+  if (lines[0]?.trim() === '---') {
+    const close = lines.findIndex((line, i) => i > 0 && line.trim() === '---')
+    if (close > 0) {
+      const at = lines.findIndex((line, i) => i > 0 && i < close && keyLine.test(line))
+      if (at !== -1) lines[at] = `${key}: ${value}`
+      else lines.splice(close, 0, `${key}: ${value}`)
+      return lines.join(nl)
+    }
+  }
+  return `---${nl}${key}: ${value}${nl}---${nl}${nl}${raw}`
+}
+
 /** Enough metadata to file deterministically — no LLM needed. */
 export function isRoutable(meta: Meta): boolean {
   return Boolean(meta.project && meta.topic)

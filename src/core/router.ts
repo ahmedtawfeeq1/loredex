@@ -13,7 +13,7 @@ import { type ClassifyOptions, resolveMeta } from './classify'
 import type { Config } from './config'
 import { resolveSourceAbs } from './drift'
 import { emitLoredexEvent } from './events'
-import { type Meta, parseDoc, serializeDoc, stampSchema } from './frontmatter'
+import { type Meta, parseDoc, serializeDoc, stampFrontmatterKey, stampSchema } from './frontmatter'
 import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
 import { loadProducts, productOf } from './products'
@@ -166,11 +166,11 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
     } else if (existsSync(item.source)) {
       // stamp the original so it is never re-adopted — reread from disk, never item.raw:
       // the source may have been edited between planning and now, and writing the stale
-      // snapshot back would silently destroy those edits
-      const latest = parseDoc(readFileSync(item.source, 'utf8'))
+      // snapshot back would silently destroy those edits. Surgical single-key edit (not
+      // a serializeDoc round-trip) so the user's own frontmatter formatting is untouched.
       writeFileSync(
         item.source,
-        serializeDoc({ meta: { ...latest.meta, loredex: 'routed' }, body: latest.body }),
+        stampFrontmatterKey(readFileSync(item.source, 'utf8'), 'loredex', 'routed'),
       )
     }
     addRelatedLinks(dest)
