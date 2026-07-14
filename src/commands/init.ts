@@ -3,6 +3,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { basename, join, resolve } from 'node:path'
 import pc from 'picocolors'
 import { type Config, defaultVaultPath, loadConfig, saveConfig } from '../core/config'
+import type { DexType } from '../core/dex'
 import { detectEditors } from '../core/editors'
 import { setProduct } from '../core/products'
 import { inboxPath, scaffoldVault, slugify } from '../core/vault'
@@ -20,10 +21,17 @@ export interface InitOptions {
   sync?: string
   editor?: string
   product?: string
+  type?: string
 }
 
 export function runInit(opts: InitOptions): void {
   const cwd = process.cwd()
+  const dexType = (opts.type ?? 'research') as DexType
+  if (dexType !== 'research' && dexType !== 'agent-ops') {
+    console.error(pc.red(`unknown dex type "${opts.type}" — use research | agent-ops`))
+    process.exitCode = 1
+    return
+  }
   const existing = loadConfig()
   const vaultPath = resolve(opts.vault ?? existing?.vaultPath ?? defaultVaultPath())
   const projectName = opts.project ?? basename(cwd)
@@ -45,7 +53,7 @@ export function runInit(opts: InitOptions): void {
     }
   }
 
-  scaffoldVault(vaultPath)
+  scaffoldVault(vaultPath, dexType)
   saveConfig(config)
 
   // product grouping (view layer): file this project under a product in the
@@ -56,8 +64,14 @@ export function runInit(opts: InitOptions): void {
   injectConventions(cwd, projectName, inboxPath(vaultPath))
   const mcpWired = wireMcpServer(cwd)
 
-  console.log(pc.green('✓'), `vault: ${vaultPath}`)
+  console.log(
+    pc.green('✓'),
+    `dex: ${vaultPath}${dexType === 'agent-ops' ? pc.dim(' (agent-ops)') : ''}`,
+  )
   console.log(pc.green('✓'), `project registered: ${projectName} (${cwd})`)
+  if (dexType === 'agent-ops') {
+    console.log(pc.dim('next: loredex new client <name> --manager <m> --tags <a,b>'))
+  }
   if (config.sync === 'git') console.log(pc.green('✓'), 'git sync: auto-commit after each route')
   if (autoDetected) {
     console.log(

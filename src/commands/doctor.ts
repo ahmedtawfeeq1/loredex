@@ -2,8 +2,11 @@ import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import pc from 'picocolors'
+import type { ClientInfo } from '../core/agent-ops'
 import { configPath, loadConfig } from '../core/config'
 import { vaultSchemaStatus } from '../core/consume'
+import { isAgentOps } from '../core/dex'
+import { lintAgentOps } from '../core/doctor-agent-ops'
 import { detectEditors } from '../core/editors'
 import { claudeAvailable } from '../llm/claude-cli'
 import { codexAvailable } from '../llm/codex-cli'
@@ -81,5 +84,54 @@ export function runDoctor(): void {
       pc.yellow('!'),
       `no editor configured — run \`npx -y loredex@latest init --editor ${editors[0]?.scheme}\` to open code links in ${editors[0]?.name}`,
     )
+  }
+
+  if (config && existsSync(config.vaultPath) && isAgentOps(config.vaultPath)) {
+    reportAgentOps(config.vaultPath)
+  }
+}
+
+function reportAgentOps(vaultPath: string): void {
+  const { findings, fleet } = lintAgentOps(vaultPath)
+  console.log()
+  console.log(pc.bold('agent-ops dex'))
+  printFleetTable(fleet)
+  for (const finding of findings) {
+    const mark =
+      finding.level === 'error'
+        ? pc.red('✗')
+        : finding.level === 'warn'
+          ? pc.yellow('!')
+          : pc.cyan('•')
+    console.log(mark, `${finding.client}/${finding.scope}`, pc.dim(finding.message))
+  }
+  if (findings.length === 0 && fleet.length > 0) {
+    console.log(pc.green('✓'), 'fleet clean — every client passes the agent-ops schema')
+  }
+  if (findings.some((f) => f.level === 'error')) process.exitCode = 1
+}
+
+function printFleetTable(fleet: ClientInfo[]): void {
+  if (fleet.length === 0) {
+    console.log(pc.dim('no clients yet — `loredex new client <name>`'))
+    return
+  }
+  const rows = fleet.map((c) => [
+    c.slug,
+    c.manager ?? '—',
+    `${c.pipelines.length}`,
+    `${c.pipelines.reduce((n, p) => n + p.stages.length, 0)}`,
+    `${c.agents.length}`,
+    `${c.knowledgeTables.length}`,
+    `${c.inboxCount}`,
+    c.tags.map((t) => `#${t}`).join(' '),
+  ])
+  const header = ['client', 'manager', 'pipelines', 'stages', 'agents', 'tables', 'inbox', 'tags']
+  const widths = header.map((h, i) => Math.max(h.length, ...rows.map((r) => (r[i] ?? '').length)))
+  const pad = (text: string, width: number): string =>
+    text + ' '.repeat(Math.max(0, width - text.length))
+  console.log(pc.dim(header.map((h, i) => pad(h, widths[i] ?? h.length)).join('  ')))
+  for (const row of rows) {
+    console.log(row.map((cell, i) => pad(cell, widths[i] ?? 0)).join('  '))
   }
 }

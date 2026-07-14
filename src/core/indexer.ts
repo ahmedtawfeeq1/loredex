@@ -2,7 +2,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join, relative, sep } from 'node:path'
 import { writeDashboardBase } from './bases'
 import { isBriefName } from './curate'
+import { loadDexType } from './dex'
 import { parseDoc } from './frontmatter'
+import { rebuildAgentOpsIndexes } from './indexer-agent-ops'
 import { groupProjects, loadProducts } from './products'
 import { walkMarkdown } from './scan'
 
@@ -11,8 +13,14 @@ interface NoteEntry {
   stale: boolean
 }
 
-/** Rebuild _index/Home.md and per-project MOCs from the vault tree. Idempotent — full regenerate. */
+/** Rebuild _index/Home.md and per-project MOCs from the dex tree. Idempotent — full regenerate. */
 export function rebuildIndexes(vaultPath: string): void {
+  // agent-ops dexes get their own index shape; branching here (not a new signature)
+  // keeps every host that passes only a vault path working unchanged
+  if (loadDexType(vaultPath) === 'agent-ops') {
+    rebuildAgentOpsIndexes(vaultPath)
+    return
+  }
   const byProject = new Map<string, Map<string, NoteEntry[]>>()
   const briefsByProject = new Map<string, string[]>()
   const projectsDir = join(vaultPath, 'projects')

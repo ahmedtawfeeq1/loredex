@@ -31,25 +31,25 @@ describe('resolveMeta project pinning', () => {
 
   it('pins to the registered project even when the LLM invents another', () => {
     // LLM guesses a different project from content — the classic scatter bug.
-    mockClassify.mockReturnValue({ project: 'genudo-mcp', topic: 'mcp', type: 'note', tags: [] })
+    mockClassify.mockReturnValue({ project: 'acme-mcp', topic: 'mcp', type: 'note', tags: [] })
     const { root, path } = makeFile('src/mcp/tools.md')
-    const meta = resolveMeta(path, '# doc\n', opts(root, 'genudo_backend'))
-    expect(meta.project).toBe('genudo_backend') // registered wins, no scatter
+    const meta = resolveMeta(path, '# doc\n', opts(root, 'acme_backend'))
+    expect(meta.project).toBe('acme_backend') // registered wins, no scatter
     expect(meta.topic).toBe('mcp') // LLM still owns topic
   })
 
   it('lets the LLM pick the project for inbox files (no registered root)', () => {
-    mockClassify.mockReturnValue({ project: 'genudo-mcp', topic: 'mcp', type: 'note', tags: [] })
+    mockClassify.mockReturnValue({ project: 'acme-mcp', topic: 'mcp', type: 'note', tags: [] })
     const { root, path } = makeFile('note.md')
     const meta = resolveMeta(path, '# doc\n', opts(root, '')) // projectName '' = inbox
-    expect(meta.project).toBe('genudo-mcp')
+    expect(meta.project).toBe('acme-mcp')
   })
 
   it('explicit file frontmatter still overrides the registered project', () => {
-    mockClassify.mockReturnValue({ project: 'genudo-mcp', topic: 'mcp', type: 'note', tags: [] })
+    mockClassify.mockReturnValue({ project: 'acme-mcp', topic: 'mcp', type: 'note', tags: [] })
     const { root, path } = makeFile('src/mcp/tools.md')
     const raw = '---\nproject: chosen-by-hand\ntopic: t\ntype: note\n---\n# doc\n'
-    const meta = resolveMeta(path, raw, opts(root, 'genudo_backend'))
+    const meta = resolveMeta(path, raw, opts(root, 'acme_backend'))
     expect(meta.project).toBe('chosen-by-hand')
   })
 })

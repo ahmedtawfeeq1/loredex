@@ -3,6 +3,31 @@
  * The CLI stays the primary interface; this exposes the same core it is built on.
  */
 export { ACTIVITY_LOG_ARGS, type ActivityEvent, parseActivity } from './core/activity'
+export {
+  type ClientInfo,
+  STAGE_FILE_SUFFIXES,
+  type StageInfo,
+  scanClient,
+  scanFleet,
+  stageNumberingGaps,
+  UNIT_FILES,
+  type UnitInfo,
+} from './core/agent-ops'
+export {
+  scaffoldAgent,
+  scaffoldClient,
+  scaffoldPipeline,
+  scaffoldStage,
+} from './core/agent-ops-scaffold'
+export {
+  addClientTag,
+  type ClientMap,
+  clientTags,
+  loadClients,
+  removeClientTag,
+  saveClients,
+  setClientTags,
+} from './core/clients'
 export { type Config, defaultVaultPath, loadConfig, saveConfig } from './core/config'
 export {
   ambientGitIdentity,
@@ -11,6 +36,12 @@ export {
   type VaultSchemaStatus,
   vaultSchemaStatus,
 } from './core/consume'
+export { type DexType, isAgentOps, loadDexType, saveDexType } from './core/dex'
+export {
+  type LintFinding,
+  type LintLevel,
+  lintAgentOps,
+} from './core/doctor-agent-ops'
 export {
   type Identity,
   type LoredexEmitter,
