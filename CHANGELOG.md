@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.5.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.4.1...loredex-v2.5.0) (2026-07-14)
+
+
+### Features
+
+* **agent-ops:** dex types + agent-ops structure (manifests, scaffolds, doctor, indexer) ([4cf1719](https://github.com/ahmedtawfeeq1/loredex/commit/4cf171996699ec62d97dcf1e7826f6eaa2dadb42))
+* dex types + agent-ops (manifests, scaffolds, doctor, workspace materializer, data indexing) ([23d3a18](https://github.com/ahmedtawfeeq1/loredex/commit/23d3a18f052025ccea1007a5583f7e894490102f))
+* **scan:** structural indexing of yaml/json/csv for agent-ops dexes ([9898219](https://github.com/ahmedtawfeeq1/loredex/commit/989821904f8ef20c280c9aa81889f37d1f3d4859))
+* **workspace:** workspace.yml → generated agent tooling (.mcp.json, .claude settings, AGENTS.md) ([c62e682](https://github.com/ahmedtawfeeq1/loredex/commit/c62e6824d284d696cad8011aed036fea85524b19))
+
 ## [2.4.1](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.4.0...loredex-v2.4.1) (2026-07-13)
 
 
