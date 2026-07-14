@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.6.0...loredex-v2.7.0) (2026-07-14)
+
+
+### Features
+
+* resolve the dex per invocation — two dexes on one machine ([77eef12](https://github.com/ahmedtawfeeq1/loredex/commit/77eef12d69db7c72e0e4140b002833a5796dc251))
+* resolve the dex per invocation — two dexes on one machine, no env hacks ([1b74a5a](https://github.com/ahmedtawfeeq1/loredex/commit/1b74a5a4fd132ee76468d4b9326a13f2b66cc1a3))
+
 ## [2.6.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.5.0...loredex-v2.6.0) (2026-07-14)
 
 
