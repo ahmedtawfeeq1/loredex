@@ -1,6 +1,6 @@
 import { statSync } from 'node:fs'
 import pc from 'picocolors'
-import { loadConfig } from '../core/config'
+import { loadResolvedConfig } from '../core/config'
 import { walkMarkdown } from '../core/scan'
 import { inboxPath } from '../core/vault'
 import { runRoute } from './route'
@@ -15,7 +15,7 @@ const POLL_MS = 3000
  * debounce, so no extra timer bookkeeping is needed.
  */
 export function runWatch(opts: { llm: boolean }): void {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1

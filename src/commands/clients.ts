@@ -1,6 +1,6 @@
 import pc from 'picocolors'
 import { clientTags, loadClients, setClientTags } from '../core/clients'
-import { loadConfig } from '../core/config'
+import { loadResolvedConfig } from '../core/config'
 import { isAgentOps } from '../core/dex'
 import { rebuildIndexes } from '../core/indexer'
 import { listProjects } from '../core/product'
@@ -10,7 +10,7 @@ import { slugify } from '../core/vault'
 
 /** `loredex clients` — list clients with manager + tags, or manage tags. */
 export function runClients(action: string | undefined, args: string[]): void {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1

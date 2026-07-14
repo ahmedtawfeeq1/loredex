@@ -3,28 +3,32 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import pc from 'picocolors'
 import type { ClientInfo } from '../core/agent-ops'
-import { configPath, loadConfig } from '../core/config'
+import { configPath, loadResolvedConfig } from '../core/config'
 import { vaultSchemaStatus } from '../core/consume'
-import { isAgentOps } from '../core/dex'
+import { isAgentOps, loadDexSync } from '../core/dex'
 import { lintAgentOps } from '../core/doctor-agent-ops'
 import { detectEditors } from '../core/editors'
 import { claudeAvailable } from '../llm/claude-cli'
 import { codexAvailable } from '../llm/codex-cli'
 
 export function runDoctor(): void {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   const checks: Array<[string, boolean, string]> = []
 
   checks.push(['config', config !== null, configPath()])
   if (config) {
-    checks.push(['vault', existsSync(config.vaultPath), config.vaultPath])
+    checks.push([
+      'vault',
+      existsSync(config.vaultPath),
+      `${config.vaultPath} (via ${config.vaultSource})`,
+    ])
     checks.push(['inbox', existsSync(join(config.vaultPath, '_inbox')), ''])
     checks.push([
       'projects registered',
       Object.keys(config.projects).length > 0,
       `${Object.keys(config.projects).length}`,
     ])
-    if (config.sync === 'git') {
+    if ((loadDexSync(config.vaultPath) ?? config.sync) === 'git') {
       checks.push(['vault git repo', existsSync(join(config.vaultPath, '.git')), ''])
     }
     checks.push(['editor for code links', true, config.editor ?? 'system default'])

@@ -5,7 +5,7 @@ import {
   scaffoldPipeline,
   scaffoldStage,
 } from '../core/agent-ops-scaffold'
-import { loadConfig } from '../core/config'
+import { loadResolvedConfig } from '../core/config'
 import { isAgentOps } from '../core/dex'
 import { rebuildIndexes } from '../core/indexer'
 import { gitAutoCommit } from '../core/router'
@@ -19,7 +19,7 @@ export interface NewOptions {
 
 /** `loredex new client|pipeline|agent|stage …` — scaffold agent-ops dex structure. */
 export function runNew(kind: string, args: string[], opts: NewOptions): void {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1
@@ -103,7 +103,7 @@ function usage(text: string): void {
 
 function finish(
   vaultPath: string,
-  config: NonNullable<ReturnType<typeof loadConfig>>,
+  config: NonNullable<ReturnType<typeof loadResolvedConfig>>,
   message: string,
 ): void {
   rebuildIndexes(vaultPath)

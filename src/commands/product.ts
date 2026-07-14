@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import pc from 'picocolors'
-import { loadConfig } from '../core/config'
+import { loadResolvedConfig } from '../core/config'
 import { serializeDoc } from '../core/frontmatter'
 import { rebuildIndexes } from '../core/indexer'
 import { buildDashboard, PRODUCT_BRIEF_NAME, renderDashboardMarkdown } from '../core/product'
@@ -54,7 +54,7 @@ export interface ProductOptions {
 }
 
 export async function runCurateProduct(opts: ProductOptions): Promise<void> {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1

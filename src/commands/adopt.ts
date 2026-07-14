@@ -1,7 +1,13 @@
 import { basename, relative, resolve } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import pc from 'picocolors'
-import { type Config, defaultVaultPath, loadConfig, saveConfig } from '../core/config'
+import {
+  type Config,
+  defaultVaultPath,
+  loadConfig,
+  loadResolvedConfig,
+  saveConfig,
+} from '../core/config'
 import type { PlanItem } from '../core/router'
 import { executePlan, knownStructure, planFile } from '../core/router'
 import { findCandidates } from '../core/scan'
@@ -18,15 +24,18 @@ export async function runAdopt(target: string | undefined, opts: AdoptOptions): 
   const root = resolve(target ?? process.cwd())
   const projectName = basename(root)
 
-  // zero-setup path: `npx loredex adopt` on a fresh machine just works
-  const config: Config = loadConfig() ?? {
+  // zero-setup path: `npx loredex adopt` on a fresh machine just works.
+  // Persist registration against the config as saved on disk; operate on the
+  // per-invocation resolved dex (which may differ and must never be persisted).
+  const saved: Config = loadConfig() ?? {
     vaultPath: defaultVaultPath(),
     sync: 'none',
     projects: {},
   }
+  saved.projects[root] = saved.projects[root] ?? { name: projectName }
+  saveConfig(saved)
+  const config = loadResolvedConfig(root) ?? { ...saved, vaultSource: 'global' as const }
   scaffoldVault(config.vaultPath)
-  config.projects[root] = config.projects[root] ?? { name: projectName }
-  saveConfig(config)
 
   const candidates = findCandidates(root)
   if (candidates.length === 0) {

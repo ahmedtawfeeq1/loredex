@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { loadClients, saveClients } from './clients'
-import { type DexType, isAgentOps, saveDexType } from './dex'
+import { type DexType, hasDexManifest, isAgentOps, saveDexType } from './dex'
 import { LOREDEX_SCHEMA, type Meta } from './frontmatter'
 
 export function scaffoldVault(vaultPath: string, type: DexType = 'research'): void {
@@ -12,8 +12,11 @@ export function scaffoldVault(vaultPath: string, type: DexType = 'research'): vo
   if (!existsSync(home)) {
     writeFileSync(home, '# Home\n\nIndexes are rebuilt by `loredex route`.\n')
   }
+  // every dex declares its type — the manifest doubles as the dex-root marker
+  // that per-invocation vault resolution walks for (see loadResolvedConfig).
+  // Never re-type an already-declared dex: callers like adopt pass the default.
+  if (!hasDexManifest(vaultPath)) saveDexType(vaultPath, type)
   if (type === 'agent-ops') {
-    saveDexType(vaultPath, type)
     if (!existsSync(join(vaultPath, '_index', 'clients.json'))) {
       saveClients(vaultPath, loadClients(vaultPath))
     }

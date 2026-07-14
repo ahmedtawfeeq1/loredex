@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import pc from 'picocolors'
-import { findProject, loadConfig } from '../core/config'
+import { findProject, loadResolvedConfig } from '../core/config'
 import {
   applyCuration,
   buildDigest,
@@ -33,7 +33,7 @@ export async function runCurate(
   projectArg: string | undefined,
   opts: CurateOptions,
 ): Promise<void> {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1

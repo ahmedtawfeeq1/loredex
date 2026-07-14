@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import pc from 'picocolors'
-import { findProject, loadConfig } from '../core/config'
+import { findProject, loadResolvedConfig } from '../core/config'
 import { isRoutable, isRouted, parseDoc } from '../core/frontmatter'
 import type { PlanItem } from '../core/router'
 import { executePlan, knownStructure, planFile, refreshRoutedCopies } from '../core/router'
@@ -17,7 +17,7 @@ export interface RouteOptions {
 }
 
 export function runRoute(opts: RouteOptions): void {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1
