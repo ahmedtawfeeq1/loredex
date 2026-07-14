@@ -3,12 +3,12 @@
   "owner": {
     "name": "Ahmed Tawfeeq"
   },
-  "description": "Auto-organize AI-generated markdown into an Obsidian-compatible vault",
+  "description": "Auto-organize AI-generated markdown into an Obsidian-compatible dex",
   "plugins": [
     {
       "name": "loredex",
       "source": "./plugin",
-      "description": "Auto-file research/analysis markdown from Claude Code sessions into your loredex vault"
+      "description": "Auto-file research/analysis markdown from Claude Code sessions into your loredex dex"
     }
   ]
 }

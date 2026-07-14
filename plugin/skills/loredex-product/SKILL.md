@@ -1,6 +1,6 @@
 ---
 name: loredex-product
-description: Curate the whole product — a cross-project dashboard and brief spanning every project in the vault, with per-project state, the handoff flow between teams, and report-only cross-project risks/duplicates. Use when the user asks for the product view, "where does the whole product stand", "what's the state across projects/teams", or wants cross-project contradictions checked.
+description: Curate the whole product — a cross-project dashboard and brief spanning every project in the dex, with per-project state, the handoff flow between teams, and report-only cross-project risks/duplicates. Use when the user asks for the product view, "where does the whole product stand", "what's the state across projects/teams", or wants cross-project contradictions checked.
 ---
 
 # /loredex-product
@@ -14,7 +14,7 @@ derives the product's objective from the material.
 
 What one run does:
 
-1. **Pulls the vault remote** so teammates' latest notes and handoffs are included.
+1. **Pulls the dex remote** so teammates' latest notes and handoffs are included.
 2. **Deterministic dashboard** (works with `--no-llm` too): per-project state table (notes,
    last activity, active topics, stale counts, Start-Here-brief freshness), the flow table
    of open/consumed handoffs between teams with age, and cross-project reference edges.
@@ -23,7 +23,7 @@ What one run does:
    **report-only** risks/contradictions and duplicate-coverage findings (e.g. two projects
    describing the same API field differently). Nothing is auto-stamped across project
    boundaries — surface the findings to the user and let them judge.
-4. Writes `Start Here - Product.md` at the vault root (linked from the Home index),
+4. Writes `Start Here - Product.md` at the dex root (linked from the Home index),
    commits, and pushes.
 
 `--refresh-stale` re-curates any project whose own brief is missing or older than its

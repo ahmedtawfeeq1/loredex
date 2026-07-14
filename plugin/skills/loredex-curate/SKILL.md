@@ -1,6 +1,6 @@
 ---
 name: loredex-curate
-description: Write a Start-Here brief for a project or a recent session's findings, and flag stale/duplicate/orphaned notes. Use when the user says "curate my vault/research", "where do I start", "make sense of this project", or just finished a session that produced several markdown files and wants a handoff.
+description: Write a Start-Here brief for a project or a recent session's findings, and flag stale/duplicate/orphaned notes. Use when the user says "curate my dex/research", "where do I start", "make sense of this project", or just finished a session that produced several markdown files and wants a handoff.
 ---
 
 # /loredex-curate

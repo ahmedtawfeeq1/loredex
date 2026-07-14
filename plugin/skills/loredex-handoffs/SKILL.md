@@ -18,7 +18,7 @@ To check on demand:
 npx -y loredex@latest handoffs
 ```
 
-This pulls the vault remote first, so teammates' fresh handoffs appear. For each open
+This pulls the dex remote first, so teammates' fresh handoffs appear. For each open
 handoff listed:
 
 1. **Read it** (the path is printed) — it contains the objective, a brief written for this
