@@ -1,6 +1,6 @@
 {
   "name": "loredex",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Universal control system for coding agents: shared memory, cross-project handoffs, research management, and MCP + Obsidian dashboards across products and repos.",
   "type": "module",
   "license": "MIT",

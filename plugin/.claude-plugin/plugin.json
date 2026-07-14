@@ -1,7 +1,7 @@
 {
   "name": "loredex",
   "description": "Auto-file AI-generated research markdown into your Obsidian-compatible dex",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "author": {
     "name": "Ahmed Tawfeeq"
   },
