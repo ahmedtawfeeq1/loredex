@@ -1,5 +1,5 @@
 import pc from 'picocolors'
-import { loadConfig } from '../core/config'
+import { loadResolvedConfig } from '../core/config'
 import { isAgentOps } from '../core/dex'
 import { slugify } from '../core/vault'
 import { materializeWorkspace } from '../core/workspace'
@@ -10,7 +10,7 @@ export interface WorkspaceOptions {
 
 /** `loredex workspace <client> [--check]` — generate (or verify) the client's agent tooling. */
 export function runWorkspace(client: string, opts: WorkspaceOptions): void {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1

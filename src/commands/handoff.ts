@@ -2,7 +2,7 @@ import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import pc from 'picocolors'
-import { findProject, loadConfig } from '../core/config'
+import { findProject, loadResolvedConfig } from '../core/config'
 import { ambientGitIdentity, consumeHandoff } from '../core/consume'
 import {
   buildDigest,
@@ -56,7 +56,7 @@ function fallbackPlan(objective: string, notes: ScopedNote[]): CurationPlan {
 }
 
 export async function runHandoff(opts: HandoffOptions): Promise<void> {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1
@@ -190,7 +190,7 @@ export interface HandoffsOptions {
 
 /** List open handoffs addressed to a project; --consume marks one done. Pulls first so teammates' handoffs appear. */
 export function runHandoffs(opts: HandoffsOptions): void {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1

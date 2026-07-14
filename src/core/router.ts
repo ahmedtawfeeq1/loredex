@@ -11,6 +11,7 @@ import {
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { type ClassifyOptions, resolveMeta } from './classify'
 import type { Config } from './config'
+import { loadDexSync } from './dex'
 import { resolveSourceAbs } from './drift'
 import { emitLoredexEvent } from './events'
 import { type Meta, parseDoc, serializeDoc, stampFrontmatterKey, stampSchema } from './frontmatter'
@@ -310,7 +311,8 @@ function stripRelated(body: string): string {
 }
 
 export function gitAutoCommit(vaultPath: string, config: Config, message: string): void {
-  if (config.sync !== 'git') return
+  // the dex's own committed sync policy wins; config.sync is the machine-global fallback
+  if ((loadDexSync(vaultPath) ?? config.sync) !== 'git') return
   try {
     execFileSync('git', ['add', '-A'], { cwd: vaultPath, stdio: 'ignore' })
     execFileSync('git', ['commit', '-m', message], { cwd: vaultPath, stdio: 'ignore' })

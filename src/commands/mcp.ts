@@ -1,5 +1,5 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
-import { loadConfig } from '../core/config'
+import { loadResolvedConfig } from '../core/config'
 import { createLoredexMcpServer } from '../mcp/server'
 
 /**
@@ -7,7 +7,7 @@ import { createLoredexMcpServer } from '../mcp/server'
  * stdout belongs to the transport; all human-facing output goes to stderr.
  */
 export async function runMcp(): Promise<void> {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error('no loredex config — run `npx -y loredex@latest init` first')
     process.exit(1)

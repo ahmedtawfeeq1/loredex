@@ -2,7 +2,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve, sep } from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import pc from 'picocolors'
-import { loadConfig } from '../core/config'
+import { loadResolvedConfig } from '../core/config'
 import { isRouted, parseDoc, serializeDoc } from '../core/frontmatter'
 import { rebuildIndexes } from '../core/indexer'
 import { gitAutoCommit } from '../core/router'
@@ -20,7 +20,7 @@ export interface ResetOptions {
  * `loredex: routed` marker is removed.
  */
 export async function runReset(projectArg: string, opts: ResetOptions): Promise<void> {
-  const config = loadConfig()
+  const config = loadResolvedConfig()
   if (!config) {
     console.error(pc.red('no loredex config — run `npx -y loredex@latest init` first'))
     process.exitCode = 1

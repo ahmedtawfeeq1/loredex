@@ -3,7 +3,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { basename, join, resolve } from 'node:path'
 import pc from 'picocolors'
 import { type Config, defaultVaultPath, loadConfig, saveConfig } from '../core/config'
-import type { DexType } from '../core/dex'
+import { type DexType, hasDexManifest, loadDexSync, loadDexType, saveDexSync } from '../core/dex'
 import { detectEditors } from '../core/editors'
 import { setProduct } from '../core/products'
 import { inboxPath, scaffoldVault, slugify } from '../core/vault'
@@ -36,10 +36,27 @@ export function runInit(opts: InitOptions): void {
   const vaultPath = resolve(opts.vault ?? existing?.vaultPath ?? defaultVaultPath())
   const projectName = opts.project ?? basename(cwd)
 
+  // never absorb an existing dex into a different type — the manifest (or, for
+  // pre-manifest dexes, a scaffolded _index/) is proof of what it already is
+  const declared = hasDexManifest(vaultPath) ? loadDexType(vaultPath) : null
+  const implicitResearch = !declared && existsSync(join(vaultPath, '_index'))
+  if ((declared ?? (implicitResearch ? 'research' : dexType)) !== dexType) {
+    console.error(
+      pc.red(
+        `dex at ${vaultPath} is type "${declared ?? 'research'}" — refusing to re-type as "${dexType}"`,
+      ),
+    )
+    console.error(pc.dim('edit _index/dex.json by hand if you really mean it'))
+    process.exitCode = 1
+    return
+  }
+
+  // global vaultPath is written once at bootstrap; after that, a project pointing
+  // at a different dex records it on its own entry — init never repoints the machine
   const config: Config = existing ?? { vaultPath, sync: 'none', projects: {} }
-  config.vaultPath = vaultPath
-  config.projects[cwd] = { name: projectName }
-  if (opts.sync === 'git') config.sync = 'git'
+  const isDefaultVault = vaultPath === resolve(config.vaultPath)
+  config.projects[cwd] = isDefaultVault ? { name: projectName } : { name: projectName, vaultPath }
+  if (opts.sync === 'git' && isDefaultVault) config.sync = 'git'
   if (opts.editor) config.editor = opts.editor
 
   // auto-pick when there's exactly one installed editor and the user hasn't chosen one yet —
@@ -54,13 +71,16 @@ export function runInit(opts: InitOptions): void {
   }
 
   scaffoldVault(vaultPath, dexType)
+  // sync is a property of the dex (committed, team-shared), not of this machine
+  if (opts.sync === 'git') saveDexSync(vaultPath, 'git')
+  const effectiveSync = (loadDexSync(vaultPath) ?? config.sync) === 'git'
   saveConfig(config)
 
   // product grouping (view layer): file this project under a product in the
   // vault's shared manifest. Slug-keyed to match the projects/<slug>/ dirs.
   if (opts.product) setProduct(vaultPath, slugify(projectName), opts.product)
 
-  if (config.sync === 'git') setupGitSync(vaultPath)
+  if (effectiveSync) setupGitSync(vaultPath)
   injectConventions(cwd, projectName, inboxPath(vaultPath))
   const mcpWired = wireMcpServer(cwd)
 
@@ -72,7 +92,7 @@ export function runInit(opts: InitOptions): void {
   if (dexType === 'agent-ops') {
     console.log(pc.dim('next: loredex new client <name> --manager <m> --tags <a,b>'))
   }
-  if (config.sync === 'git') console.log(pc.green('✓'), 'git sync: auto-commit after each route')
+  if (effectiveSync) console.log(pc.green('✓'), 'git sync: auto-commit after each route')
   if (autoDetected) {
     console.log(
       pc.green('✓'),

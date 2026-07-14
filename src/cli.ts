@@ -17,6 +17,7 @@ import { runStatus } from './commands/status'
 import { runSync } from './commands/sync'
 import { runWatch } from './commands/watch'
 import { runWorkspace } from './commands/workspace'
+import { setVaultOverride } from './core/config'
 
 const program = new Command()
 
@@ -24,6 +25,11 @@ program
   .name('loredex')
   .description('Auto-organize AI-generated markdown into an Obsidian-compatible vault')
   .version(pkg.version)
+  .option(
+    '--vault <path>',
+    'operate on this dex (default: nearest _index/dex.json ancestor, then config)',
+  )
+  .hook('preAction', () => setVaultOverride(program.opts().vault))
 
 program
   .command('init')

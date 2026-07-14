@@ -38,15 +38,25 @@ describe('dex type manifest', () => {
     })
   })
 
-  it('scaffoldVault(agent-ops) writes dex.json + clients.json; default writes neither', () => {
+  it('scaffoldVault always declares the type; clients.json is agent-ops only', () => {
     const ops = dex()
     scaffoldVault(ops, 'agent-ops')
     expect(loadDexType(ops)).toBe('agent-ops')
     expect(existsSync(join(ops, '_index', 'clients.json'))).toBe(true)
 
+    // research dexes get an explicit manifest too — it's the dex-root marker
+    // that per-invocation vault resolution walks for
     const research = dex()
     scaffoldVault(research)
-    expect(existsSync(join(research, '_index', 'dex.json'))).toBe(false)
+    expect(existsSync(join(research, '_index', 'dex.json'))).toBe(true)
+    expect(loadDexType(research)).toBe('research')
     expect(existsSync(join(research, '_index', 'clients.json'))).toBe(false)
+  })
+
+  it('scaffoldVault never re-types an already-declared dex', () => {
+    const v = dex()
+    saveDexType(v, 'agent-ops')
+    scaffoldVault(v) // default 'research' (e.g. adopt) must not clobber
+    expect(loadDexType(v)).toBe('agent-ops')
   })
 })

@@ -28,7 +28,17 @@ export {
   saveClients,
   setClientTags,
 } from './core/clients'
-export { type Config, defaultVaultPath, loadConfig, saveConfig } from './core/config'
+export {
+  type Config,
+  defaultVaultPath,
+  findDexRoot,
+  loadConfig,
+  loadResolvedConfig,
+  type ResolvedConfig,
+  saveConfig,
+  setVaultOverride,
+  type VaultSource,
+} from './core/config'
 export {
   ambientGitIdentity,
   type ConsumeReceipt,
@@ -37,7 +47,15 @@ export {
   vaultSchemaStatus,
 } from './core/consume'
 export { operationalDataDigest } from './core/curate'
-export { type DexType, isAgentOps, loadDexType, saveDexType } from './core/dex'
+export {
+  type DexType,
+  hasDexManifest,
+  isAgentOps,
+  loadDexSync,
+  loadDexType,
+  saveDexSync,
+  saveDexType,
+} from './core/dex'
 export {
   type LintFinding,
   type LintLevel,
