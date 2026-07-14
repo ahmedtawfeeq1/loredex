@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { loadClients, saveClients } from './clients'
-import { type DexType, saveDexType } from './dex'
+import { type DexType, isAgentOps, saveDexType } from './dex'
 import { LOREDEX_SCHEMA, type Meta } from './frontmatter'
 
 export function scaffoldVault(vaultPath: string, type: DexType = 'research'): void {
@@ -54,9 +54,21 @@ export function slugify(text: string): string {
   return slug || 'untitled'
 }
 
-/** Directory a note belongs in. Notes without a project land under research/. */
+/**
+ * Directory a note belongs in. Notes without a project land under research/.
+ * Agent-ops dexes have no topic tree — routed markdown for a known client lands
+ * in its `_randoms/` (searchable, lint-exempt) so route/adopt/hooks can never
+ * break the client schema; an unknown project falls back to research/.
+ */
 export function targetDir(vaultPath: string, meta: Meta): string {
   const topic = slugify(meta.topic ?? 'general')
+  if (meta.project && isAgentOps(vaultPath)) {
+    const client = slugify(meta.project)
+    if (existsSync(join(vaultPath, 'projects', client))) {
+      return join(vaultPath, 'projects', client, '_randoms')
+    }
+    return join(vaultPath, 'research', topic)
+  }
   return meta.project
     ? join(vaultPath, 'projects', slugify(meta.project), topic)
     : join(vaultPath, 'research', topic)

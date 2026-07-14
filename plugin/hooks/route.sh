@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop hook: route new findings into the loredex vault.
+# Stop hook: route new findings into the loredex dex.
 # Must never block Claude Code — always exits 0, fast-exits for unregistered projects.
 set -u
 

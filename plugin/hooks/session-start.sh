@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart hook: pull the vault remote and surface open handoffs addressed to this
+# SessionStart hook: pull the dex remote and surface open handoffs addressed to this
 # project. Stdout is injected into the session's context, so the agent starts work already
 # knowing what other teams shipped — no skill invocation required.
 # Must never block Claude Code — always exits 0, fast-exits for unregistered projects.

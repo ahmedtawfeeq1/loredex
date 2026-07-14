@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { scaffoldClient } from '../src/core/agent-ops-scaffold'
 import type { Config } from '../src/core/config'
 import { storeNote } from '../src/core/store'
-import { scaffoldVault } from '../src/core/vault'
+import { scaffoldVault, targetDir } from '../src/core/vault'
 
 function config(vaultPath: string): Config {
   return { vaultPath, sync: 'none', projects: {} }
@@ -52,6 +52,26 @@ describe('vault_store on agent-ops dexes', () => {
       content: 'x',
     })
     expect(dest).toContain(join('projects', 'acme-crm', 'auth'))
+  })
+
+  it('route safety: targetDir on agent-ops dexes never builds a topic tree inside a client', () => {
+    const v = mkdtempSync(join(tmpdir(), 'loredex-store-'))
+    scaffoldVault(v, 'agent-ops')
+    const { slug } = scaffoldClient(v, 'peak_fitness')
+    // known client → _randoms, regardless of topic
+    expect(targetDir(v, { project: slug, topic: 'pricing' })).toBe(
+      join(v, 'projects', slug, '_randoms'),
+    )
+    // unknown project → research/, never a stray client dir
+    expect(targetDir(v, { project: 'ghost-client', topic: 'misc' })).toBe(
+      join(v, 'research', 'misc'),
+    )
+    // research dexes unchanged
+    const r = mkdtempSync(join(tmpdir(), 'loredex-store-'))
+    scaffoldVault(r)
+    expect(targetDir(r, { project: 'acme-crm', topic: 'auth' })).toBe(
+      join(r, 'projects', 'acme-crm', 'auth'),
+    )
   })
 
   it('back-compat tripwire: vault_store type enum keeps its original five values', () => {
