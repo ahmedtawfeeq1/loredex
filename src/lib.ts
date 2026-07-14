@@ -110,4 +110,12 @@ export { type SearchHit, sanitizeForContext, searchVault } from './core/search'
 export { type StoreInput, storeNote } from './core/store'
 export { type SyncHealth, syncStatus } from './core/sync-status'
 export { inboxPath, scaffoldVault, slugify, stampEngineSchema } from './core/vault'
+export {
+  expandEnvRefs,
+  loadWorkspaceSpec,
+  materializeWorkspace,
+  type WorkspaceResult,
+  type WorkspaceSpec,
+  workspaceSchema,
+} from './core/workspace'
 export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'

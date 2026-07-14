@@ -16,6 +16,7 @@ import { runRoute } from './commands/route'
 import { runStatus } from './commands/status'
 import { runSync } from './commands/sync'
 import { runWatch } from './commands/watch'
+import { runWorkspace } from './commands/workspace'
 
 const program = new Command()
 
@@ -159,6 +160,14 @@ program
   .option('--before <NN>', 'insert the new stage before stage NN (renumbers later stages)')
   .option('--after <NN>', 'insert the new stage after stage NN (renumbers later stages)')
   .action((kind, args, opts) => runNew(kind, args ?? [], opts))
+
+program
+  .command('workspace <client>')
+  .description(
+    "generate the client's agent tooling from workspace.yml (.mcp.json, .claude settings, AGENTS.md — secrets from env)",
+  )
+  .option('--check', 'verify without writing; non-zero exit on drift or missing env vars')
+  .action((client, opts) => runWorkspace(client, opts))
 
 program
   .command('clients [action] [args...]')

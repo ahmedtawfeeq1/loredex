@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { type ClientInfo, scanFleet, stageNumberingGaps, type UnitInfo } from './agent-ops'
+import { materializeWorkspace } from './workspace'
 
 /**
  * Agent-ops lint engine — pure (no console) so the CLI doctor, tests, and desktop
@@ -236,13 +237,51 @@ export function committedProjectFiles(vaultPath: string): string[] {
   return out
 }
 
+/** Workspace drift/missing-env findings for one client (check mode — never writes). */
+function lintWorkspace(vaultPath: string, info: ClientInfo): LintFinding[] {
+  if (!info.hasWorkspaceYml) return []
+  try {
+    const result = materializeWorkspace(vaultPath, info.slug, { check: true })
+    const findings: LintFinding[] = []
+    if (result.wouldChange.length > 0) {
+      findings.push({
+        level: 'warn',
+        client: info.slug,
+        scope: 'workspace.yml',
+        message: `generated files out of date (${result.wouldChange.join(', ')}) — run \`loredex workspace ${info.slug}\``,
+      })
+    }
+    for (const name of result.missingEnv) {
+      findings.push({
+        level: 'attention',
+        client: info.slug,
+        scope: 'workspace.yml',
+        message: `references \${${name}} which is not set in this environment`,
+      })
+    }
+    return findings
+  } catch (error) {
+    return [
+      {
+        level: 'error',
+        client: info.slug,
+        scope: 'workspace.yml',
+        message: error instanceof Error ? error.message : String(error),
+      },
+    ]
+  }
+}
+
 export function lintAgentOps(
   vaultPath: string,
   now = Date.now(),
 ): { findings: LintFinding[]; fleet: ClientInfo[] } {
   const fleet = scanFleet(vaultPath)
   const findings: LintFinding[] = []
-  for (const info of fleet) findings.push(...lintClient(info, now))
+  for (const info of fleet) {
+    findings.push(...lintClient(info, now))
+    findings.push(...lintWorkspace(vaultPath, info))
+  }
   findings.push(...scanForSecrets(vaultPath, committedProjectFiles(vaultPath)))
   findings.push(...findTrackedGeneratedFiles(vaultPath))
   const order: Record<LintLevel, number> = { error: 0, warn: 1, attention: 2 }
