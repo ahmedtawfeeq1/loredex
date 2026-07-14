@@ -21,6 +21,13 @@ export interface Meta {
   project?: string
   /** the product this project belongs to (view grouping); mirror of `_index/products.json` */
   product?: string
+  /** agent-ops dexes: the client this note belongs to (mirror of the projects/<client> dir) */
+  client?: string
+  /** agent-ops dexes: pipeline / stage a scaffolded file describes */
+  pipeline?: string
+  stage?: string
+  /** agent-ops dexes: stage-less unit */
+  agent?: string
   topic?: string
   type?: string
   date?: string

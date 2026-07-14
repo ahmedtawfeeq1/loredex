@@ -3,6 +3,31 @@
  * The CLI stays the primary interface; this exposes the same core it is built on.
  */
 export { ACTIVITY_LOG_ARGS, type ActivityEvent, parseActivity } from './core/activity'
+export {
+  type ClientInfo,
+  STAGE_FILE_SUFFIXES,
+  type StageInfo,
+  scanClient,
+  scanFleet,
+  stageNumberingGaps,
+  UNIT_FILES,
+  type UnitInfo,
+} from './core/agent-ops'
+export {
+  scaffoldAgent,
+  scaffoldClient,
+  scaffoldPipeline,
+  scaffoldStage,
+} from './core/agent-ops-scaffold'
+export {
+  addClientTag,
+  type ClientMap,
+  clientTags,
+  loadClients,
+  removeClientTag,
+  saveClients,
+  setClientTags,
+} from './core/clients'
 export { type Config, defaultVaultPath, loadConfig, saveConfig } from './core/config'
 export {
   ambientGitIdentity,
@@ -11,6 +36,13 @@ export {
   type VaultSchemaStatus,
   vaultSchemaStatus,
 } from './core/consume'
+export { operationalDataDigest } from './core/curate'
+export { type DexType, isAgentOps, loadDexType, saveDexType } from './core/dex'
+export {
+  type LintFinding,
+  type LintLevel,
+  lintAgentOps,
+} from './core/doctor-agent-ops'
 export {
   type Identity,
   type LoredexEmitter,
@@ -74,9 +106,25 @@ export {
   RouteUndoError,
 } from './core/receipts'
 export { ensureGeneratedMergeDriver, gitAutoCommit, gitPullPush, undoRoute } from './core/router'
+export { DATA_EXTS, walkData } from './core/scan'
 export { matchNeverRoute, RouteScopeError } from './core/scope'
 export { type SearchHit, sanitizeForContext, searchVault } from './core/search'
 export { type StoreInput, storeNote } from './core/store'
 export { type SyncHealth, syncStatus } from './core/sync-status'
+export {
+  csvHead,
+  type DataFileSummary,
+  dataFileSummary,
+  jsonTopLevelKeys,
+  yamlTopLevelKeys,
+} from './core/tables'
 export { inboxPath, scaffoldVault, slugify, stampEngineSchema } from './core/vault'
+export {
+  expandEnvRefs,
+  loadWorkspaceSpec,
+  materializeWorkspace,
+  type WorkspaceResult,
+  type WorkspaceSpec,
+  workspaceSchema,
+} from './core/workspace'
 export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'

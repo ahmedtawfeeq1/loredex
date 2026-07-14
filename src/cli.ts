@@ -2,11 +2,13 @@
 import { Command } from 'commander'
 import pkg from '../package.json'
 import { runAdopt } from './commands/adopt'
+import { runClients } from './commands/clients'
 import { runCurate } from './commands/curate'
 import { runDoctor } from './commands/doctor'
 import { runHandoff, runHandoffs } from './commands/handoff'
 import { runInit } from './commands/init'
 import { runMcp } from './commands/mcp'
+import { runNew } from './commands/new'
 import { runCurateProduct } from './commands/product'
 import { runProducts } from './commands/products'
 import { runReset } from './commands/reset'
@@ -14,6 +16,7 @@ import { runRoute } from './commands/route'
 import { runStatus } from './commands/status'
 import { runSync } from './commands/sync'
 import { runWatch } from './commands/watch'
+import { runWorkspace } from './commands/workspace'
 
 const program = new Command()
 
@@ -24,8 +27,9 @@ program
 
 program
   .command('init')
-  .description('create/register the vault and wire this project into it')
-  .option('--vault <path>', 'vault location (default: ~/Loredex)')
+  .description('create/register the dex and wire this project into it')
+  .option('--vault <path>', 'dex location (default: ~/Loredex)')
+  .option('--type <type>', 'dex type: research | agent-ops', 'research')
   .option('--project <name>', 'project name (default: directory name)')
   .option('--sync <mode>', 'sync mode: git | none', 'none')
   .option(
@@ -147,8 +151,32 @@ program
   .action((action, args, opts) => runProducts(action, args ?? [], opts))
 
 program
+  .command('new <kind> [args...]')
+  .description(
+    'scaffold agent-ops structure: client <name> | pipeline <client> <name> | agent <client> <name> | stage <client> <pipeline> <name>',
+  )
+  .option('--manager <name>', 'file the new client under a manager (with `client`)')
+  .option('--tags <a,b>', 'category tags for the new client (with `client`)')
+  .option('--before <NN>', 'insert the new stage before stage NN (renumbers later stages)')
+  .option('--after <NN>', 'insert the new stage after stage NN (renumbers later stages)')
+  .action((kind, args, opts) => runNew(kind, args ?? [], opts))
+
+program
+  .command('workspace <client>')
+  .description(
+    "generate the client's agent tooling from workspace.yml (.mcp.json, .claude settings, AGENTS.md — secrets from env)",
+  )
+  .option('--check', 'verify without writing; non-zero exit on drift or missing env vars')
+  .action((client, opts) => runWorkspace(client, opts))
+
+program
+  .command('clients [action] [args...]')
+  .description('agent-ops client roster: list (default) | tag <client> <tag...> | untag | set-tags')
+  .action((action, args) => runClients(action, args ?? []))
+
+program
   .command('doctor')
-  .description('check config, vault, and classifier availability')
+  .description('check config, dex, and classifier availability')
   .action(runDoctor)
 
 program.parseAsync().catch((error: unknown) => {

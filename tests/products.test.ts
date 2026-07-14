@@ -20,15 +20,15 @@ describe('products', () => {
   it('round-trips the manifest and reports a project’s product', () => {
     const v = vault()
     expect(loadProducts(v)).toEqual({}) // no manifest yet
-    setProduct(v, 'genudo-ai-engine', 'genudo')
-    setProduct(v, 'genudo-website', 'genudo')
+    setProduct(v, 'acme-crm', 'acme')
+    setProduct(v, 'acme-website', 'acme')
     setProduct(v, 'loredex-desktop', 'loredex')
     const map = loadProducts(v)
     expect(map).toEqual({
-      genudo: ['genudo-ai-engine', 'genudo-website'],
+      acme: ['acme-crm', 'acme-website'],
       loredex: ['loredex-desktop'],
     })
-    expect(productOf(map, 'genudo-website')).toBe('genudo')
+    expect(productOf(map, 'acme-website')).toBe('acme')
     expect(productOf(map, 'unknown')).toBeNull()
   })
 
@@ -40,10 +40,10 @@ describe('products', () => {
   })
 
   it('groups Product → Project with Ungrouped last, dropping absent members', () => {
-    const map = { genudo: ['genudo-ai-engine', 'gone'], loredex: ['loredex-desktop'] }
-    const groups = groupProjects(map, ['genudo-ai-engine', 'loredex-desktop', 'orphan'])
+    const map = { acme: ['acme-crm', 'gone'], loredex: ['loredex-desktop'] }
+    const groups = groupProjects(map, ['acme-crm', 'loredex-desktop', 'orphan'])
     expect(groups).toEqual([
-      { product: 'genudo', projects: ['genudo-ai-engine'] }, // 'gone' isn't present → dropped
+      { product: 'acme', projects: ['acme-crm'] }, // 'gone' isn't present → dropped
       { product: 'loredex', projects: ['loredex-desktop'] },
       { product: null, projects: ['orphan'] }, // Ungrouped, last
     ])
@@ -55,18 +55,16 @@ describe('products', () => {
   })
 
   it('infers products only from prefixes shared by 2+ projects', () => {
-    expect(
-      inferProducts(['genudo-ai-engine', 'genudo-website', 'loredex-desktop', 'standalone']),
-    ).toEqual({
-      genudo: ['genudo-ai-engine', 'genudo-website'],
+    expect(inferProducts(['acme-crm', 'acme-website', 'loredex-desktop', 'standalone'])).toEqual({
+      acme: ['acme-crm', 'acme-website'],
       // loredex-desktop is the only loredex-* → not a product; standalone has no prefix
     })
   })
 
   it('tolerates a hand-written flat manifest (no products wrapper)', () => {
     const v = vault()
-    writeFileSync(join(v, '_index', 'products.json'), JSON.stringify({ genudo: ['x'] }))
-    expect(loadProducts(v)).toEqual({ genudo: ['x'] })
+    writeFileSync(join(v, '_index', 'products.json'), JSON.stringify({ acme: ['x'] }))
+    expect(loadProducts(v)).toEqual({ acme: ['x'] })
   })
 
   it('the manifest is committable JSON under _index/', () => {

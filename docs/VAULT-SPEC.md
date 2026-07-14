@@ -1,5 +1,9 @@
 # Vault specification
 
+> The knowledge store is now called a **dex** ("vault" is Obsidian's word — this file
+> keeps its name for inbound links). This spec describes the default `research` dex.
+> Dex types and the `agent-ops` layout: [DEX-SPEC.md](DEX-SPEC.md).
+
 The loredex vault is a plain-markdown folder. Any tool that can write markdown files with
 YAML frontmatter can participate — the spec is the integration surface, not any particular
 agent.

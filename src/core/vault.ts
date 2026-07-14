@@ -1,14 +1,22 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
+import { loadClients, saveClients } from './clients'
+import { type DexType, saveDexType } from './dex'
 import { LOREDEX_SCHEMA, type Meta } from './frontmatter'
 
-export function scaffoldVault(vaultPath: string): void {
+export function scaffoldVault(vaultPath: string, type: DexType = 'research'): void {
   for (const dir of ['_inbox', '_index', 'projects', 'research']) {
     mkdirSync(join(vaultPath, dir), { recursive: true })
   }
   const home = join(vaultPath, '_index', 'Home.md')
   if (!existsSync(home)) {
     writeFileSync(home, '# Home\n\nIndexes are rebuilt by `loredex route`.\n')
+  }
+  if (type === 'agent-ops') {
+    saveDexType(vaultPath, type)
+    if (!existsSync(join(vaultPath, '_index', 'clients.json'))) {
+      saveClients(vaultPath, loadClients(vaultPath))
+    }
   }
   stampEngineSchema(vaultPath)
 }

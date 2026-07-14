@@ -50,17 +50,17 @@ describe('bases', () => {
 describe('indexer product grouping', () => {
   it('groups Home under product headings when a manifest exists', () => {
     const vault = mkdtempSync(join(tmpdir(), 'loredex-idx-prod-'))
-    note(vault, 'genudo-ai-engine', 'auth', '2026-07-01-a')
+    note(vault, 'acme-crm', 'auth', '2026-07-01-a')
     note(vault, 'loredex-desktop', 'ui', '2026-07-02-b')
-    setProduct(vault, 'genudo-ai-engine', 'genudo')
+    setProduct(vault, 'acme-crm', 'acme')
     setProduct(vault, 'loredex-desktop', 'loredex')
     rebuildIndexes(vault)
 
     const home = readFileSync(join(vault, '_index', 'Home.md'), 'utf8')
-    expect(home).toContain('## genudo')
+    expect(home).toContain('## acme')
     expect(home).toContain('## loredex')
     // product heading precedes its project
-    expect(home.indexOf('## genudo')).toBeLessThan(home.indexOf('[[genudo-ai-engine]]'))
+    expect(home.indexOf('## acme')).toBeLessThan(home.indexOf('[[acme-crm]]'))
   })
 
   it('stays flat (no headings) when no products are defined', () => {

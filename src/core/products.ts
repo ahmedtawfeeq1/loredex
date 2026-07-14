@@ -88,8 +88,8 @@ export function groupProjects(
 }
 
 /**
- * Guess products from a shared name prefix (`genudo-ai-engine`, `genudo-website`
- * → `genudo`). Report-only — the caller confirms before writing. A prefix shared
+ * Guess products from a shared name prefix (`acme-crm`, `acme-website`
+ * → `acme`). Report-only — the caller confirms before writing. A prefix shared
  * by a single project isn't a product, so those stay ungrouped.
  */
 export function inferProducts(allProjects: readonly string[]): ProductMap {
