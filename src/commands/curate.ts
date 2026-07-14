@@ -8,6 +8,7 @@ import {
   collectNotes,
   filterNotes,
   findOrphans,
+  operationalDataDigest,
   projectDir,
   sanitizeNotes,
   stampDrift,
@@ -87,6 +88,10 @@ export async function runCurate(
       )
     }
     const digest = buildDigest(notes, opts.maxDetailed)
+    // agent-ops dexes: append the compact operational inventory (tables, workflows,
+    // pipelines) so the brief reflects what the client's AI actually runs on
+    const operational = operationalDataDigest(config.vaultPath, project)
+    if (operational) digest.text = `${digest.text}\n\n${operational}`
     if (digest.indexOnlyCount > 0) {
       console.log(
         pc.dim(

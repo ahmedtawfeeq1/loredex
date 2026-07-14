@@ -21,8 +21,8 @@ const SIGNAL_NAME =
 
 const SIGNAL_DIR = /(^|\/)(docs?|research|findings|notes|analysis|reports?|specs?|plans?)(\/|$)/i
 
-/** All .md files under root, pruning dependency/build/hidden directories. */
-export function walkMarkdown(root: string): string[] {
+/** One prune implementation for every walker: dependency/build/hidden dirs skipped. */
+function walkFiles(root: string, match: (name: string) => boolean): string[] {
   const results: string[] = []
   const stack = [root]
   while (stack.length > 0) {
@@ -38,12 +38,24 @@ export function walkMarkdown(root: string): string[] {
         if (!SKIP_DIRS.has(entry.name) && !entry.name.startsWith('.')) {
           stack.push(join(dir, entry.name))
         }
-      } else if (entry.name.endsWith('.md')) {
+      } else if (match(entry.name)) {
         results.push(join(dir, entry.name))
       }
     }
   }
   return results.sort()
+}
+
+/** All .md files under root, pruning dependency/build/hidden directories. */
+export function walkMarkdown(root: string): string[] {
+  return walkFiles(root, (name) => name.endsWith('.md'))
+}
+
+export const DATA_EXTS = ['.yaml', '.yml', '.json', '.csv'] as const
+
+/** Structured data files (yaml/json/csv) under root — agent-ops dexes index these too. */
+export function walkData(root: string): string[] {
+  return walkFiles(root, (name) => DATA_EXTS.some((ext) => name.endsWith(ext)))
 }
 
 export interface Candidate {

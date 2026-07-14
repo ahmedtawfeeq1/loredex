@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { type ClientInfo, scanFleet, type UnitInfo } from './agent-ops'
 import { writeDashboardBase } from './bases'
 import { groupProjects, loadProducts } from './products'
+import { dataFileSummary } from './tables'
 
 /**
  * Index generation for agent-ops dexes: Home.md groups Manager → Client, each
@@ -29,7 +30,7 @@ export function rebuildAgentOpsIndexes(vaultPath: string): void {
     for (const slug of group.projects) {
       const info = bySlug.get(slug)
       if (!info) continue
-      emitClientMoc(indexDir, info)
+      emitClientMoc(vaultPath, indexDir, info)
       home.push(`- [[${slug}]] — ${clientSummary(info)}`)
     }
     if (grouped) home.push('')
@@ -65,7 +66,16 @@ function emitUnit(moc: string[], unit: UnitInfo): void {
   moc.push('')
 }
 
-function emitClientMoc(indexDir: string, info: ClientInfo): void {
+/** `orders.csv — 4 columns · 120 rows (order_id, patient, …)` — structural line, contents stay raw. */
+function tableLine(vaultPath: string, info: ClientInfo, name: string): string {
+  const summary = dataFileSummary(join(vaultPath, info.dir, 'knowledge_tables', name))
+  if (!summary || summary.kind !== 'csv' || summary.keys.length === 0) return name
+  const headers = summary.keys.slice(0, 6).join(', ')
+  const more = summary.keys.length > 6 ? ', …' : ''
+  return `${name} — ${summary.keys.length} columns · ${summary.rowCount ?? 0} rows (${headers}${more})`
+}
+
+function emitClientMoc(vaultPath: string, indexDir: string, info: ClientInfo): void {
   const moc: string[] = [
     `# ${info.slug}`,
     '',
@@ -92,7 +102,7 @@ function emitClientMoc(indexDir: string, info: ClientInfo): void {
   }
   if (info.knowledgeTables.length > 0) {
     moc.push('## Knowledge tables', '')
-    for (const name of info.knowledgeTables) moc.push(`- ${name}`)
+    for (const name of info.knowledgeTables) moc.push(`- ${tableLine(vaultPath, info, name)}`)
     moc.push('')
   }
   if (info.workflows.length > 0) {

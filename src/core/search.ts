@@ -1,9 +1,11 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { isBriefName } from './curate'
+import { loadDexType } from './dex'
 import { type Meta, parseDoc } from './frontmatter'
 import { listProjects, PRODUCT_BRIEF_NAME } from './product'
-import { walkMarkdown } from './scan'
+import { walkData, walkMarkdown } from './scan'
+import { dataFileSummary } from './tables'
 
 export interface SearchHit {
   name: string
@@ -11,7 +13,9 @@ export interface SearchHit {
   topic: string
   date: string
   status: string
-  kind: 'brief' | 'handoff' | 'note'
+  kind: 'brief' | 'handoff' | 'note' | 'data'
+  /** set on kind 'data' hits (agent-ops dexes index yaml/json/csv structurally) */
+  fileType?: 'yaml' | 'json' | 'csv'
   excerpt: string
   path: string
   score: number
@@ -122,5 +126,47 @@ export function searchVault(
       score,
     })
   }
+  // agent-ops dexes: structural pass over data files (yaml/json keys, csv headers).
+  // Early type check keeps research dexes byte- and time-identical.
+  if (loadDexType(vaultPath) === 'agent-ops') {
+    for (const project of listProjects(vaultPath)) {
+      if (opts.project && project !== opts.project) continue
+      for (const path of walkData(join(vaultPath, 'projects', project))) {
+        const summary = dataFileSummary(path)
+        if (!summary) continue
+        const name = basename(path)
+        const lowerName = name.toLowerCase()
+        const lowerKeys = summary.keys.map((k) => k.toLowerCase())
+        let score = 0
+        for (const term of terms) {
+          if (lowerName.includes(term)) score += 3
+          score += 2 * lowerKeys.filter((k) => k.includes(term)).length
+        }
+        if (score === 0) continue
+        const keyList = summary.keys.slice(0, 12).join(', ')
+        const rows = summary.rowCount !== undefined ? ` · ${summary.rowCount} rows` : ''
+        hits.push({
+          name,
+          project,
+          topic: dataTopic(vaultPath, project, path),
+          date: '',
+          status: 'active',
+          kind: 'data',
+          fileType: summary.kind,
+          excerpt: sanitizeForContext(`${summary.kind}${rows} — ${keyList}`, 300),
+          path,
+          score,
+        })
+      }
+    }
+  }
+
   return hits.sort((a, b) => b.score - a.score).slice(0, opts.limit ?? 10)
+}
+
+/** First folder under the client dir, e.g. knowledge_tables / automation_workflows / pipelines. */
+function dataTopic(vaultPath: string, project: string, path: string): string {
+  const rel = path.slice(join(vaultPath, 'projects', project).length + 1)
+  const first = rel.split('/')[0] ?? ''
+  return first.includes('.') ? '' : first
 }

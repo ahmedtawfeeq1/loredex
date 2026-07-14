@@ -1,9 +1,12 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { basename, join, relative, sep } from 'node:path'
+import { scanClient } from './agent-ops'
+import { loadDexType } from './dex'
 import { type Meta, parseDoc, serializeDoc } from './frontmatter'
 import { replaceRelated } from './linker'
 import { sanitizeWikilinks } from './sanitize'
 import { walkMarkdown } from './scan'
+import { dataFileSummary } from './tables'
 import { slugify } from './vault'
 
 export interface CurationPlan {
@@ -146,6 +149,38 @@ function digestEntry(note: ScopedNote): string {
   ]
     .filter(Boolean)
     .join('\n')
+}
+
+/**
+ * Compact operational-data appendix for agent-ops dexes: pipelines/agents, knowledge
+ * tables (headers + row counts), workflow exports, workspace tooling, pending inbox.
+ * Always short — never subject to the maxDetailed cutoff. Empty on research dexes,
+ * so existing digests stay byte-identical.
+ */
+export function operationalDataDigest(vaultPath: string, project: string): string {
+  if (loadDexType(vaultPath) !== 'agent-ops') return ''
+  const info = scanClient(vaultPath, slugify(project))
+  if (!info) return ''
+  const lines: string[] = ['## Operational data', '']
+  for (const unit of [...info.pipelines, ...info.agents]) {
+    const stages =
+      unit.kind === 'pipeline'
+        ? ` — stages: ${unit.stages.map((s) => `${s.nn}_${s.slug}`).join(', ') || '(none)'}`
+        : ''
+    lines.push(`- ${unit.kind} ${unit.name}${stages}`)
+  }
+  for (const name of info.knowledgeTables) {
+    const summary = dataFileSummary(join(vaultPath, info.dir, 'knowledge_tables', name))
+    const detail =
+      summary && summary.keys.length > 0
+        ? ` (${summary.keys.slice(0, 8).join(', ')}${summary.rowCount !== undefined ? ` · ${summary.rowCount} rows` : ''})`
+        : ''
+    lines.push(`- table ${name}${detail}`)
+  }
+  if (info.workflows.length > 0) lines.push(`- workflows: ${info.workflows.join(', ')}`)
+  if (info.hasWorkspaceYml) lines.push('- workspace.yml present (agent tooling declared)')
+  if (info.inboxCount > 0) lines.push(`- _inbox: ${info.inboxCount} item(s) pending consumption`)
+  return lines.length > 2 ? `${lines.join('\n')}\n` : ''
 }
 
 /**

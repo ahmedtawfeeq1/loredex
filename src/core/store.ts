@@ -1,8 +1,11 @@
-import { writeFileSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import type { Config } from './config'
+import { loadDexType } from './dex'
 import { emitLoredexEvent } from './events'
 import { serializeDoc } from './frontmatter'
-import { executePlan, knownStructure, planFile } from './router'
+import { rebuildIndexes } from './indexer'
+import { executePlan, gitAutoCommit, knownStructure, planFile } from './router'
 import { inboxPath, slugify, uniquePath } from './vault'
 
 export interface StoreInput {
@@ -33,6 +36,22 @@ export function storeNote(config: Config, input: StoreInput): string {
     },
     body: `# ${input.title}\n\n${input.content}\n`,
   })
+
+  // agent-ops dexes have no topic tree — agent-stored notes land in the client's
+  // _randoms/ (searchable, lint-exempt) instead of being routed
+  const clientSlug = slugify(input.project)
+  if (
+    loadDexType(config.vaultPath) === 'agent-ops' &&
+    existsSync(join(config.vaultPath, 'projects', clientSlug))
+  ) {
+    const randoms = join(config.vaultPath, 'projects', clientSlug, '_randoms')
+    const dest = uniquePath(randoms, `${today}-${slugify(input.title)}.md`)
+    writeFileSync(dest, raw)
+    rebuildIndexes(config.vaultPath)
+    gitAutoCommit(config.vaultPath, config, `loredex: store ${clientSlug} note`)
+    emitLoredexEvent('store', { path: dest })
+    return dest
+  }
 
   const inbox = inboxPath(config.vaultPath)
   const draft = uniquePath(inbox, `${today}-${slugify(input.title)}.md`)

@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { type ClientInfo, scanFleet, stageNumberingGaps, type UnitInfo } from './agent-ops'
-import { materializeWorkspace } from './workspace'
+import { loadWorkspaceSpec, materializeWorkspace } from './workspace'
 
 /**
  * Agent-ops lint engine — pure (no console) so the CLI doctor, tests, and desktop
@@ -241,6 +241,15 @@ export function committedProjectFiles(vaultPath: string): string[] {
 function lintWorkspace(vaultPath: string, info: ClientInfo): LintFinding[] {
   if (!info.hasWorkspaceYml) return []
   try {
+    // a freshly scaffolded (all-comments) workspace.yml declares nothing — nothing to generate yet
+    const spec = loadWorkspaceSpec(join(vaultPath, info.dir))
+    if (
+      Object.keys(spec.mcp).length === 0 &&
+      spec.plugins.claude.length === 0 &&
+      spec.skills.length === 0
+    ) {
+      return []
+    }
     const result = materializeWorkspace(vaultPath, info.slug, { check: true })
     const findings: LintFinding[] = []
     if (result.wouldChange.length > 0) {
