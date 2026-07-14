@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.6.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.5.0...loredex-v2.6.0) (2026-07-14)
+
+
+### Features
+
+* agent-ops plugin skill + dex wording; route safety on agent-ops dexes ([1a6637a](https://github.com/ahmedtawfeeq1/loredex/commit/1a6637a1420b3351d17e79d80fd894b0f52f9e4b))
+* **plugin:** agent-ops skill + dex wording across skills ([ad1acc5](https://github.com/ahmedtawfeeq1/loredex/commit/ad1acc50724df25f7a72a25e8eecf5739674c8aa))
+
+
+### Bug Fixes
+
+* **route:** agent-ops dexes route markdown into the client's _randoms ([8bd9da5](https://github.com/ahmedtawfeeq1/loredex/commit/8bd9da55f0cd397c1ee0dc6aa589ddb23703682f))
+
 ## [2.5.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.4.1...loredex-v2.5.0) (2026-07-14)
 
 
