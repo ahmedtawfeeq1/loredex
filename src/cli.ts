@@ -173,6 +173,11 @@ program
     "generate the client's agent tooling from workspace.yml (.mcp.json, .claude settings, AGENTS.md — secrets from env)",
   )
   .option('--check', 'verify without writing; non-zero exit on drift or missing env vars')
+  .option(
+    '--from <client>',
+    "copy another client's workspace.yml first, rewriting per-client ${VAR_<SLUG>} env refs",
+  )
+  .option('--force', 'with --from: overwrite a workspace.yml that already declares tooling')
   .action((client, opts) => runWorkspace(client, opts))
 
 program

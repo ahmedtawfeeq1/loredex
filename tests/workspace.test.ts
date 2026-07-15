@@ -5,7 +5,13 @@ import { describe, expect, it } from 'vitest'
 import { scaffoldClient, scaffoldPipeline, scaffoldStage } from '../src/core/agent-ops-scaffold'
 import { lintAgentOps } from '../src/core/doctor-agent-ops'
 import { scaffoldVault } from '../src/core/vault'
-import { expandEnvRefs, loadWorkspaceSpec, materializeWorkspace } from '../src/core/workspace'
+import {
+  copyWorkspaceSpec,
+  envSuffix,
+  expandEnvRefs,
+  loadWorkspaceSpec,
+  materializeWorkspace,
+} from '../src/core/workspace'
 
 const WS = `mcp:
   crm-bridge:
@@ -150,5 +156,63 @@ describe('workspace materializer', () => {
       expect(gitignore).toContain(rel)
     }
     expect(existsSync(join(dir, '.mcp.json'))).toBe(true)
+  })
+})
+
+describe('copyWorkspaceSpec (workspace --from)', () => {
+  const GOLDEN = `# golden tooling
+mcp:
+  crm-bridge:
+    command: npx
+    args: [-y, some-mcp-client]
+    env:
+      CRM_TOKEN: "\${CRM_TOKEN_BRIGHTSMILE_DENTAL}"
+      CRM_URL: "https://crm.example.com"
+plugins:
+  claude: [some-plugin@some-marketplace]
+skills: []
+`
+
+  function dexWithTwoClients(): { v: string; from: string; to: string } {
+    const v = mkdtempSync(join(tmpdir(), 'loredex-wsfrom-'))
+    scaffoldVault(v, 'agent-ops')
+    const { slug: from } = scaffoldClient(v, 'brightsmile_dental', { manager: 'sara' })
+    const { slug: to } = scaffoldClient(v, 'peak_fitness', { manager: 'sara' })
+    writeFileSync(join(v, 'projects', from, 'workspace.yml'), GOLDEN)
+    return { v, from, to }
+  }
+
+  it('copies tooling and rewrites the per-client env suffix', () => {
+    const { v, from, to } = dexWithTwoClients()
+    const { renamed } = copyWorkspaceSpec(v, from, to)
+    expect(renamed).toEqual([
+      { from: 'CRM_TOKEN_BRIGHTSMILE_DENTAL', to: 'CRM_TOKEN_PEAK_FITNESS' },
+    ])
+    const copied = readFileSync(join(v, 'projects', to, 'workspace.yml'), 'utf8')
+    expect(copied).toContain('${CRM_TOKEN_PEAK_FITNESS}')
+    expect(copied).toContain('# golden tooling') // raw copy — comments survive
+    expect(copied).toContain('https://crm.example.com') // non-suffixed values untouched
+    const spec = loadWorkspaceSpec(join(v, 'projects', to))
+    expect(Object.keys(spec.mcp)).toEqual(['crm-bridge'])
+  })
+
+  it('refuses a target that already declares tooling unless forced', () => {
+    const { v, from, to } = dexWithTwoClients()
+    copyWorkspaceSpec(v, from, to)
+    expect(() => copyWorkspaceSpec(v, from, to)).toThrow(/already declares tooling/)
+    expect(copyWorkspaceSpec(v, from, to, { force: true }).renamed).toHaveLength(1)
+  })
+
+  it('refuses an empty (template-only) source and a missing target client', () => {
+    const { v, to, from } = dexWithTwoClients()
+    // scaffolded template declares nothing → copying it is a mistake
+    expect(() => copyWorkspaceSpec(v, to, from)).toThrow(/declares no tooling/)
+    expect(() => copyWorkspaceSpec(v, from, 'no-such-client')).toThrow(/no client/)
+  })
+
+  it('envSuffix upper-snakes slugs', () => {
+    expect(envSuffix('2me')).toBe('2ME')
+    expect(envSuffix('p-s')).toBe('P_S')
+    expect(envSuffix('brightsmile-dental')).toBe('BRIGHTSMILE_DENTAL')
   })
 })

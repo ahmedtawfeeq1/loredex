@@ -2,10 +2,12 @@ import pc from 'picocolors'
 import { loadResolvedConfig } from '../core/config'
 import { isAgentOps } from '../core/dex'
 import { slugify } from '../core/vault'
-import { materializeWorkspace } from '../core/workspace'
+import { copyWorkspaceSpec, materializeWorkspace } from '../core/workspace'
 
 export interface WorkspaceOptions {
   check?: boolean
+  from?: string
+  force?: boolean
 }
 
 /** `loredex workspace <client> [--check]` — generate (or verify) the client's agent tooling. */
@@ -22,7 +24,14 @@ export function runWorkspace(client: string, opts: WorkspaceOptions): void {
     return
   }
   try {
-    const result = materializeWorkspace(config.vaultPath, slugify(client), {
+    const slug = slugify(client)
+    if (opts.from) {
+      const from = slugify(opts.from)
+      const { renamed } = copyWorkspaceSpec(config.vaultPath, from, slug, { force: opts.force })
+      console.log(pc.green('✓'), `workspace.yml copied from ${from}`)
+      for (const r of renamed) console.log(pc.dim(`  \${${r.from}} → \${${r.to}}`))
+    }
+    const result = materializeWorkspace(config.vaultPath, slug, {
       check: opts.check,
     })
     for (const rel of result.wrote) console.log(pc.green('✓'), `wrote ${rel}`)
