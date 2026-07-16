@@ -1,6 +1,7 @@
-import { existsSync } from 'node:fs'
-import { extname, isAbsolute, resolve } from 'node:path'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { basename, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { mapOutsideCode } from './sanitize'
+import { walkMarkdown } from './scan'
 
 /** Extensions that open sensibly in a code editor (deep link with line support). */
 const TEXT_EXTS = new Set([
@@ -65,6 +66,44 @@ export interface RelinkContext {
   mapping: Map<string, string>
   /** 'system' → file://; otherwise a URI scheme: vscode | cursor | windsurf | <custom> */
   editor: string
+  /**
+   * date-stripped slug → existing vault note names — fallback for wikilinks whose
+   * target was routed in an EARLIER batch (route renames notes to YYYY-MM-DD-slug,
+   * so `[[slug]]` written after that batch would otherwise never resolve).
+   */
+  vaultIndex?: Map<string, string[]>
+}
+
+const DATE_PREFIX = /^\d{4}-\d{2}-\d{2}[-_]?/
+
+/** Existing vault notes keyed by date-stripped lowercased slug. `_inbox` is excluded — those notes are renamed on route. */
+export function buildVaultLinkIndex(vaultPath: string): Map<string, string[]> {
+  const index = new Map<string, string[]>()
+  for (const path of walkMarkdown(vaultPath)) {
+    if (relative(vaultPath, path).split(sep)[0] === '_inbox') continue
+    const name = basename(path, '.md')
+    const slug = name.replace(DATE_PREFIX, '').toLowerCase()
+    const names = index.get(slug)
+    if (names) names.push(name)
+    else index.set(slug, [name])
+  }
+  return index
+}
+
+/** Unique vault note name for a bare wikilink target, or null (ambiguity is never guessed). */
+function resolveByIndex(
+  target: string,
+  vaultIndex: Map<string, string[]> | undefined,
+): { name: string; anchor: string } | null {
+  if (!vaultIndex) return null
+  const hashAt = target.indexOf('#')
+  const base = hashAt === -1 ? target : target.slice(0, hashAt)
+  const anchor = hashAt === -1 ? '' : target.slice(hashAt)
+  if (!base || base.includes('/')) return null
+  const names = vaultIndex.get(base.replace(/\.md$/i, '').toLowerCase())
+  const name = names?.length === 1 ? names[0] : undefined
+  if (!name || name.toLowerCase() === base.toLowerCase()) return null
+  return { name, anchor }
 }
 
 /** Deep link that opens the file in the configured editor (line-aware), or the OS default. */
@@ -98,14 +137,22 @@ export function rewriteLinks(body: string, ctx: RelinkContext): RelinkResult {
   }
 
   const result = mapOutsideCode(body, (segment) => {
-    // wikilinks whose target resolves to an adopted file get the new note name
+    // wikilinks whose target resolves to an adopted file get the new note name;
+    // otherwise fall back to notes already in the vault from earlier batches
     const wikiPass = segment.replace(WIKILINK, (full, target: string, alias?: string) => {
       const trimmed = target.trim()
       const hit =
         ctx.mapping.get(resolveTarget(trimmed)) ?? ctx.mapping.get(resolveTarget(`${trimmed}.md`))
-      if (!hit || hit === trimmed) return full
+      if (hit) {
+        if (hit === trimmed) return full
+        changed++
+        return alias ? `[[${hit}|${alias}]]` : `[[${hit}]]`
+      }
+      const vaulted = resolveByIndex(trimmed, ctx.vaultIndex)
+      if (!vaulted) return full
       changed++
-      return alias ? `[[${hit}|${alias}]]` : `[[${hit}]]`
+      const renamed = `${vaulted.name}${vaulted.anchor}`
+      return alias ? `[[${renamed}|${alias}]]` : `[[${renamed}]]`
     })
 
     return wikiPass.replace(
@@ -143,4 +190,40 @@ export function rewriteLinks(body: string, ctx: RelinkContext): RelinkResult {
   })
 
   return { body: result, changed }
+}
+
+export interface RepairedFile {
+  path: string
+  changed: number
+}
+
+/**
+ * Vault-wide repair for links broken by cross-batch routing: rewrite bare
+ * wikilinks that uniquely match a date-prefixed vault note. Frontmatter and
+ * code spans are never touched; `_inbox` waits for route. Idempotent.
+ */
+export function repairVaultLinks(vaultPath: string, opts?: { dryRun?: boolean }): RepairedFile[] {
+  const vaultIndex = buildVaultLinkIndex(vaultPath)
+  const repaired: RepairedFile[] = []
+  for (const path of walkMarkdown(vaultPath)) {
+    if (relative(vaultPath, path).split(sep)[0] === '_inbox') continue
+    const raw = readFileSync(path, 'utf8')
+    // split frontmatter off byte-exactly — a parse/serialize round-trip would reformat it
+    const fmMatch = raw.startsWith('---\n') ? raw.match(/^---\n[\s\S]*?\n---\n/) : null
+    const head = fmMatch?.[0] ?? ''
+    let changed = 0
+    const body = mapOutsideCode(raw.slice(head.length), (segment) =>
+      segment.replace(WIKILINK, (full, target: string, alias?: string) => {
+        const vaulted = resolveByIndex(target.trim(), vaultIndex)
+        if (!vaulted) return full
+        changed++
+        const renamed = `${vaulted.name}${vaulted.anchor}`
+        return alias ? `[[${renamed}|${alias}]]` : `[[${renamed}]]`
+      }),
+    )
+    if (changed === 0) continue
+    if (!opts?.dryRun) writeFileSync(path, head + body)
+    repaired.push({ path, changed })
+  }
+  return repaired
 }

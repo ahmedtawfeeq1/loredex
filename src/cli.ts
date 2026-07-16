@@ -11,6 +11,7 @@ import { runMcp } from './commands/mcp'
 import { runNew } from './commands/new'
 import { runCurateProduct } from './commands/product'
 import { runProducts } from './commands/products'
+import { runRelink } from './commands/relink'
 import { runReset } from './commands/reset'
 import { runRoute } from './commands/route'
 import { runStatus } from './commands/status'
@@ -140,6 +141,12 @@ program
     'run the loredex MCP server over stdio (vault_search, handoffs, product_state, vault_store)',
   )
   .action(runMcp)
+
+program
+  .command('relink')
+  .description('repair vault wikilinks broken by cross-batch routing (bare slug → dated note name)')
+  .option('--dry-run', 'list what would change without touching anything')
+  .action((opts) => runRelink(opts))
 
 program
   .command('reset <project>')
