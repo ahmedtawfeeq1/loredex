@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.8.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.7.0...loredex-v2.8.0) (2026-07-16)
+
+
+### Features
+
+* **relink:** resolve cross-batch wikilinks + loredex relink repair command ([5602ce0](https://github.com/ahmedtawfeeq1/loredex/commit/5602ce0c5dfcf0e1c613cbf9fd382d80872ca187))
+* **work,auth,init:** desktop v3 deferred lib work — work items, auth/dex CLI, --demo ([01415d9](https://github.com/ahmedtawfeeq1/loredex/commit/01415d99f36fded8872508e8caff60d6aa9ace14))
+* **workspace:** --from copies a golden client's tooling with per-client env rewrite ([93e1b5b](https://github.com/ahmedtawfeeq1/loredex/commit/93e1b5bdbb5eb088739b26f9b0fc13d63fab29a2))
+
 ## [2.7.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.6.0...loredex-v2.7.0) (2026-07-14)
 
 
