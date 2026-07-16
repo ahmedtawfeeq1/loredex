@@ -2,11 +2,6 @@
 import { Command } from 'commander'
 import pkg from '../package.json'
 import { runAdopt } from './commands/adopt'
-import { runClients } from './commands/clients'
-import { runCurate } from './commands/curate'
-import { runDoctor } from './commands/doctor'
-import { runHandoff, runHandoffs } from './commands/handoff'
-import { runInit } from './commands/init'
 import {
   runAuthLogin,
   runAuthLogout,
@@ -15,6 +10,11 @@ import {
   runDexJoin,
   runDexList,
 } from './commands/auth'
+import { runClients } from './commands/clients'
+import { runCurate } from './commands/curate'
+import { runDoctor } from './commands/doctor'
+import { runHandoff, runHandoffs } from './commands/handoff'
+import { runInit } from './commands/init'
 import { runMcp } from './commands/mcp'
 import { runNew } from './commands/new'
 import { runCurateProduct } from './commands/product'
@@ -170,11 +170,20 @@ auth
   .description('device flow; --with-token reads a PAT from stdin')
   .option('--with-token', 'read a fine-grained PAT from stdin (CI)')
   .action((opts) => runAuthLogin(opts))
-auth.command('status').description('account, store, scopes').action(() => runAuthStatus())
-auth.command('logout').description('delete the stored token').action(() => runAuthLogout())
+auth
+  .command('status')
+  .description('account, store, scopes')
+  .action(() => runAuthStatus())
+auth
+  .command('logout')
+  .description('delete the stored token')
+  .action(() => runAuthLogout())
 
 const dex = program.command('dex').description('dex registry — repos tagged loredex-dex')
-dex.command('list').description('your dexes across account + orgs').action(() => runDexList())
+dex
+  .command('list')
+  .description('your dexes across account + orgs')
+  .action(() => runDexList())
 dex
   .command('join <name>')
   .description('clone a dex repo')

@@ -192,7 +192,6 @@ function injectConventions(projectRoot: string, projectName: string, inbox: stri
   }
 }
 
-
 /**
  * `loredex init --demo` (desktop v3 first-run): seed a fresh dex with a tiny
  * two-project product — two filed notes, one OPEN handoff between them, one
@@ -202,7 +201,8 @@ function injectConventions(projectRoot: string, projectName: string, inbox: stri
 export function seedDemoDex(config: Config): void {
   const { storeNote } = require('../core/store') as typeof import('../core/store')
   const { createHandoff } = require('../core/handoff') as typeof import('../core/handoff')
-  const { parseDoc, serializeDoc } = require('../core/frontmatter') as typeof import('../core/frontmatter')
+  const { parseDoc, serializeDoc } =
+    require('../core/frontmatter') as typeof import('../core/frontmatter')
   const identity = { name: 'demo', email: 'demo@loredex.local' }
 
   const notePath = storeNote(config, {

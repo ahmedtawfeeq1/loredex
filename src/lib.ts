@@ -137,16 +137,6 @@ export {
   yamlTopLevelKeys,
 } from './core/tables'
 export { inboxPath, scaffoldVault, slugify, stampEngineSchema } from './core/vault'
-export {
-  expandEnvRefs,
-  loadWorkspaceSpec,
-  materializeWorkspace,
-  type WorkspaceResult,
-  type WorkspaceSpec,
-  workspaceSchema,
-} from './core/workspace'
-export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'
-
 // work items (desktop DESIGN v3 §8): tasks ∪ handoffs on one board plane
 export {
   claimWorkItem,
@@ -161,3 +151,12 @@ export {
   type WorkReceipt,
   type WorkStatus,
 } from './core/work-items'
+export {
+  expandEnvRefs,
+  loadWorkspaceSpec,
+  materializeWorkspace,
+  type WorkspaceResult,
+  type WorkspaceSpec,
+  workspaceSchema,
+} from './core/workspace'
+export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'

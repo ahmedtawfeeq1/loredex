@@ -73,7 +73,9 @@ export async function runAuthLogin(opts: { withToken?: boolean }): Promise<void>
         process.exitCode = 1
         return
       }
-      console.log(pc.green(`signed in as ${user?.login ?? 'you'} (${maskToken(r.token)}, keychain)`))
+      console.log(
+        pc.green(`signed in as ${user?.login ?? 'you'} (${maskToken(r.token)}, keychain)`),
+      )
       return
     }
     if (r.state === 'slow_down') interval += 5
@@ -130,7 +132,9 @@ export async function runDexList(): Promise<void> {
   }
   const repos = await listDexRepos(token)
   if (repos.length === 0) {
-    console.log(`no repos carry the ${pc.bold('loredex-dex')} topic yet — \`loredex dex create <name>\``)
+    console.log(
+      `no repos carry the ${pc.bold('loredex-dex')} topic yet — \`loredex dex create <name>\``,
+    )
     return
   }
   for (const r of repos) {
@@ -173,6 +177,10 @@ export async function runDexCreate(name: string, opts: { private?: boolean }): P
     return
   }
   const repo = await createDexRepo(token, name, opts.private !== false)
-  console.log(pc.green(`created ${repo.fullName} (${repo.isPrivate ? 'private' : 'public'}, topic loredex-dex)`))
+  console.log(
+    pc.green(
+      `created ${repo.fullName} (${repo.isPrivate ? 'private' : 'public'}, topic loredex-dex)`,
+    ),
+  )
   console.log(`join it: loredex dex join ${repo.name}`)
 }

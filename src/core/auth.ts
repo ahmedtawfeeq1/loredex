@@ -22,11 +22,10 @@ export function storedToken(): string | null {
   if (process.platform !== 'darwin') return null
   try {
     return (
-      execFileSync(
-        'security',
-        ['find-generic-password', '-s', SERVICE, '-a', ACCOUNT, '-w'],
-        { encoding: 'utf8', timeout: 5000 },
-      ).trim() || null
+      execFileSync('security', ['find-generic-password', '-s', SERVICE, '-a', ACCOUNT, '-w'], {
+        encoding: 'utf8',
+        timeout: 5000,
+      }).trim() || null
     )
   } catch {
     return null
@@ -56,9 +55,7 @@ export function deleteToken(): void {
 
 export function ghCliToken(): string | null {
   try {
-    return (
-      execFileSync('gh', ['auth', 'token'], { encoding: 'utf8', timeout: 5000 }).trim() || null
-    )
+    return execFileSync('gh', ['auth', 'token'], { encoding: 'utf8', timeout: 5000 }).trim() || null
   } catch {
     return null
   }
@@ -211,7 +208,11 @@ export async function createDexRepo(
   const res = await fetch('https://api.github.com/user/repos', {
     method: 'POST',
     headers: { ...ghHeaders(token), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, private: isPrivate, description: 'loredex dex — one per product' }),
+    body: JSON.stringify({
+      name,
+      private: isPrivate,
+      description: 'loredex dex — one per product',
+    }),
   })
   if (!res.ok) throw new Error(`GitHub said ${res.status}`)
   const repo = (await res.json()) as RepoJson

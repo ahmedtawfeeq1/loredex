@@ -7,11 +7,17 @@ import type { Config } from '../core/config'
 import { ambientGitIdentity, consumeHandoff } from '../core/consume'
 import { parseDoc } from '../core/frontmatter'
 import { buildDashboard, listHandoffs, renderDashboardMarkdown } from '../core/product'
-import { claimWorkItem, finishWorkItem, listWorkItems, updateWorkItem, WORK_STATUSES } from '../core/work-items'
 import { gitPullPush } from '../core/router'
 import { sanitizeForContext, searchVault } from '../core/search'
 import { storeNote } from '../core/store'
 import { slugify } from '../core/vault'
+import {
+  claimWorkItem,
+  finishWorkItem,
+  listWorkItems,
+  updateWorkItem,
+  WORK_STATUSES,
+} from '../core/work-items'
 
 /**
  * Every response begins with this framing: vault content is authored by vault writers
@@ -219,7 +225,9 @@ export function createLoredexMcpServer(config: Config): McpServer {
         const r = claimWorkItem(config.vaultPath, config, id, ambientGitIdentity(config.vaultPath))
         return text(`Claimed: ${sanitizeForContext(r.id, 80)} — status doing, owner you.`)
       } catch (e) {
-        return text(`Cannot claim "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`)
+        return text(
+          `Cannot claim "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`,
+        )
       }
     },
   )
@@ -247,9 +255,13 @@ export function createLoredexMcpServer(config: Config): McpServer {
           { status, priority, sprint, owner, delegate },
           ambientGitIdentity(config.vaultPath),
         )
-        return text(`Updated: ${sanitizeForContext(r.id, 80)} (${r.pushed ? 'pushed' : 'will push on next sync'}).`)
+        return text(
+          `Updated: ${sanitizeForContext(r.id, 80)} (${r.pushed ? 'pushed' : 'will push on next sync'}).`,
+        )
       } catch (e) {
-        return text(`Cannot update "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`)
+        return text(
+          `Cannot update "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`,
+        )
       }
     },
   )
@@ -265,7 +277,9 @@ export function createLoredexMcpServer(config: Config): McpServer {
         const r = finishWorkItem(config.vaultPath, config, id, ambientGitIdentity(config.vaultPath))
         return text(`Done: ${sanitizeForContext(r.id, 80)}.`)
       } catch (e) {
-        return text(`Cannot finish "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`)
+        return text(
+          `Cannot finish "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`,
+        )
       }
     },
   )
