@@ -26,6 +26,14 @@ export interface LoredexEventMap {
     by: Identity
     at: string
   }
+  /** work-item writer (desktop DESIGN v3 §8): a task's fields changed */
+  'work.updated': {
+    id: string
+    path: string
+    patch: Record<string, string | undefined>
+    by: Identity
+    at: string
+  }
 }
 
 export type LoredexEventKind = keyof LoredexEventMap

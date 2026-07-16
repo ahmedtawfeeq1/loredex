@@ -7,6 +7,7 @@ import type { Config } from '../core/config'
 import { ambientGitIdentity, consumeHandoff } from '../core/consume'
 import { parseDoc } from '../core/frontmatter'
 import { buildDashboard, listHandoffs, renderDashboardMarkdown } from '../core/product'
+import { claimWorkItem, finishWorkItem, listWorkItems, updateWorkItem, WORK_STATUSES } from '../core/work-items'
 import { gitPullPush } from '../core/router'
 import { sanitizeForContext, searchVault } from '../core/search'
 import { storeNote } from '../core/store'
@@ -176,6 +177,96 @@ export function createLoredexMcpServer(config: Config): McpServer {
     async ({ project, topic, title, content, type, tags }) => {
       const dest = storeNote(config, { project, topic, title, content, type, tags })
       return text(`Filed: ${dest}`)
+    },
+  )
+
+  // ── work items (desktop DESIGN v3 §8): one board plane over tasks ∪ handoffs ──
+
+  server.registerTool(
+    'work_list',
+    {
+      description:
+        'List the dex work items — tasks (kind: task notes) plus every handoff/request mapped onto one board plane (backlog/todo/doing/review/done/consumed). Use to pick up work or see the sprint board.',
+      inputSchema: {
+        status: z.enum(WORK_STATUSES).optional().describe('filter to one board status'),
+        project: z.string().optional().describe('limit to one project slug'),
+      },
+    },
+    async ({ status, project }) => {
+      const today = new Date().toISOString().slice(0, 10)
+      let items = listWorkItems(config.vaultPath, today)
+      if (status) items = items.filter((i) => i.status === status)
+      if (project) items = items.filter((i) => i.project === slugify(project))
+      if (items.length === 0) return text('No work items match.')
+      const lines = items.map(
+        (i) =>
+          `- [${i.status}] (${i.kind}) ${sanitizeForContext(i.id, 80)} — ${sanitizeForContext(i.title, 120)}` +
+          `${i.project ? ` · project: ${i.project}` : ''}${i.sprint ? ` · sprint: ${i.sprint}` : ''}${i.owner ? ` · owner: ${sanitizeForContext(i.owner, 60)}` : ''}\n  path: ${i.path}`,
+      )
+      return text(`${items.length} work item(s):\n${lines.join('\n')}`)
+    },
+  )
+
+  server.registerTool(
+    'work_claim',
+    {
+      description:
+        'Claim a task: sets you as owner and moves it to doing. Tasks only — handoffs keep their accept/consume lifecycle (handoff_consume).',
+      inputSchema: { id: z.string().describe('task note name from work_list') },
+    },
+    async ({ id }) => {
+      try {
+        const r = claimWorkItem(config.vaultPath, config, id, ambientGitIdentity(config.vaultPath))
+        return text(`Claimed: ${sanitizeForContext(r.id, 80)} — status doing, owner you.`)
+      } catch (e) {
+        return text(`Cannot claim "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`)
+      }
+    },
+  )
+
+  server.registerTool(
+    'work_update',
+    {
+      description:
+        'Update a task work item — status/priority/sprint/owner/delegate. Tasks only; every write is attributed and committed.',
+      inputSchema: {
+        id: z.string().describe('task note name from work_list'),
+        status: z.enum(WORK_STATUSES).optional(),
+        priority: z.string().optional(),
+        sprint: z.string().optional(),
+        owner: z.string().optional(),
+        delegate: z.string().optional(),
+      },
+    },
+    async ({ id, status, priority, sprint, owner, delegate }) => {
+      try {
+        const r = updateWorkItem(
+          config.vaultPath,
+          config,
+          id,
+          { status, priority, sprint, owner, delegate },
+          ambientGitIdentity(config.vaultPath),
+        )
+        return text(`Updated: ${sanitizeForContext(r.id, 80)} (${r.pushed ? 'pushed' : 'will push on next sync'}).`)
+      } catch (e) {
+        return text(`Cannot update "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`)
+      }
+    },
+  )
+
+  server.registerTool(
+    'work_done',
+    {
+      description: 'Finish a task work item: status → done. Tasks only.',
+      inputSchema: { id: z.string().describe('task note name from work_list') },
+    },
+    async ({ id }) => {
+      try {
+        const r = finishWorkItem(config.vaultPath, config, id, ambientGitIdentity(config.vaultPath))
+        return text(`Done: ${sanitizeForContext(r.id, 80)}.`)
+      } catch (e) {
+        return text(`Cannot finish "${sanitizeForContext(id, 80)}": ${e instanceof Error ? e.message : String(e)}`)
+      }
     },
   )
 

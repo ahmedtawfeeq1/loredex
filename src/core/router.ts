@@ -19,7 +19,7 @@ import { rebuildIndexes } from './indexer'
 import { addRelatedLinks } from './linker'
 import { loadProducts, productOf } from './products'
 import { loadReceipt, type RouteReceipt, RouteUndoError, writeReceipt } from './receipts'
-import { rewriteLinks } from './relink'
+import { buildVaultLinkIndex, rewriteLinks } from './relink'
 import { sanitizeWikilinks } from './sanitize'
 import { findRouted, walkMarkdown } from './scan'
 import { matchNeverRoute, RouteScopeError } from './scope'
@@ -140,6 +140,9 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
   for (const [index, item] of items.entries()) {
     mapping.set(resolve(item.source), basename(dests[index] as string, '.md'))
   }
+  // notes routed in EARLIER batches — without this, a wikilink to a sibling routed
+  // last session never picks up its date-prefixed vault name and renders broken
+  const vaultIndex = buildVaultLinkIndex(vaultPath)
   const editor = config.editor ?? 'system'
   const products = loadProducts(vaultPath)
 
@@ -158,6 +161,7 @@ export function executePlan(items: PlanItem[], vaultPath: string, config: Config
       sourceDir: dirname(resolve(item.source)),
       mapping,
       editor,
+      vaultIndex,
     }).body
 
     const dest = dests[index] as string
@@ -269,6 +273,7 @@ export function refreshRoutedCopies(
   }
 
   const editor = config.editor ?? 'system'
+  const vaultIndex = buildVaultLinkIndex(vaultPath)
   const refreshed: string[] = []
   for (const { path, raw } of findRouted(projectRoot)) {
     const notes = bySource.get(resolve(path))
@@ -281,6 +286,7 @@ export function refreshRoutedCopies(
       sourceDir: dirname(resolve(path)),
       mapping: new Map(),
       editor,
+      vaultIndex,
     }).body
     for (const notePath of notes) {
       const note = parseDoc(readFileSync(notePath, 'utf8'))

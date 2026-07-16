@@ -1,8 +1,8 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { editorUri, rewriteLinks } from '../src/core/relink'
+import { buildVaultLinkIndex, editorUri, repairVaultLinks, rewriteLinks } from '../src/core/relink'
 
 describe('relink', () => {
   const root = mkdtempSync(join(tmpdir(), 'loredex-relink-'))
@@ -91,5 +91,74 @@ describe('relink', () => {
   it('editorUri shapes', () => {
     expect(editorUri('vscode', '/a/b.ts', 7)).toBe('vscode://file/a/b.ts:7')
     expect(editorUri('system', '/a/b.ts')).toBe('file:///a/b.ts')
+  })
+
+  describe('vault-index fallback (cross-batch wikilinks)', () => {
+    const vaultIndex = new Map([
+      ['distribution-research', ['2026-07-16-distribution-research']],
+      ['dupe', ['2026-07-01-dupe', '2026-07-02-dupe']],
+      ['objective', ['2026-07-02-objective']],
+    ])
+    const vctx = () => ({ sourceDir: docs, mapping, editor: 'cursor', vaultIndex })
+
+    it('rewrites wikilinks to notes routed in earlier batches', () => {
+      expect(rewriteLinks('see [[distribution-research]]', vctx()).body).toBe(
+        'see [[2026-07-16-distribution-research]]',
+      )
+    })
+
+    it('preserves alias and heading anchor', () => {
+      expect(rewriteLinks('[[distribution-research#goals|the research]]', vctx()).body).toBe(
+        '[[2026-07-16-distribution-research#goals|the research]]',
+      )
+    })
+
+    it('leaves ambiguous slugs and unknown targets untouched', () => {
+      expect(rewriteLinks('[[dupe]] and [[nope]]', vctx()).body).toBe('[[dupe]] and [[nope]]')
+    })
+
+    it('same-batch mapping wins over the vault index', () => {
+      // OBJECTIVE resolves via the batch mapping; the vault index must not double-fire
+      expect(rewriteLinks('[[OBJECTIVE]]', vctx()).body).toBe('[[2026-07-02-objective]]')
+    })
+  })
+})
+
+describe('repairVaultLinks', () => {
+  const vault = mkdtempSync(join(tmpdir(), 'loredex-repair-'))
+  const topic = join(vault, 'projects', 'proj', 'topic')
+
+  beforeAll(() => {
+    mkdirSync(topic, { recursive: true })
+    mkdirSync(join(vault, '_inbox'), { recursive: true })
+    writeFileSync(join(topic, '2026-07-16-research.md'), '# research\n')
+    writeFileSync(
+      join(topic, '2026-07-16-follow-up.md'),
+      '---\ndate: 2026-07-16\n---\n\nSee [[research]] and [[missing]].\n\n`[[research]]` stays.\n',
+    )
+    writeFileSync(join(vault, '_inbox', 'pending.md'), 'inbox [[research]] untouched\n')
+  })
+
+  it('indexes vault notes by date-stripped slug, skipping _inbox', () => {
+    const index = buildVaultLinkIndex(vault)
+    expect(index.get('research')).toEqual(['2026-07-16-research'])
+    expect(index.get('pending')).toBeUndefined()
+  })
+
+  it('dry run reports without writing', () => {
+    const results = repairVaultLinks(vault, { dryRun: true })
+    expect(results).toEqual([{ path: join(topic, '2026-07-16-follow-up.md'), changed: 1 }])
+    expect(readFileSync(join(topic, '2026-07-16-follow-up.md'), 'utf8')).toContain('[[research]]')
+  })
+
+  it('rewrites broken wikilinks that match a date-prefixed note, preserving frontmatter and code', () => {
+    repairVaultLinks(vault)
+    const body = readFileSync(join(topic, '2026-07-16-follow-up.md'), 'utf8')
+    expect(body).toContain('---\ndate: 2026-07-16\n---')
+    expect(body).toContain('See [[2026-07-16-research]] and [[missing]].')
+    expect(body).toContain('`[[research]]` stays.')
+    expect(readFileSync(join(vault, '_inbox', 'pending.md'), 'utf8')).toContain('[[research]]')
+    // second run: nothing left to fix
+    expect(repairVaultLinks(vault)).toEqual([])
   })
 })

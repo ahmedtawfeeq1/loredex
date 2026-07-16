@@ -92,6 +92,61 @@ export function expandEnvRefs(
   return { spec: { ...spec, mcp }, missing: [...missing].sort() }
 }
 
+/** `${VAR}` suffix for a client slug: kebab → UPPER_SNAKE (2me → 2ME, p-s → P_S). */
+export function envSuffix(client: string): string {
+  return client.replace(/[^a-zA-Z0-9]+/g, '_').toUpperCase()
+}
+
+export interface CopyWorkspaceResult {
+  renamed: Array<{ from: string; to: string }>
+}
+
+/**
+ * Copy a golden client's workspace.yml onto another client, rewriting the
+ * per-client env refs: `${X_<FROMSLUG>}` → `${X_<TOSLUG>}` (suffix = envSuffix).
+ * Raw-text copy so comments survive; refuses to clobber a target that already
+ * declares tooling unless forced. The follow-up materialize reports the new
+ * env vars as missing — that's the prompt to export them.
+ */
+export function copyWorkspaceSpec(
+  vaultPath: string,
+  from: string,
+  to: string,
+  opts?: { force?: boolean },
+): CopyWorkspaceResult {
+  const fromDir = join(vaultPath, 'projects', from)
+  const toDir = join(vaultPath, 'projects', to)
+  const toPath = join(toDir, 'workspace.yml')
+  if (!existsSync(toPath)) {
+    throw new Error(`no client "${to}" in this dex — scaffold it with \`loredex new client\``)
+  }
+  const source = loadWorkspaceSpec(fromDir) // validates the source before touching the target
+  if (Object.keys(source.mcp).length === 0 && source.plugins.claude.length === 0) {
+    throw new Error(`${from}/workspace.yml declares no tooling — nothing to copy`)
+  }
+  const target = loadWorkspaceSpec(toDir)
+  const targetHasTooling =
+    Object.keys(target.mcp).length > 0 ||
+    target.plugins.claude.length > 0 ||
+    target.skills.length > 0
+  if (targetHasTooling && !opts?.force) {
+    throw new Error(`${to}/workspace.yml already declares tooling — pass --force to overwrite`)
+  }
+
+  const fromSuffix = `_${envSuffix(from)}`
+  const toSuffix = `_${envSuffix(to)}`
+  const renamed: CopyWorkspaceResult['renamed'] = []
+  const raw = readFileSync(join(fromDir, 'workspace.yml'), 'utf8')
+  const rewritten = raw.replace(ENV_REF, (whole, name: string) => {
+    if (!name.endsWith(fromSuffix)) return whole
+    const next = name.slice(0, -fromSuffix.length) + toSuffix
+    renamed.push({ from: name, to: next })
+    return `\${${next}}`
+  })
+  writeFileSync(toPath, rewritten)
+  return { renamed }
+}
+
 /** Deterministic stringify: sorted keys at every level so --check diffs are byte-stable. */
 function stableJson(value: unknown): string {
   const sortValue = (v: unknown): unknown => {

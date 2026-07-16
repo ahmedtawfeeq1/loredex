@@ -146,3 +146,18 @@ export {
   workspaceSchema,
 } from './core/workspace'
 export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'
+
+// work items (desktop DESIGN v3 §8): tasks ∪ handoffs on one board plane
+export {
+  claimWorkItem,
+  finishWorkItem,
+  handoffBoardStatus,
+  listWorkItems,
+  updateWorkItem,
+  WORK_STATUSES,
+  type WorkItem,
+  type WorkKind,
+  type WorkPatch,
+  type WorkReceipt,
+  type WorkStatus,
+} from './core/work-items'

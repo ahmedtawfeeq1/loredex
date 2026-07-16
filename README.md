@@ -281,6 +281,7 @@ Claude Code's hooks fire in any IDE-hosted terminal (VS Code, Cursor, Antigravit
 | `loredex handoffs` | List open handoffs for this project (pulls remote first). `--consume <name>` marks done |
 | `loredex mcp` | MCP server over stdio — wired into `.mcp.json` by `init` |
 | `loredex sync` | Commit local vault changes, pull teammates' notes, push yours |
+| `loredex relink` | Repair vault wikilinks broken by cross-batch routing (bare slug → dated note name). `--dry-run` |
 | `loredex reset <project>` | Remove a project's vault copies and unstamp originals for a clean re-adopt. `--dry-run`, `-y` |
 | `loredex watch` | Daemon: route automatically on file changes (polling — no fd limits) |
 | `loredex status` | Vault statistics |
