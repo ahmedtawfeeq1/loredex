@@ -64,6 +64,15 @@ export interface Meta {
   declined_at?: string
   snoozed_by?: string
   snoozed_at?: string
+  /** work items (desktop DESIGN v3 §8): tasks carry kind: task + these —
+   *  status shares the key above (backlog|todo|doing|review|done) */
+  title?: string
+  priority?: string
+  sprint?: string
+  owner?: string
+  delegate?: string
+  updated_by?: string
+  updated_at?: string
   loredex_schema?: number
 }
 

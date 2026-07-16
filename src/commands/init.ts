@@ -22,6 +22,8 @@ export interface InitOptions {
   editor?: string
   product?: string
   type?: string
+  /** seed the dex with a small demo product (notes + an open handoff + a task) */
+  demo?: boolean
 }
 
 export function runInit(opts: InitOptions): void {
@@ -118,6 +120,11 @@ export function runInit(opts: InitOptions): void {
   console.log()
   console.log('Next:', pc.bold('npx -y loredex@latest adopt'), 'to organize existing markdown,')
   console.log('      or open the vault folder in Obsidian.')
+
+  if (opts.demo) {
+    const seeded = loadConfig()
+    if (seeded) seedDemoDex(seeded)
+  }
 }
 
 function setupGitSync(vaultPath: string): void {
@@ -183,4 +190,68 @@ function injectConventions(projectRoot: string, projectName: string, inbox: stri
   } else if (!readFileSync(cursorRule, 'utf8').includes(MARKER_START)) {
     appendFileSync(cursorRule, `\n${ruleBody}`)
   }
+}
+
+
+/**
+ * `loredex init --demo` (desktop v3 first-run): seed a fresh dex with a tiny
+ * two-project product — two filed notes, one OPEN handoff between them, one
+ * task work item — everything written through the real engine writers, so
+ * Today/Inbox/Plan/Atlas have honest data on first launch.
+ */
+export function seedDemoDex(config: Config): void {
+  const { storeNote } = require('../core/store') as typeof import('../core/store')
+  const { createHandoff } = require('../core/handoff') as typeof import('../core/handoff')
+  const { parseDoc, serializeDoc } = require('../core/frontmatter') as typeof import('../core/frontmatter')
+  const identity = { name: 'demo', email: 'demo@loredex.local' }
+
+  const notePath = storeNote(config, {
+    project: 'demo-backend',
+    topic: 'auth',
+    title: 'Auth flow findings',
+    content:
+      'Session tokens rotate every 24h; refresh happens in middleware.\n\nSee the task on the Plan board for the follow-up.',
+    type: 'finding',
+    tags: ['demo'],
+  })
+  storeNote(config, {
+    project: 'demo-frontend',
+    topic: 'onboarding',
+    title: 'Onboarding research',
+    content: 'Users drop at step 3 — shorten the form and defer email verification.',
+    type: 'research',
+    tags: ['demo'],
+  })
+
+  createHandoff(
+    config.vaultPath,
+    config,
+    {
+      fromProject: 'demo-backend',
+      toProject: 'demo-frontend',
+      objective: 'Adopt the rotated-session auth contract in the web client',
+      kind: 'request',
+      notes: [basename(notePath, '.md')],
+      nextActions: ['Read the auth findings', 'Swap the token refresh call'],
+    },
+    identity,
+  )
+
+  // one task work item (kind: task — Plan board's task lane)
+  const taskPath = storeNote(config, {
+    project: 'demo-backend',
+    topic: 'auth',
+    title: 'Rotate refresh tokens on password change',
+    content: 'Follow-up from the auth findings: invalidate refresh tokens on password change.',
+    type: 'note',
+    tags: ['demo'],
+  })
+  const doc = parseDoc(readFileSync(taskPath, 'utf8'))
+  doc.meta.kind = 'task'
+  doc.meta.status = 'todo'
+  doc.meta.priority = 'P2'
+  doc.meta.title = 'Rotate refresh tokens on password change'
+  writeFileSync(taskPath, serializeDoc(doc))
+
+  console.log(pc.green('demo dex seeded — two projects, one open handoff, one task'))
 }

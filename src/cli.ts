@@ -7,6 +7,14 @@ import { runCurate } from './commands/curate'
 import { runDoctor } from './commands/doctor'
 import { runHandoff, runHandoffs } from './commands/handoff'
 import { runInit } from './commands/init'
+import {
+  runAuthLogin,
+  runAuthLogout,
+  runAuthStatus,
+  runDexCreate,
+  runDexJoin,
+  runDexList,
+} from './commands/auth'
 import { runMcp } from './commands/mcp'
 import { runNew } from './commands/new'
 import { runCurateProduct } from './commands/product'
@@ -47,6 +55,7 @@ program
     '--product <name>',
     'group this project under a product (Product → Project → Topic → Note)',
   )
+  .option('--demo', 'seed the new dex with a small demo product (notes, a handoff, a task)')
   .action((opts) => runInit(opts))
 
 program
@@ -154,6 +163,28 @@ program
   .option('--dry-run', 'list what would change without touching anything')
   .option('-y, --yes', 'skip the confirmation prompt')
   .action((project, opts) => runReset(project, opts))
+
+const auth = program.command('auth').description('GitHub sign-in (shared with the desktop app)')
+auth
+  .command('login')
+  .description('device flow; --with-token reads a PAT from stdin')
+  .option('--with-token', 'read a fine-grained PAT from stdin (CI)')
+  .action((opts) => runAuthLogin(opts))
+auth.command('status').description('account, store, scopes').action(() => runAuthStatus())
+auth.command('logout').description('delete the stored token').action(() => runAuthLogout())
+
+const dex = program.command('dex').description('dex registry — repos tagged loredex-dex')
+dex.command('list').description('your dexes across account + orgs').action(() => runDexList())
+dex
+  .command('join <name>')
+  .description('clone a dex repo')
+  .option('--dir <path>', 'clone destination (default: ./<name>)')
+  .action((name, opts) => runDexJoin(name, opts))
+dex
+  .command('create <name>')
+  .description('new private repo + loredex-dex topic')
+  .option('--public', 'create it public')
+  .action((name, opts) => runDexCreate(name, { private: !opts.public }))
 
 program.command('status').description('vault statistics').action(runStatus)
 
