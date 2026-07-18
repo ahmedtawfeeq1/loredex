@@ -5,6 +5,8 @@
 export { ACTIVITY_LOG_ARGS, type ActivityEvent, parseActivity } from './core/activity'
 export {
   type ClientInfo,
+  type InboxItem,
+  listClientInbox,
   STAGE_FILE_SUFFIXES,
   type StageInfo,
   scanClient,
@@ -152,11 +154,15 @@ export {
   type WorkStatus,
 } from './core/work-items'
 export {
+  type CopyWorkspaceResult,
+  copyWorkspaceSpec,
+  envSuffix,
   expandEnvRefs,
   loadWorkspaceSpec,
   materializeWorkspace,
   type WorkspaceResult,
   type WorkspaceSpec,
+  workspaceEnvRefs,
   workspaceSchema,
 } from './core/workspace'
 export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'

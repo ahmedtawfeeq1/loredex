@@ -1,7 +1,8 @@
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, utimesSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { listClientInbox } from '../src/core/agent-ops'
 import { scaffoldClient, scaffoldPipeline, scaffoldStage } from '../src/core/agent-ops-scaffold'
 import { lintAgentOps } from '../src/core/doctor-agent-ops'
 import { scaffoldVault } from '../src/core/vault'
@@ -11,6 +12,7 @@ import {
   expandEnvRefs,
   loadWorkspaceSpec,
   materializeWorkspace,
+  workspaceEnvRefs,
 } from '../src/core/workspace'
 
 const WS = `mcp:
@@ -214,5 +216,69 @@ skills: []
     expect(envSuffix('2me')).toBe('2ME')
     expect(envSuffix('p-s')).toBe('P_S')
     expect(envSuffix('brightsmile-dental')).toBe('BRIGHTSMILE_DENTAL')
+  })
+})
+
+describe('servers subset copy + workspaceEnvRefs + listClientInbox', () => {
+  const TWO_SERVERS = `mcp:
+  new-platform:
+    command: npx
+    args: [-y, new-mcp]
+    env: { NEW_TOKEN: "\${NEW_TOKEN_BRIGHTSMILE_DENTAL}" }
+  old-platform:
+    command: npx
+    args: [-y, old-mcp]
+    env: { OLD_TOKEN: "\${OLD_TOKEN_BRIGHTSMILE_DENTAL}" }
+plugins:
+  claude: [some-plugin@some-marketplace]
+skills: []
+`
+
+  function dexTwo(): { v: string; from: string; to: string } {
+    const v = mkdtempSync(join(tmpdir(), 'loredex-wssub-'))
+    scaffoldVault(v, 'agent-ops')
+    const { slug: from } = scaffoldClient(v, 'brightsmile_dental', { manager: 'sara' })
+    const { slug: to } = scaffoldClient(v, 'peak_fitness', { manager: 'sara' })
+    writeFileSync(join(v, 'projects', from, 'workspace.yml'), TWO_SERVERS)
+    return { v, from, to }
+  }
+
+  it('copies only the requested servers, env-rewritten', () => {
+    const { v, from, to } = dexTwo()
+    const { renamed } = copyWorkspaceSpec(v, from, to, { servers: ['new-platform'] })
+    expect(renamed).toEqual([
+      { from: 'NEW_TOKEN_BRIGHTSMILE_DENTAL', to: 'NEW_TOKEN_PEAK_FITNESS' },
+    ])
+    const spec = loadWorkspaceSpec(join(v, 'projects', to))
+    expect(Object.keys(spec.mcp)).toEqual(['new-platform'])
+    expect(spec.plugins.claude).toEqual(['some-plugin@some-marketplace'])
+    expect(spec.mcp['new-platform']?.env?.NEW_TOKEN).toBe('${NEW_TOKEN_PEAK_FITNESS}')
+  })
+
+  it('rejects unknown or empty server filters', () => {
+    const { v, from, to } = dexTwo()
+    expect(() => copyWorkspaceSpec(v, from, to, { servers: ['nope'] })).toThrow(/no mcp server/)
+    expect(() => copyWorkspaceSpec(v, from, to, { servers: [] })).toThrow(/at least one/)
+  })
+
+  it('workspaceEnvRefs lists the declared ${VAR} names, sorted + deduped', () => {
+    const { v, from } = dexTwo()
+    expect(workspaceEnvRefs(join(v, 'projects', from))).toEqual([
+      'NEW_TOKEN_BRIGHTSMILE_DENTAL',
+      'OLD_TOKEN_BRIGHTSMILE_DENTAL',
+    ])
+  })
+
+  it('listClientInbox returns pending items oldest-first with vault-relative paths', () => {
+    const { v, from } = dexTwo()
+    const inbox = join(v, 'projects', from, '_inbox')
+    writeFileSync(join(inbox, 'b-newer.md'), 'x')
+    writeFileSync(join(inbox, 'a-older.md'), 'x')
+    const older = Date.now() / 1000 - 3600
+    utimesSync(join(inbox, 'a-older.md'), older, older)
+    const items = listClientInbox(v, from)
+    expect(items.map((i) => i.name)).toEqual(['a-older.md', 'b-newer.md'])
+    expect(items[0]?.rel).toBe(`projects/${from}/_inbox/a-older.md`)
+    expect(listClientInbox(v, 'no-such-client')).toEqual([])
   })
 })

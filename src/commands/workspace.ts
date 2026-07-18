@@ -8,6 +8,7 @@ export interface WorkspaceOptions {
   check?: boolean
   from?: string
   force?: boolean
+  servers?: string[]
 }
 
 /** `loredex workspace <client> [--check]` — generate (or verify) the client's agent tooling. */
@@ -27,7 +28,10 @@ export function runWorkspace(client: string, opts: WorkspaceOptions): void {
     const slug = slugify(client)
     if (opts.from) {
       const from = slugify(opts.from)
-      const { renamed } = copyWorkspaceSpec(config.vaultPath, from, slug, { force: opts.force })
+      const { renamed } = copyWorkspaceSpec(config.vaultPath, from, slug, {
+        force: opts.force,
+        servers: opts.servers,
+      })
       console.log(pc.green('✓'), `workspace.yml copied from ${from}`)
       for (const r of renamed) console.log(pc.dim(`  \${${r.from}} → \${${r.to}}`))
     }
