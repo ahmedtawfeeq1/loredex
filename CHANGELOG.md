@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.9.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.8.0...loredex-v2.9.0) (2026-07-18)
+
+
+### Features
+
+* **lib:** desktop agent-ops verbs — copy exports, servers subset, env refs, inbox list ([b366066](https://github.com/ahmedtawfeeq1/loredex/commit/b36606630b71b82c89265ed6d5d6f438353d52e5))
+* **lib:** desktop agent-ops verbs — copy exports, servers subset, env refs, inbox list ([5df5e75](https://github.com/ahmedtawfeeq1/loredex/commit/5df5e759c83f09dd14c99be41deb05f968713658))
+
 ## [2.8.0](https://github.com/ahmedtawfeeq1/loredex/compare/loredex-v2.7.0...loredex-v2.8.0) (2026-07-16)
 
 
