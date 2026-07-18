@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { load as yamlLoad } from 'js-yaml'
+import { dump as yamlDump, load as yamlLoad } from 'js-yaml'
 import { z } from 'zod'
 import { MARKER_END, MARKER_START } from '../templates'
 import { scanClient } from './agent-ops'
@@ -107,12 +107,16 @@ export interface CopyWorkspaceResult {
  * Raw-text copy so comments survive; refuses to clobber a target that already
  * declares tooling unless forced. The follow-up materialize reports the new
  * env vars as missing — that's the prompt to export them.
+ *
+ * `servers` narrows the copy to those mcp connections (a client that only
+ * talks to one platform shouldn't inherit the golden client's other servers);
+ * the narrowed copy is re-serialized, so source comments don't survive it.
  */
 export function copyWorkspaceSpec(
   vaultPath: string,
   from: string,
   to: string,
-  opts?: { force?: boolean },
+  opts?: { force?: boolean; servers?: string[] },
 ): CopyWorkspaceResult {
   const fromDir = join(vaultPath, 'projects', from)
   const toDir = join(vaultPath, 'projects', to)
@@ -133,10 +137,30 @@ export function copyWorkspaceSpec(
     throw new Error(`${to}/workspace.yml already declares tooling — pass --force to overwrite`)
   }
 
+  let raw: string
+  if (opts?.servers) {
+    const unknown = opts.servers.filter((s) => !(s in source.mcp))
+    if (unknown.length > 0) {
+      throw new Error(`no mcp server "${unknown[0]}" in ${from}/workspace.yml`)
+    }
+    if (opts.servers.length === 0) {
+      throw new Error('servers filter is empty — pass at least one connection to copy')
+    }
+    const subset: WorkspaceSpec = {
+      mcp: Object.fromEntries(
+        Object.entries(source.mcp).filter(([name]) => opts.servers?.includes(name)),
+      ),
+      plugins: source.plugins,
+      skills: source.skills,
+    }
+    raw = WORKSPACE_HEADER + yamlDump(subset, { lineWidth: 100 })
+  } else {
+    raw = readFileSync(join(fromDir, 'workspace.yml'), 'utf8')
+  }
+
   const fromSuffix = `_${envSuffix(from)}`
   const toSuffix = `_${envSuffix(to)}`
   const renamed: CopyWorkspaceResult['renamed'] = []
-  const raw = readFileSync(join(fromDir, 'workspace.yml'), 'utf8')
   const rewritten = raw.replace(ENV_REF, (whole, name: string) => {
     if (!name.endsWith(fromSuffix)) return whole
     const next = name.slice(0, -fromSuffix.length) + toSuffix
@@ -145,6 +169,26 @@ export function copyWorkspaceSpec(
   })
   writeFileSync(toPath, rewritten)
   return { renamed }
+}
+
+const WORKSPACE_HEADER = `# Agent tooling for this client — committed, secret-free.
+# \`loredex workspace <client>\` generates .mcp.json / .claude/settings.json / AGENTS.md
+# from this file. Secrets stay in your environment: \${VAR} is expanded at generate time.
+`
+
+/**
+ * The `${VAR}` names a client's workspace.yml references — what a machine
+ * must supply (shell env or a host's secret store) for a full materialize.
+ */
+export function workspaceEnvRefs(clientDir: string): string[] {
+  const spec = loadWorkspaceSpec(clientDir)
+  const refs = new Set<string>()
+  for (const server of Object.values(spec.mcp)) {
+    for (const value of Object.values(server.env ?? {})) {
+      for (const m of value.matchAll(ENV_REF)) refs.add(m[1] as string)
+    }
+  }
+  return [...refs].sort()
 }
 
 /** Deterministic stringify: sorted keys at every level so --check diffs are byte-stable. */

@@ -225,6 +225,15 @@ program
     "copy another client's workspace.yml first, rewriting per-client ${VAR_<SLUG>} env refs",
   )
   .option('--force', 'with --from: overwrite a workspace.yml that already declares tooling')
+  .option(
+    '--servers <names>',
+    'with --from: copy only these mcp connections (comma-separated)',
+    (v: string) =>
+      v
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+  )
   .action((client, opts) => runWorkspace(client, opts))
 
 program

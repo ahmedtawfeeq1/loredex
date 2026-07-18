@@ -184,6 +184,29 @@ function inboxStats(dir: string): { count: number; oldestMs: number | null } {
   return { count: files.length, oldestMs: oldest }
 }
 
+export interface InboxItem {
+  name: string
+  /** path relative to the vault root, e.g. projects/<slug>/_inbox/<name> */
+  rel: string
+  mtimeMs: number | null
+}
+
+/** The client's pending `_inbox` items, oldest first — the consume queue. */
+export function listClientInbox(vaultPath: string, slug: string): InboxItem[] {
+  const dir = join(vaultPath, 'projects', slug, '_inbox')
+  return listFiles(dir)
+    .map((name) => {
+      let mtimeMs: number | null = null
+      try {
+        mtimeMs = statSync(join(dir, name)).mtimeMs
+      } catch {
+        // unreadable entry still shows up as pending
+      }
+      return { name, rel: `projects/${slug}/_inbox/${name}`, mtimeMs }
+    })
+    .sort((a, b) => (a.mtimeMs ?? 0) - (b.mtimeMs ?? 0))
+}
+
 export function scanClient(vaultPath: string, slug: string): ClientInfo | null {
   const clientAbs = join(vaultPath, 'projects', slug)
   if (!existsSync(clientAbs)) return null
