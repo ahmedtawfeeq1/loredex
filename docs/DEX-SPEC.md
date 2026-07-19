@@ -62,6 +62,7 @@ projects/<client>/
   automation_workflows/*.json    # workflow exports (n8n etc.) — raw, never rewritten
   _inbox/                        # client intake pending consumption (doctor: attention)
   _randoms/                      # keep-anyway; searchable, exempt from every lint
+  _versions/<unit>/<stamp>/      # committed snapshots; exempt from every lint
   workspace.yml                  # committed, secret-free agent-tooling spec
   .mcp.json                      # GENERATED from workspace.yml — gitignored
   .claude/settings.json          # GENERATED — gitignored
@@ -81,6 +82,13 @@ projects/<client>/
 - `.curls.yaml` suffix marks action files; no invented extension.
 - `_inbox/` = intake queue: consume by moving the file to its proper home (or act +
   delete). Pending items are attention-level, never errors. Empty inbox = healthy.
+- `_versions/` = dated snapshots of a unit's definition (`loredex snapshot`, the
+  `dex_snapshot` MCP tool, or the desktop Snapshot button). Each stamp dir
+  `YYYY-MM-DD_HHMMSS/` holds the copied definition files (preserving the
+  `stages/NN_*/` layout), an optional `platform.json` (live platform state an
+  agent captured via the client's own MCP), and a `manifest.json`. Committed —
+  that IS the durability story. Invisible to the fleet scanner and exempt from
+  every lint (a versions dir must never parse as a pipeline/agent/stage).
 - `_randoms/` = the escape hatch that keeps the rest strict: indexed for search,
   ignored by every lint (including the secret scan).
 
