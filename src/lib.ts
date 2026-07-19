@@ -14,6 +14,9 @@ export {
   type UnitInfo,
 } from './core/agent-ops'
 export {
+  type NormalizeOptions,
+  type NormalizeResult,
+  normalizeClient,
   scaffoldAgent,
   scaffoldClient,
   scaffoldPipeline,

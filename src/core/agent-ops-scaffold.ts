@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from 'node:fs'
 import { join } from 'node:path'
 import { STAGE_FILE_SUFFIXES, type StageInfo, scanClient, stageNumberingGaps } from './agent-ops'
 import { setClientTags } from './clients'
@@ -265,4 +272,98 @@ export function scaffoldStage(
     )
   }
   return { dir: `projects/${client}/pipelines/${pipeline}/stages/${dirName}`, renumbered }
+}
+
+/** Container dirs that are valid-but-empty — a .gitkeep makes the structure
+ *  git-tracked and identical across clients (git ignores empty dirs). */
+const KEEP_DIRS = ['knowledge_tables', 'automation_workflows', '_inbox', '_randoms'] as const
+
+const GITKEEP = `# Keeps this folder in git so every client has the same structure.
+# Delete once this folder holds real files.
+`
+
+export interface NormalizeOptions {
+  /** default unit names created only when the client has none (idempotent) */
+  pipeline?: string
+  stage?: string
+  agent?: string
+}
+
+export interface NormalizeResult {
+  slug: string
+  /** vault-relative paths created this run (dirs get a trailing /) */
+  created: string[]
+  /** true when nothing had to be added — the client was already canonical */
+  alreadyCanonical: boolean
+}
+
+/**
+ * Bring a client up to the canonical agent-ops structure without ever
+ * clobbering real content (writeIfMissing throughout). Ensures the six
+ * top-level dirs, a .gitkeep in each empty container so the layout is
+ * git-tracked and uniform, and — when the client has NO pipeline / NO agent —
+ * a starter pipeline (persona + instructions + stages/NN_<stage>/…) and a
+ * starter agent so the nested template exists everywhere. Re-running is a
+ * no-op once canonical.
+ */
+export function normalizeClient(
+  vaultPath: string,
+  clientName: string,
+  opts?: NormalizeOptions,
+): NormalizeResult {
+  const slug = slugify(clientName)
+  const clientAbs = join(vaultPath, 'projects', slug)
+  if (!existsSync(clientAbs)) {
+    throw new Error(`no client "${slug}" — run \`loredex new client\` first`)
+  }
+  const created: string[] = []
+  const track = (abs: string, rel: string): void => {
+    if (!existsSync(abs)) created.push(rel)
+  }
+
+  // 1. the six top-level dirs (mkdir is silent if present) + workspace/.gitignore
+  for (const dir of ['pipelines', 'agents', ...KEEP_DIRS]) {
+    track(join(clientAbs, dir), `projects/${slug}/${dir}/`)
+    mkdirSync(join(clientAbs, dir), { recursive: true })
+  }
+  track(join(clientAbs, 'workspace.yml'), `projects/${slug}/workspace.yml`)
+  writeIfMissing(join(clientAbs, 'workspace.yml'), WORKSPACE_TEMPLATE)
+  ensureGitignoreBlock(clientAbs)
+
+  // 2. .gitkeep in empty containers so the structure survives a commit
+  for (const dir of KEEP_DIRS) {
+    const dirAbs = join(clientAbs, dir)
+    const nonKeep = listFilesLite(dirAbs).filter((n) => n !== '.gitkeep')
+    if (nonKeep.length === 0) {
+      const keep = join(dirAbs, '.gitkeep')
+      track(keep, `projects/${slug}/${dir}/.gitkeep`)
+      writeIfMissing(keep, GITKEEP)
+    }
+  }
+
+  // 3. a starter pipeline + stage when the client has none
+  const info = scanClient(vaultPath, slug)
+  if (info && info.pipelines.length === 0) {
+    const pipeline = slugify(opts?.pipeline ?? 'main')
+    const unit = scaffoldUnit(vaultPath, slug, 'pipeline', pipeline)
+    created.push(`${unit.dir}/`)
+    scaffoldStage(vaultPath, slug, pipeline, opts?.stage ?? 'intake')
+    created.push(`${unit.dir}/stages/01_${slugify(opts?.stage ?? 'intake')}/`)
+  }
+
+  // 4. a starter agent when the client has none
+  if (info && info.agents.length === 0) {
+    const agent = scaffoldUnit(vaultPath, slug, 'agent', slugify(opts?.agent ?? 'assistant'))
+    created.push(`${agent.dir}/`)
+  }
+
+  return { slug, created, alreadyCanonical: created.length === 0 }
+}
+
+function listFilesLite(dir: string): string[] {
+  try {
+    return readdirSync(dir)
+  } catch {
+    return []
+  }
 }
