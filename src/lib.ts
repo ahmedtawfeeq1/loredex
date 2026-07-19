@@ -165,6 +165,7 @@ export {
   materializeWorkspace,
   type WorkspaceResult,
   type WorkspaceSpec,
+  windowsSafeCommand,
   workspaceEnvRefs,
   workspaceSchema,
 } from './core/workspace'

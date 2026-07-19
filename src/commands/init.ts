@@ -7,6 +7,7 @@ import { type DexType, hasDexManifest, loadDexSync, loadDexType, saveDexSync } f
 import { detectEditors } from '../core/editors'
 import { setProduct } from '../core/products'
 import { inboxPath, scaffoldVault, slugify } from '../core/vault'
+import { windowsSafeCommand } from '../core/workspace'
 import {
   agentsSnippet,
   claudePointer,
@@ -160,7 +161,9 @@ function wireMcpServer(projectRoot: string): boolean {
   }
   json.mcpServers ??= {}
   if (json.mcpServers.loredex) return true // already wired
-  json.mcpServers.loredex = { command: 'npx', args: ['-y', 'loredex@latest', 'mcp'] }
+  // Windows can't spawn the npx shim directly — wrap in `cmd /c` there
+  const safe = windowsSafeCommand('npx', ['-y', 'loredex@latest', 'mcp'])
+  json.mcpServers.loredex = { command: safe.command, args: safe.args }
   writeFileSync(mcpPath, `${JSON.stringify(json, null, 2)}\n`)
   return true
 }
