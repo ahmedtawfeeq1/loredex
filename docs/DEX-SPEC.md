@@ -83,7 +83,7 @@ projects/<client>/
 - `_inbox/` = intake queue: consume by moving the file to its proper home (or act +
   delete). Pending items are attention-level, never errors. Empty inbox = healthy.
 - `_versions/` = dated snapshots of a unit's definition (`loredex snapshot`, the
-  `dex_snapshot` MCP tool, or the desktop Snapshot button). Each stamp dir
+  `vault_snapshot` MCP tool, or the desktop Snapshot button). Each stamp dir
   `YYYY-MM-DD_HHMMSS/` holds the copied definition files (preserving the
   `stages/NN_*/` layout), an optional `platform.json` (live platform state an
   agent captured via the client's own MCP), and a `manifest.json`. Committed —

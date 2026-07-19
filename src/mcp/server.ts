@@ -292,7 +292,7 @@ export function createLoredexMcpServer(config: Config): McpServer {
   // pipeline config fetched via that client's own MCP) and hands it here to
   // version under _versions/<client>/<unit>/<stamp>/ alongside the local files.
   server.registerTool(
-    'dex_snapshot',
+    'vault_snapshot',
     {
       description:
         "Snapshot an agent-ops client pipeline/agent under a dated folder in _versions/ (committed). Copies the local definition files, and — for a live capture — stores platform_data verbatim (fetch it first from the client's own platform MCP (its list_pipeline_stages/list_variables/get_stage_followup style tools)). Agent-ops dexes only.",
@@ -313,7 +313,7 @@ export function createLoredexMcpServer(config: Config): McpServer {
     },
     async ({ client, unit, platform_data, include_tables, note }) => {
       if (!isAgentOps(config.vaultPath)) {
-        return text('dex_snapshot applies to agent-ops dexes only.')
+        return text('vault_snapshot applies to agent-ops dexes only.')
       }
       try {
         let parsed: unknown
@@ -341,7 +341,7 @@ export function createLoredexMcpServer(config: Config): McpServer {
   )
 
   server.registerTool(
-    'dex_snapshot_list',
+    'vault_snapshot_list',
     {
       description: 'List snapshots for an agent-ops client (all units, or one), newest first.',
       inputSchema: {
@@ -351,7 +351,7 @@ export function createLoredexMcpServer(config: Config): McpServer {
     },
     async ({ client, unit }) => {
       if (!isAgentOps(config.vaultPath)) {
-        return text('dex_snapshot_list applies to agent-ops dexes only.')
+        return text('vault_snapshot_list applies to agent-ops dexes only.')
       }
       const rows = listSnapshots(config.vaultPath, client, unit)
       if (rows.length === 0) return text(`No snapshots for ${client}${unit ? `/${unit}` : ''}.`)
