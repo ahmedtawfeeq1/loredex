@@ -5,10 +5,13 @@ import { z } from 'zod'
 import pkg from '../../package.json'
 import type { Config } from '../core/config'
 import { ambientGitIdentity, consumeHandoff } from '../core/consume'
+import { isAgentOps } from '../core/dex'
 import { parseDoc } from '../core/frontmatter'
+import { rebuildIndexes } from '../core/indexer'
 import { buildDashboard, listHandoffs, renderDashboardMarkdown } from '../core/product'
-import { gitPullPush } from '../core/router'
+import { gitAutoCommit, gitPullPush } from '../core/router'
 import { sanitizeForContext, searchVault } from '../core/search'
+import { listSnapshots, snapshotUnit } from '../core/snapshot'
 import { storeNote } from '../core/store'
 import { slugify } from '../core/vault'
 import {
@@ -284,5 +287,91 @@ export function createLoredexMcpServer(config: Config): McpServer {
     },
   )
 
+  // ── agent-ops snapshots (append-only; agent-ops dexes only) ──
+  // The client-scoped agent captures its live platform state (e.g. the client's
+  // pipeline config fetched via that client's own MCP) and hands it here to
+  // version under _versions/<client>/<unit>/<stamp>/ alongside the local files.
+  server.registerTool(
+    'dex_snapshot',
+    {
+      description:
+        "Snapshot an agent-ops client pipeline/agent under a dated folder in _versions/ (committed). Copies the local definition files, and — for a live capture — stores platform_data verbatim (fetch it first from the client's own platform MCP (its list_pipeline_stages/list_variables/get_stage_followup style tools)). Agent-ops dexes only.",
+      inputSchema: {
+        client: z.string().describe('client slug'),
+        unit: z
+          .string()
+          .describe('pipeline or agent name (or a platform label like "pipeline-60")'),
+        platform_data: z
+          .string()
+          .optional()
+          .describe(
+            'JSON string of the live platform config you fetched (stored as platform.json)',
+          ),
+        include_tables: z.boolean().optional().describe('also copy knowledge_tables/'),
+        note: z.string().optional().describe('note stored in the manifest'),
+      },
+    },
+    async ({ client, unit, platform_data, include_tables, note }) => {
+      if (!isAgentOps(config.vaultPath)) {
+        return text('dex_snapshot applies to agent-ops dexes only.')
+      }
+      try {
+        let parsed: unknown
+        if (platform_data !== undefined) {
+          try {
+            parsed = JSON.parse(platform_data)
+          } catch {
+            parsed = platform_data // not JSON — store the raw string
+          }
+        }
+        const result = snapshotUnit(config.vaultPath, client, unit, snapshotStamp(new Date()), {
+          includeTables: include_tables,
+          note,
+          platformData: parsed,
+        })
+        rebuildIndexes(config.vaultPath)
+        gitAutoCommit(config.vaultPath, config, `loredex: snapshot ${result.unit} ${result.stamp}`)
+        return text(
+          `Snapshot ${result.dir} — ${result.files.length} file(s)${note ? ` · ${note}` : ''}.`,
+        )
+      } catch (e) {
+        return text(`Cannot snapshot: ${e instanceof Error ? e.message : String(e)}`)
+      }
+    },
+  )
+
+  server.registerTool(
+    'dex_snapshot_list',
+    {
+      description: 'List snapshots for an agent-ops client (all units, or one), newest first.',
+      inputSchema: {
+        client: z.string().describe('client slug'),
+        unit: z.string().optional().describe('limit to one pipeline/agent'),
+      },
+    },
+    async ({ client, unit }) => {
+      if (!isAgentOps(config.vaultPath)) {
+        return text('dex_snapshot_list applies to agent-ops dexes only.')
+      }
+      const rows = listSnapshots(config.vaultPath, client, unit)
+      if (rows.length === 0) return text(`No snapshots for ${client}${unit ? `/${unit}` : ''}.`)
+      return text(
+        rows
+          .map(
+            (r) => `${r.unit} · ${r.stamp} · ${r.fileCount} file(s)${r.note ? ` · ${r.note}` : ''}`,
+          )
+          .join('\n'),
+      )
+    },
+  )
+
   return server
+}
+
+/** `YYYY-MM-DD_HHMMSS` local-time stamp — the snapshot dir name. */
+function snapshotStamp(d: Date): string {
+  const p = (n: number): string => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(
+    d.getMinutes(),
+  )}${p(d.getSeconds())}`
 }

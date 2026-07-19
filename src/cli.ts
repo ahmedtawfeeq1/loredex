@@ -22,6 +22,7 @@ import { runProducts } from './commands/products'
 import { runRelink } from './commands/relink'
 import { runReset } from './commands/reset'
 import { runRoute } from './commands/route'
+import { runSnapshot } from './commands/snapshot'
 import { runStatus } from './commands/status'
 import { runSync } from './commands/sync'
 import { runWatch } from './commands/watch'
@@ -213,6 +214,16 @@ program
   .option('--before <NN>', 'insert the new stage before stage NN (renumbers later stages)')
   .option('--after <NN>', 'insert the new stage after stage NN (renumbers later stages)')
   .action((kind, args, opts) => runNew(kind, args ?? [], opts))
+
+program
+  .command('snapshot [client] [unit]')
+  .description(
+    "version a pipeline/agent's definition files into _versions/ (committed) — or --list them",
+  )
+  .option('--tables', 'also snapshot the client knowledge_tables/')
+  .option('--note <text>', 'note stored in the snapshot manifest')
+  .option('--list', 'list snapshots for <client> (optionally one <unit>) instead of creating')
+  .action((client, unit, opts) => runSnapshot(client, unit, opts))
 
 program
   .command('workspace <client>')

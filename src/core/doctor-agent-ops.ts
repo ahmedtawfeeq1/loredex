@@ -157,7 +157,9 @@ export function scanForSecrets(vaultPath: string, files: string[]): LintFinding[
   const findings: LintFinding[] = []
   for (const rel of files) {
     if (!SCANNABLE.test(rel)) continue
-    if (rel.includes('/_randoms/')) continue
+    // _randoms = keep-anyway; _versions = committed snapshots of already-scanned
+    // definition files — both lint-exempt so snapshots don't double-flag
+    if (rel.includes('/_randoms/') || rel.includes('/_versions/')) continue
     let raw: string
     try {
       raw = readFileSync(join(vaultPath, rel), 'utf8')
