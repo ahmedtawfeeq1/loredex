@@ -163,6 +163,26 @@ function stableJson(value: unknown): string {
   return `${JSON.stringify(sortValue(value), null, 2)}\n`
 }
 
+/**
+ * Node's package shims (npx, npm, yarn, pnpm) are `.cmd` batch files on Windows,
+ * not executables — `spawn('npx', …)` without a shell fails with ENOENT, and MCP
+ * clients (Claude Code included) warn that Windows needs a `cmd /c` wrapper. The
+ * generated `.mcp.json` is per-machine (gitignored), so wrap at generate time on
+ * Windows only; every other OS keeps the bare command.
+ */
+const WINDOWS_SHIMS = new Set(['npx', 'npm', 'yarn', 'pnpm', 'node-gyp'])
+
+export function windowsSafeCommand(
+  command: string,
+  args: string[] = [],
+  platform: NodeJS.Platform = process.platform,
+): { command: string; args: string[] } {
+  if (platform === 'win32' && WINDOWS_SHIMS.has(command)) {
+    return { command: 'cmd', args: ['/c', command, ...args] }
+  }
+  return { command, args }
+}
+
 function renderMcpJson(clientDir: string, spec: WorkspaceSpec): string {
   const path = join(clientDir, '.mcp.json')
   let json: { mcpServers?: Record<string, unknown> } = {}
@@ -175,9 +195,10 @@ function renderMcpJson(clientDir: string, spec: WorkspaceSpec): string {
   }
   json.mcpServers ??= {}
   for (const [name, server] of Object.entries(spec.mcp)) {
+    const safe = windowsSafeCommand(server.command, server.args ?? [])
     json.mcpServers[name] = {
-      command: server.command,
-      ...(server.args ? { args: server.args } : {}),
+      command: safe.command,
+      ...(safe.args.length > 0 ? { args: safe.args } : {}),
       ...(server.env && Object.keys(server.env).length > 0 ? { env: server.env } : {}),
     }
   }

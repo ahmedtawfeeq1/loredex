@@ -157,6 +157,7 @@ export {
   materializeWorkspace,
   type WorkspaceResult,
   type WorkspaceSpec,
+  windowsSafeCommand,
   workspaceSchema,
 } from './core/workspace'
 export { createLoredexMcpServer, resolveNoteInsideVault } from './mcp/server'
