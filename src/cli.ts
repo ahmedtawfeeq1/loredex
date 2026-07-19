@@ -17,6 +17,7 @@ import { runHandoff, runHandoffs } from './commands/handoff'
 import { runInit } from './commands/init'
 import { runMcp } from './commands/mcp'
 import { runNew } from './commands/new'
+import { runNormalize } from './commands/normalize'
 import { runCurateProduct } from './commands/product'
 import { runProducts } from './commands/products'
 import { runRelink } from './commands/relink'
@@ -213,6 +214,16 @@ program
   .option('--before <NN>', 'insert the new stage before stage NN (renumbers later stages)')
   .option('--after <NN>', 'insert the new stage after stage NN (renumbers later stages)')
   .action((kind, args, opts) => runNew(kind, args ?? [], opts))
+
+program
+  .command('normalize [client]')
+  .description(
+    'bring one client (or the whole fleet) up to the canonical structure — folders, .gitkeep, starter pipeline/stage/agent; idempotent',
+  )
+  .option('--pipeline <name>', 'starter pipeline name when a client has none (default: main)')
+  .option('--stage <name>', 'starter stage name (default: intake)')
+  .option('--agent <name>', 'starter agent name when a client has none (default: assistant)')
+  .action((client, opts) => runNormalize(client, opts))
 
 program
   .command('workspace <client>')
