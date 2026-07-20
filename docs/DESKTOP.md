@@ -21,7 +21,7 @@ No Obsidian, no server, no account. The vault stays a plain markdown folder in g
 
 Grab the installer for your OS from the **[latest release](https://github.com/ahmedtawfeeq1/loredex-desktop/releases/latest)**. Builds are **unsigned** for now (code signing + notarization is on the roadmap), so each OS shows a first-launch warning you clear once — steps below.
 
-> Filenames below use `<version>` — the release page shows the exact name (e.g. `0.4.0`); swap it in.
+> Filenames below use `<version>` — the release page shows the exact name (e.g. `0.9.4`); swap it in.
 
 ### macOS
 
@@ -92,6 +92,8 @@ Nine views, sidebar order (⌘/Ctrl 1–9):
 | **Settings** | Appearance, identity, contract repos + globs, GitHub integration, MCP server port |
 
 A ⌘/Ctrl+K command palette lists every action; `?` shows the keyboard map.
+
+**On an agent-ops dex** the app adds a **Clients** view and two side panels — it becomes a control room for a fleet of client AI-agent deployments (managers → clients → pipelines/agents → stages). Per client: scaffold pipelines/agents/stages, snapshot a unit into `_versions/`, keep platform logins in your OS keychain, generate agent tooling from `workspace.yml`, and drop an **AI chat** (Claude Code / Codex over ACP) or the **embedded terminal** into the client's folder — all from the UI, each as one attributed commit. See the [desktop user guide](https://github.com/ahmedtawfeeq1/loredex-desktop/blob/main/docs/USER-GUIDE.md#agent-ops-operate-a-client-fleet).
 
 ## Connect your coding agents (MCP)
 
