@@ -287,6 +287,16 @@ Claude Code's hooks fire in any IDE-hosted terminal (VS Code, Cursor, Antigravit
 | `loredex status` | Vault statistics |
 | `loredex doctor` | Check config, vault, editor, and classifier availability |
 
+**Agent-ops dexes** — a dex created with `loredex init --type agent-ops` is an agency operating a fleet of client AI-agent deployments (managers → clients → pipelines/agents → stages) instead of research notes. It adds:
+
+| Command | What it does |
+|---|---|
+| `loredex new <kind>` | Scaffold structure: `client <name>`, `pipeline <client> <name>`, `agent <client> <name>`, `stage <client> <pipeline> <name>` (`--before`/`--after` renumbers) |
+| `loredex clients` | The client roster: `list` (default), `tag` / `untag` / `set-tags` |
+| `loredex workspace <client>` | Generate a client's agent tooling from `workspace.yml` (`.mcp.json`, `.claude` settings, `AGENTS.md`) — secrets from env, never committed. `--check`, `--from <client>` |
+
+The full layout, rules, and file contract are in [docs/DEX-SPEC.md](docs/DEX-SPEC.md); the [Loredex Desktop](https://github.com/ahmedtawfeeq1/loredex-desktop) app drives all of this from a UI.
+
 Full walkthrough of every command plus a guided test checklist: [docs/USER-GUIDE.md](docs/USER-GUIDE.md).
 
 <a id="curate"></a>
@@ -339,11 +349,11 @@ Prefer a purpose-built native app over Obsidian? **[Loredex Desktop](https://git
 
 | OS | File | First launch (unsigned) |
 |---|---|---|
-| **macOS** (Apple Silicon, 14+) | `Loredex-0.2.1-arm64.dmg` | `xattr -dr com.apple.quarantine /Applications/Loredex.app` |
-| **Windows** (10/11, x64) | `Loredex.Setup.0.2.1.exe` | SmartScreen → **More info → Run anyway** |
+| **macOS** (Apple Silicon, 14+) | `Loredex-<version>-arm64.dmg` | `xattr -cr /Applications/Loredex.app` then `codesign --force --deep --sign - /Applications/Loredex.app` |
+| **Windows** (10/11, x64) | `Loredex.Setup.<version>.exe` | SmartScreen → **More info → Run anyway** |
 | **Linux** (x64) | `.AppImage` (any distro) or `.deb` (Debian/Ubuntu) | `chmod +x *.AppImage` and run |
 
-It embeds the same `loredex` package the CLI and agents use — one engine, in-process — and adds a handoff inbox/outbox board (accept / decline / snooze / consume, replies, threads), a zoomable **Atlas** graph, an API-contract change timeline, live team sync against your git remote, and an in-app MCP server agents auto-discover. No Obsidian, no plugins, no account.
+It embeds the same `loredex` package the CLI and agents use — one engine, in-process — and adds a handoff inbox/outbox board (accept / decline / snooze / consume, replies, threads), a zoomable **Atlas** graph, an API-contract change timeline, live team sync against your git remote, and an in-app MCP server agents auto-discover. On an **agent-ops** dex it also becomes a fleet control room — a Clients view, per-client onboarding, an embedded terminal, and client-scoped AI chat panels. No Obsidian, no plugins, no account.
 
 **Why the app over Obsidian?** Obsidian is a great markdown *editor/browser*; the desktop app is built to *operate* the loredex workflow — running handoffs with attributed transitions, tracing dependencies, watching contract drift, and serving live vault state to agents with zero setup. They're complementary on the same git-synced folder. Full comparison + step-by-step install/use: **[docs/DESKTOP.md](docs/DESKTOP.md)**.
 
