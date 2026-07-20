@@ -251,6 +251,34 @@ routed note now carries portable provenance (`source_project` + `source_rel` alo
 machine-local `source_path`), so drift detection works on any teammate's machine, resolved
 through their own registered project paths.
 
+## Agent-ops dexes: run a client fleet
+
+Everything above is the default **research** dex — AI notes filed by topic. A dex
+can instead be **agent-ops**: an agency operating a fleet of client AI-agent
+deployments, with a fixed, validated layout (managers → clients →
+pipelines/agents → stages) rather than free-form topics.
+
+```bash
+loredex init --type agent-ops          # this dex holds client deployments
+loredex new client acme_dental --manager sara
+loredex new pipeline acme_dental lead_reactivation
+loredex new stage acme_dental lead_reactivation qualify   # --before/--after renumbers
+loredex clients                        # the roster; tag / untag / set-tags
+loredex workspace acme_dental          # generate .mcp.json / .claude / AGENTS.md from workspace.yml
+loredex workspace acme_dental --check  # CI: non-zero exit on drift or missing env vars
+loredex doctor                         # validates structure, stage numbering, committed secrets
+```
+
+Each client lives at `projects/<client>/` with `pipelines/`, `agents/`,
+`knowledge_tables/`, `_inbox/`, `_randoms/`, and a committed, secret-free
+`workspace.yml` (tokens stay in the environment as `${VAR}` refs, expanded only
+into gitignored generated files). `route` files agent markdown into a client's
+`_randoms/`; `doctor` errors on schema breaks, stage-numbering gaps, and
+committed secrets. The full contract — layout, rules, committed-vs-generated —
+is [DEX-SPEC.md](DEX-SPEC.md), and the [Loredex Desktop](https://github.com/ahmedtawfeeq1/loredex-desktop)
+app drives the whole fleet (scaffold, snapshots, credentials, tooling, AI chat)
+from a UI.
+
 ## Live vault access for agents: `loredex mcp`
 
 `init` wires the loredex MCP server into your project's `.mcp.json`, so MCP-capable agents
