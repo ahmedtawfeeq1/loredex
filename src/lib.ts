@@ -129,6 +129,13 @@ export { ensureGeneratedMergeDriver, gitAutoCommit, gitPullPush, undoRoute } fro
 export { DATA_EXTS, walkData } from './core/scan'
 export { matchNeverRoute, RouteScopeError } from './core/scope'
 export { type SearchHit, sanitizeForContext, searchVault } from './core/search'
+export {
+  listSnapshots,
+  type SnapshotOptions,
+  type SnapshotResult,
+  type SnapshotSummary,
+  snapshotUnit,
+} from './core/snapshot'
 export { type StoreInput, storeNote } from './core/store'
 export { type SyncHealth, syncStatus } from './core/sync-status'
 export {
