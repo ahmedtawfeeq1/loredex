@@ -315,19 +315,24 @@ export function normalizeClient(
     }
   }
 
-  // 3. a starter pipeline + stage when the client has none
+  // 3. a starter pipeline + agent, ONLY when explicitly asked for.
+  //
+  // This used to happen unconditionally, which put a `pipelines/main/` and an
+  // `agents/assistant/` in every client that had none. Both were empty
+  // templates that no platform pipeline corresponds to, so they never became
+  // anything — they just sat there failing the schema lint and making a clean
+  // client look broken. Normalising a client's FOLDERS should not invent
+  // CONTENT for it. Pass `pipeline`/`agent` to opt in.
   const info = scanClient(vaultPath, slug)
-  if (info && info.pipelines.length === 0) {
-    const pipeline = slugify(opts?.pipeline ?? 'main')
+  if (info && opts?.pipeline && info.pipelines.length === 0) {
+    const pipeline = slugify(opts.pipeline)
     const unit = scaffoldUnit(vaultPath, slug, 'pipeline', pipeline)
     created.push(`${unit.dir}/`)
-    scaffoldStage(vaultPath, slug, pipeline, opts?.stage ?? 'intake')
-    created.push(`${unit.dir}/stages/01_${slugify(opts?.stage ?? 'intake')}/`)
+    scaffoldStage(vaultPath, slug, pipeline, opts.stage ?? 'intake')
+    created.push(`${unit.dir}/stages/01_${slugify(opts.stage ?? 'intake')}/`)
   }
-
-  // 4. a starter agent when the client has none
-  if (info && info.agents.length === 0) {
-    const agent = scaffoldUnit(vaultPath, slug, 'agent', slugify(opts?.agent ?? 'assistant'))
+  if (info && opts?.agent && info.agents.length === 0) {
+    const agent = scaffoldUnit(vaultPath, slug, 'agent', slugify(opts.agent))
     created.push(`${agent.dir}/`)
   }
 
