@@ -65,21 +65,21 @@ describe('agent-ops scaffolds', () => {
     expect(readFileSync(ws, 'utf8')).toBe(marker)
   })
 
-  it('pipeline gets the four _ files + stages/; agent gets no stages/', () => {
+  it('pipeline gets persona + instructions + stages/; agent gets no stages/', () => {
     const v = dex()
     const { slug } = scaffoldClient(v, 'peak_fitness')
     scaffoldPipeline(v, slug, 'lead_reactivation')
     scaffoldAgent(v, slug, 'reception_agent')
     const pipe = join(v, 'projects', slug, 'pipelines', 'lead-reactivation')
     const agent = join(v, 'projects', slug, 'agents', 'reception-agent')
-    for (const f of [
-      '_persona.md',
-      '_general_instructions.md',
-      '_actions.curls.yaml',
-      '_settings.export.yaml',
-    ]) {
+    for (const f of ['_persona.md', '_instructions.md']) {
       expect(existsSync(join(pipe, f)), `pipeline ${f}`).toBe(true)
       expect(existsSync(join(agent, f)), `agent ${f}`).toBe(true)
+    }
+    // platform-mirrored files are the pull's to write — scaffolding empty ones
+    // would make a never-pulled unit look pulled
+    for (const f of ['_actions.yaml', '_variables.yaml', 'pipeline.yaml']) {
+      expect(existsSync(join(pipe, f)), `pipeline ${f}`).toBe(false)
     }
     expect(existsSync(join(pipe, 'stages'))).toBe(true)
     expect(existsSync(join(agent, 'stages'))).toBe(false)
@@ -87,7 +87,7 @@ describe('agent-ops scaffolds', () => {
     expect(readFileSync(join(agent, '_persona.md'), 'utf8')).toContain('agent: reception-agent')
   })
 
-  it('stages append 01,02,03 with NN_ prefixed files', () => {
+  it('stages append 01,02,03; stage files carry no NN_ prefix', () => {
     const v = dex()
     const { slug } = scaffoldClient(v, 'lakeside_realty')
     scaffoldPipeline(v, slug, 'sales')
@@ -97,14 +97,13 @@ describe('agent-ops scaffolds', () => {
     const stages = join(v, 'projects', slug, 'pipelines', 'sales', 'stages')
     expect(readdirSync(stages).sort()).toEqual(['01_intake', '02_qualify', '03_book'])
     expect(readdirSync(join(stages, '02_qualify')).sort()).toEqual([
-      '02_actions.curls.yaml',
-      '02_enter_condition.md',
-      '02_followup.md',
-      '02_stage_instructions.md',
+      '_instructions.md',
+      'stage.yaml',
     ])
-    expect(readFileSync(join(stages, '02_qualify', '02_followup.md'), 'utf8')).toContain(
+    expect(readFileSync(join(stages, '02_qualify', '_instructions.md'), 'utf8')).toContain(
       'stage: qualify',
     )
+    expect(readFileSync(join(stages, '02_qualify', 'stage.yaml'), 'utf8')).toContain('order: 2')
   })
 
   it('--before inserts and renumbers later stages (files included), fs fallback', () => {
@@ -122,11 +121,10 @@ describe('agent-ops scaffolds', () => {
     ])
     const stages = join(v, 'projects', slug, 'pipelines', 'sales', 'stages')
     expect(readdirSync(stages).sort()).toEqual(['01_intake', '02_triage', '03_qualify', '04_book'])
+    // renumbering moves the FOLDER only — the files inside are prefix-free
     expect(readdirSync(join(stages, '03_qualify')).sort()).toEqual([
-      '03_actions.curls.yaml',
-      '03_enter_condition.md',
-      '03_followup.md',
-      '03_stage_instructions.md',
+      '_instructions.md',
+      'stage.yaml',
     ])
   })
 

@@ -8,21 +8,38 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { STAGE_FILE_SUFFIXES, UNIT_FILES } from './agent-ops'
 import { slugify } from './vault'
 
 /**
- * Versioned snapshots for agent-ops units. A snapshot copies a pipeline or
- * agent's definition files — the four `_` unit files, then (pipelines) each
- * stage's NN-prefixed files — into `projects/<client>/_versions/<unit>/<stamp>/`
- * with a manifest, preserving the relative layout. Everything under `_versions/`
- * is committed (that IS the durability story) and is invisible to the fleet
- * scanner + doctor (a versions dir must never parse as a pipeline/agent/stage).
+ * Versioned snapshots for agent-ops units.
  *
- * Pure: the caller supplies the stamp so the function is deterministic/testable.
+ * A snapshot captures a pipeline or agent's WHOLE definition — every file the
+ * unit owns, at whatever depth — into
+ * `projects/<client>/pipelines/<unit>/versions/vNN_<date>/`, preserving the
+ * relative layout, plus a manifest.
+ *
+ * Two things here were wrong before and are worth stating so they stay fixed:
+ *
+ *  1. It copied a fixed LIST of filenames. When the platform's schema moved, the
+ *     list went stale silently and a "snapshot" captured one file out of thirty
+ *     while still reporting success — worse than failing, because it looked like
+ *     a backup. It now walks the unit, so a snapshot cannot go stale again.
+ *
+ *  2. Snapshots lived in a client-level `_versions/<unit>/<timestamp>/`, away
+ *     from the thing they version. They now sit inside the unit as
+ *     `versions/vNN_<date>/`, which is the convention the platform's own tooling
+ *     writes when it pushes an edit — same folder, same names, so both tools'
+ *     history interleaves in one place instead of forming two partial ones.
+ *
+ * `versions/` is invisible to the fleet scanner (which reads only direct
+ * children of `pipelines/`) and is skipped when walking a unit, so snapshots
+ * never nest inside each other.
+ *
+ * Pure apart from the fs: the caller supplies the date so results are testable.
  */
 
-const STAGE_DIR = /^(\d{2})_(.+)$/
+/** Directories inside a unit that a snapshot must never descend into. */
+const NOT_UNIT_CONTENT = new Set(['versions', '_versions'])
 
 export interface SnapshotOptions {
   /** also copy knowledge_tables/ (default false — tables are versioned by hand) */
@@ -31,7 +48,7 @@ export interface SnapshotOptions {
   /**
    * Live platform state captured by an agent (e.g. the live platform pipeline config
    * fetched via that client's MCP) — stored verbatim as `platform.json` in the
-   * stamp dir. When set, the local unit need not exist (a platform-only
+   * version dir. When set, the local unit need not exist (a platform-only
    * snapshot of a pipeline that lives on the platform, not in local files).
    */
   platformData?: unknown
@@ -42,6 +59,7 @@ export interface SnapshotOptions {
 export interface SnapshotResult {
   unit: string
   kind: 'pipeline' | 'agent'
+  /** version folder name, e.g. `v03_2026-07-21` */
   stamp: string
   /** vault-relative snapshot dir */
   dir: string
@@ -55,6 +73,8 @@ export interface SnapshotSummary {
   stamp: string
   fileCount: number
   note?: string
+  /** vault-relative dir, so a caller can open it without rebuilding the path */
+  dir: string
 }
 
 function safeReaddir(dir: string): Dirent[] {
@@ -73,9 +93,48 @@ function listFiles(dir: string): string[] {
 }
 
 /**
- * Snapshot one unit. `stamp` is the caller-supplied dir name (e.g.
- * `2026-07-20_141530`). Refuses unknown/empty units and never overwrites an
- * existing stamp dir.
+ * Every file the unit owns, as paths relative to the unit dir, sorted.
+ * Skips dotfiles and `versions/` — a snapshot of the snapshots is not a snapshot.
+ */
+export function unitFiles(unitAbs: string): string[] {
+  const out: string[] = []
+  const walk = (relDir: string): void => {
+    for (const entry of safeReaddir(join(unitAbs, relDir))) {
+      if (entry.name.startsWith('.')) continue
+      const rel = relDir ? `${relDir}/${entry.name}` : entry.name
+      if (entry.isDirectory()) {
+        if (!relDir && NOT_UNIT_CONTENT.has(entry.name)) continue
+        walk(rel)
+      } else if (entry.isFile()) {
+        out.push(rel)
+      }
+    }
+  }
+  walk('')
+  return out.sort()
+}
+
+/** `v01_2026-07-21` — NN is one past the highest already in `versions/`. */
+export function nextVersionName(versionsAbs: string, date: string): string {
+  let highest = 0
+  for (const entry of safeReaddir(versionsAbs)) {
+    if (!entry.isDirectory()) continue
+    const n = /^v(\d+)/.exec(entry.name)
+    if (n?.[1]) highest = Math.max(highest, Number.parseInt(n[1], 10))
+  }
+  return `v${String(highest + 1).padStart(2, '0')}_${date}`
+}
+
+/** `2026-07-21_092440` → `2026-07-21`; anything without a date is used as-is. */
+function dateOf(stamp: string): string {
+  return /^(\d{4}-\d{2}-\d{2})/.exec(stamp)?.[1] ?? stamp
+}
+
+/**
+ * Snapshot one unit. `stamp` supplies the DATE (a full `2026-07-21_092440` is
+ * accepted and trimmed); the `vNN` is assigned from what is already in
+ * `versions/`, so two snapshots on the same day get distinct folders and the
+ * numbering reads as a history rather than a pile of timestamps.
  */
 export function snapshotUnit(
   vaultPath: string,
@@ -92,7 +151,7 @@ export function snapshotUnit(
   const pipelineAbs = join(clientAbs, 'pipelines', unit)
   const agentAbs = join(clientAbs, 'agents', unit)
   let kind: 'pipeline' | 'agent'
-  let unitAbs: string | null
+  let unitAbs: string
   if (existsSync(pipelineAbs)) {
     kind = 'pipeline'
     unitAbs = pipelineAbs
@@ -100,16 +159,21 @@ export function snapshotUnit(
     kind = 'agent'
     unitAbs = agentAbs
   } else if (opts?.platformData !== undefined) {
-    // platform-only snapshot: the unit lives on the platform, not local files
+    // platform-only snapshot: the unit lives on the platform, not local files.
+    // The folder is created so the capture lands where the unit will be once
+    // it is pulled, rather than in a separate orphan tree.
     kind = opts.kind ?? 'pipeline'
-    unitAbs = null
+    unitAbs = kind === 'pipeline' ? pipelineAbs : agentAbs
   } else {
     throw new Error(`no pipeline or agent "${unit}" under client "${client}"`)
   }
 
-  const destBase = join(clientAbs, '_versions', unit, stamp)
+  const group = kind === 'pipeline' ? 'pipelines' : 'agents'
+  const versionsAbs = join(unitAbs, 'versions')
+  const version = nextVersionName(versionsAbs, dateOf(stamp))
+  const destBase = join(versionsAbs, version)
   if (existsSync(destBase)) {
-    throw new Error(`snapshot "${stamp}" already exists for ${unit} — pass a fresh stamp`)
+    throw new Error(`snapshot "${version}" already exists for ${unit} — pass a fresh stamp`)
   }
 
   const files: string[] = []
@@ -121,33 +185,18 @@ export function snapshotUnit(
     files.push(rel)
   }
 
-  if (unitAbs) {
-    // 1. the four unit files
-    for (const f of UNIT_FILES) copy(join(unitAbs, f), f)
-    // 2. every stage's NN-prefixed files (pipelines only)
-    if (kind === 'pipeline') {
-      const stagesAbs = join(unitAbs, 'stages')
-      const stageDirs = safeReaddir(stagesAbs)
-        .filter((e) => e.isDirectory() && STAGE_DIR.test(e.name))
-        .sort((a, b) => a.name.localeCompare(b.name))
-      for (const e of stageDirs) {
-        const nn = e.name.match(STAGE_DIR)?.[1] ?? ''
-        for (const suffix of STAGE_FILE_SUFFIXES) {
-          const name = `${nn}_${suffix}`
-          copy(join(stagesAbs, e.name, name), join('stages', e.name, name))
-        }
-      }
-    }
-    // 3. knowledge tables (opt-in)
-    if (opts?.includeTables) {
-      const tablesAbs = join(clientAbs, 'knowledge_tables')
-      for (const name of listFiles(tablesAbs)) {
-        copy(join(tablesAbs, name), join('knowledge_tables', name))
-      }
+  // 1. the whole unit — persona, instructions, config, every stage, at any depth
+  for (const rel of unitFiles(unitAbs)) copy(join(unitAbs, rel), rel)
+
+  // 2. knowledge tables (opt-in)
+  if (opts?.includeTables) {
+    const tablesAbs = join(clientAbs, 'knowledge_tables')
+    for (const name of listFiles(tablesAbs)) {
+      copy(join(tablesAbs, name), join('knowledge_tables', name))
     }
   }
 
-  // 4. live platform state captured by an agent (platform pipeline config, …)
+  // 3. live platform state captured by an agent (platform pipeline config, …)
   if (opts?.platformData !== undefined) {
     mkdirSync(destBase, { recursive: true })
     writeFileSync(
@@ -164,6 +213,7 @@ export function snapshotUnit(
   const manifest = {
     unit,
     kind,
+    version,
     createdAt: stamp,
     files,
     ...(opts?.note ? { note: opts.note } : {}),
@@ -174,45 +224,92 @@ export function snapshotUnit(
   return {
     unit,
     kind,
-    stamp,
-    dir: `projects/${client}/_versions/${unit}/${stamp}`,
+    stamp: version,
+    dir: `projects/${client}/${group}/${unit}/versions/${version}`,
     files,
     note: opts?.note,
   }
 }
 
-/** List snapshots for a client (all units, or one), newest stamp first. */
+function readManifest(dirAbs: string): { fileCount: number; note?: string } {
+  try {
+    const m = JSON.parse(readFileSync(join(dirAbs, 'manifest.json'), 'utf8')) as {
+      files?: unknown[]
+      note?: string
+    }
+    return { fileCount: Array.isArray(m.files) ? m.files.length : 0, note: m.note }
+  } catch {
+    return { fileCount: 0 }
+  }
+}
+
+/** `v03_2026-07-21` → `2026-07-21#0003`; `2026-07-21_0924` → `2026-07-21#0924`.
+ *  Sorting on this makes `v10_` land after `v09_`, and keeps snapshots from the
+ *  retired timestamp layout interleaved by date rather than dumped at one end. */
+function sortKey(stamp: string): string {
+  const v = /^v(\d+)_(\d{4}-\d{2}-\d{2})$/.exec(stamp)
+  if (v?.[1] && v[2]) return `${v[2]}#${v[1].padStart(4, '0')}`
+  const d = /^(\d{4}-\d{2}-\d{2})[_-]?(.*)$/.exec(stamp)
+  return d?.[1] ? `${d[1]}#${d[2] ?? ''}` : stamp
+}
+
+/**
+ * List snapshots for a client (all units, or one), newest first.
+ *
+ * Reads the current `pipelines|agents/<unit>/versions/` layout AND the retired
+ * client-level `_versions/<unit>/<stamp>/`, so history taken before the move
+ * stays visible instead of appearing to have been deleted.
+ */
 export function listSnapshots(
   vaultPath: string,
   clientName: string,
   unitName?: string,
 ): SnapshotSummary[] {
   const client = slugify(clientName)
-  const versionsAbs = join(vaultPath, 'projects', client, '_versions')
-  const units = unitName
-    ? [slugify(unitName)]
-    : safeReaddir(versionsAbs)
-        .filter((e) => e.isDirectory())
-        .map((e) => e.name)
+  const clientAbs = join(vaultPath, 'projects', client)
+  const want = unitName ? slugify(unitName) : null
   const out: SnapshotSummary[] = []
-  for (const unit of units) {
-    const unitAbs = join(versionsAbs, unit)
-    for (const e of safeReaddir(unitAbs)) {
+
+  const collect = (unit: string, versionsAbs: string, relBase: string): void => {
+    for (const e of safeReaddir(versionsAbs)) {
       if (!e.isDirectory()) continue
-      let fileCount = 0
-      let note: string | undefined
-      try {
-        const m = JSON.parse(readFileSync(join(unitAbs, e.name, 'manifest.json'), 'utf8')) as {
-          files?: unknown[]
-          note?: string
-        }
-        fileCount = Array.isArray(m.files) ? m.files.length : 0
-        note = m.note
-      } catch {
-        // no/invalid manifest — still list the stamp, count 0
-      }
-      out.push({ unit, stamp: e.name, fileCount, note })
+      out.push({
+        unit,
+        stamp: e.name,
+        dir: `${relBase}/${e.name}`,
+        ...readManifest(join(versionsAbs, e.name)),
+      })
     }
   }
-  return out.sort((a, b) => b.stamp.localeCompare(a.stamp))
+
+  for (const group of ['pipelines', 'agents'] as const) {
+    const groupAbs = join(clientAbs, group)
+    const units = want
+      ? [want]
+      : safeReaddir(groupAbs)
+          .filter((e) => e.isDirectory())
+          .map((e) => e.name)
+    for (const unit of units) {
+      collect(
+        unit,
+        join(groupAbs, unit, 'versions'),
+        `projects/${client}/${group}/${unit}/versions`,
+      )
+    }
+  }
+
+  // retired layout — read so old history stays visible; never written to again
+  const legacyAbs = join(clientAbs, '_versions')
+  const legacyUnits = want
+    ? [want]
+    : safeReaddir(legacyAbs)
+        .filter((e) => e.isDirectory())
+        .map((e) => e.name)
+  for (const unit of legacyUnits) {
+    collect(unit, join(legacyAbs, unit), `projects/${client}/_versions/${unit}`)
+  }
+
+  return out.sort(
+    (a, b) => sortKey(b.stamp).localeCompare(sortKey(a.stamp)) || a.unit.localeCompare(b.unit),
+  )
 }

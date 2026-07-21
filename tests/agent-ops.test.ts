@@ -1,4 +1,4 @@
-import { mkdtempSync, renameSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -48,12 +48,7 @@ describe('agent-ops fleet scanner', () => {
     expect(pipe?.kind).toBe('pipeline')
     expect(pipe?.hasStagesDir).toBe(true)
     expect(pipe?.stages.map((s) => s.dir)).toEqual(['01_intake', '02_qualify'])
-    expect(pipe?.stages[0]?.files).toEqual({
-      enterCondition: true,
-      stageInstructions: true,
-      followup: true,
-      actions: true,
-    })
+    expect(pipe?.stages[0]?.files).toEqual({ stageInstructions: true, stageConfig: true })
     // scaffolded templates have placeholder bodies → 'ok'
     expect(pipe?.persona).toBe('ok')
     expect(info.agents[0]?.hasStagesDir).toBe(false)
@@ -65,19 +60,18 @@ describe('agent-ops fleet scanner', () => {
     expect(scanFleet(v).map((c) => c.slug)).toEqual([slug])
   })
 
-  it('detects NN prefix mismatches and empty persona', () => {
+  it('reports a stage missing its instructions, and an empty persona', () => {
     const v = dex()
     const slug = seedClient(v)
     const stage = join(v, 'projects', slug, 'pipelines', 'lead-reactivation', 'stages', '01_intake')
-    renameSync(join(stage, '01_followup.md'), join(stage, '02_followup.md'))
+    rmSync(join(stage, '_instructions.md'))
     writeFileSync(
       join(v, 'projects', slug, 'pipelines', 'lead-reactivation', '_persona.md'),
       '---\ntype: persona\n---\n\n',
     )
     const info = scanClient(v, slug)
     const s1 = info?.pipelines[0]?.stages[0]
-    expect(s1?.files.followup).toBe(true) // present, just misnumbered
-    expect(s1?.prefixMismatches).toEqual(['02_followup.md'])
+    expect(s1?.files).toEqual({ stageInstructions: false, stageConfig: true })
     expect(info?.pipelines[0]?.persona).toBe('empty')
   })
 
@@ -86,8 +80,7 @@ describe('agent-ops fleet scanner', () => {
       nn,
       slug: 's',
       dir: `${nn}_s`,
-      files: { enterCondition: true, stageInstructions: true, followup: true, actions: true },
-      prefixMismatches: [],
+      files: { stageInstructions: true, stageConfig: true },
     })
     expect(stageNumberingGaps([mk('01'), mk('02'), mk('03')])).toEqual([])
     expect(stageNumberingGaps([mk('01'), mk('04')])).toEqual(['02', '03'])

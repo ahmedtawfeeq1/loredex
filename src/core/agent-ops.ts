@@ -12,27 +12,32 @@ import { loadProducts, productOf } from './products'
  * skipped, never thrown. `_randoms/` is counted but its contents never produce findings.
  */
 
+/**
+ * The unit and stage file names.
+ *
+ * These are not loredex's to choose. An agent-ops dex MIRRORS a conversational-AI
+ * platform, and the platform's own tooling writes this tree — so if this list
+ * disagrees with it, live and correct content gets reported as "missing".
+ *
+ * `_persona.md` set the convention, so every prose/field file is `_`-prefixed;
+ * `pipeline.yaml` and `stage.yaml` are the structural config and are not.
+ * Stage files carry NO `NN_` prefix — the folder's `NN_` already orders them.
+ */
 export const UNIT_FILES = [
   '_persona.md',
-  '_general_instructions.md',
-  '_actions.curls.yaml',
-  '_settings.export.yaml',
+  '_instructions.md',
+  '_actions.yaml',
+  '_variables.yaml',
+  'pipeline.yaml',
 ] as const
 
-export const STAGE_FILE_SUFFIXES = [
-  'enter_condition.md',
-  'stage_instructions.md',
-  'followup.md',
-  'actions.curls.yaml',
-] as const
+export const STAGE_FILE_SUFFIXES = ['_instructions.md', 'stage.yaml'] as const
 
-export type StageFileKey = 'enterCondition' | 'stageInstructions' | 'followup' | 'actions'
+export type StageFileKey = 'stageInstructions' | 'stageConfig'
 
 const STAGE_FILE_KEYS: Record<(typeof STAGE_FILE_SUFFIXES)[number], StageFileKey> = {
-  'enter_condition.md': 'enterCondition',
-  'stage_instructions.md': 'stageInstructions',
-  'followup.md': 'followup',
-  'actions.curls.yaml': 'actions',
+  '_instructions.md': 'stageInstructions',
+  'stage.yaml': 'stageConfig',
 }
 
 export interface StageInfo {
@@ -43,8 +48,6 @@ export interface StageInfo {
   /** folder name, NN_<slug> */
   dir: string
   files: Record<StageFileKey, boolean>
-  /** file names inside the stage whose NN prefix ≠ the folder's NN */
-  prefixMismatches: string[]
 }
 
 export type UnitFileState = 'ok' | 'empty' | 'missing'
@@ -55,9 +58,11 @@ export interface UnitInfo {
   /** vault-relative dir, e.g. projects/<client>/pipelines/<name> */
   dir: string
   persona: UnitFileState
-  generalInstructions: UnitFileState
+  instructions: UnitFileState
   hasActions: boolean
-  hasSettings: boolean
+  hasVariables: boolean
+  /** `pipeline.yaml` — the platform config this unit mirrors */
+  hasConfig: boolean
   stages: StageInfo[]
   hasStagesDir: boolean
 }
@@ -114,23 +119,12 @@ function scanStage(stagesAbs: string, dirName: string): StageInfo {
   const match = dirName.match(STAGE_DIR)
   const nn = match?.[1] ?? ''
   const slug = match?.[2] ?? dirName
-  const files: Record<StageFileKey, boolean> = {
-    enterCondition: false,
-    stageInstructions: false,
-    followup: false,
-    actions: false,
-  }
-  const prefixMismatches: string[] = []
+  const files: Record<StageFileKey, boolean> = { stageInstructions: false, stageConfig: false }
   for (const name of listFiles(join(stagesAbs, dirName))) {
-    const fileMatch = name.match(/^(\d{2})_(.+)$/)
-    if (!fileMatch) continue
-    const suffix = fileMatch[2] as (typeof STAGE_FILE_SUFFIXES)[number]
-    const key = STAGE_FILE_KEYS[suffix]
-    if (!key) continue
-    files[key] = true
-    if (nn && fileMatch[1] !== nn) prefixMismatches.push(name)
+    const key = STAGE_FILE_KEYS[name as (typeof STAGE_FILE_SUFFIXES)[number]]
+    if (key) files[key] = true
   }
-  return { nn, slug, dir: dirName, files, prefixMismatches }
+  return { nn, slug, dir: dirName, files }
 }
 
 function scanUnit(
@@ -154,9 +148,10 @@ function scanUnit(
     kind,
     dir: `${clientRel}/${group}/${name}`,
     persona: unitFileState(join(unitAbs, '_persona.md')),
-    generalInstructions: unitFileState(join(unitAbs, '_general_instructions.md')),
-    hasActions: existsSync(join(unitAbs, '_actions.curls.yaml')),
-    hasSettings: existsSync(join(unitAbs, '_settings.export.yaml')),
+    instructions: unitFileState(join(unitAbs, '_instructions.md')),
+    hasActions: existsSync(join(unitAbs, '_actions.yaml')),
+    hasVariables: existsSync(join(unitAbs, '_variables.yaml')),
+    hasConfig: existsSync(join(unitAbs, 'pipeline.yaml')),
     stages,
     hasStagesDir,
   }

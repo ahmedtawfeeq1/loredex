@@ -45,7 +45,7 @@ describe('agent-ops indexer (via rebuildIndexes dex-type branch)', () => {
     expect(moc).toContain('## Pipelines')
     expect(moc).toContain('### booking')
     expect(moc).toContain(
-      '01 — [[projects/brightsmile-dental/pipelines/booking/stages/01_intake/01_stage_instructions|intake]]',
+      '01 — [[projects/brightsmile-dental/pipelines/booking/stages/01_intake/_instructions|intake]]',
     )
     expect(moc).toContain('## Agents')
     expect(moc).toContain('### reception-agent')

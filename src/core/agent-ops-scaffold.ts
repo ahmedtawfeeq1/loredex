@@ -54,67 +54,54 @@ type: persona
 `
 }
 
-function generalInstructionsTemplate(
-  client: string,
-  kind: 'pipeline' | 'agent',
-  name: string,
-): string {
+function instructionsTemplate(client: string, kind: 'pipeline' | 'agent', name: string): string {
   return `---
 client: ${client}
 ${kind}: ${name}
-type: general-instructions
+type: instructions
 ---
 
-# General instructions
+# Instructions
 
 <!-- Behavior that applies across every conversation, before any stage logic. -->
 `
 }
 
-const ACTIONS_TEMPLATE = `# Actions (curl definitions).
-# Each action is data the AI sends to an automation webhook; the workflow does the
-# task and returns the result.
-#
-# actions:
-#   - name: example_lookup
-#     description: Look something up in an external system
-#     curl: |
-#       curl -X POST "https://automation.example.com/webhook/example" \\
-#         -H "Content-Type: application/json" \\
-#         -d '{"query": "{{query}}"}'
-`
-
-const SETTINGS_TEMPLATE = `# AI model settings export for this unit (platform export — machine truth).
-# model:
-# temperature:
-# language:
-`
-
+/**
+ * Stage templates.
+ *
+ * `_actions.yaml` / `_variables.yaml` / `pipeline.yaml` / `stage.yaml` mirror
+ * PLATFORM state. A local scaffold cannot know a stage's platform id or order,
+ * so it writes a commented placeholder rather than inventing values that would
+ * read as real config and get pushed.
+ */
 function stageFileTemplate(
   client: string,
   pipeline: string,
   stage: string,
+  nn: string,
   suffix: (typeof STAGE_FILE_SUFFIXES)[number],
 ): string {
-  if (suffix === 'actions.curls.yaml') {
-    return `# Stage-scoped actions (curl definitions) for stage ${stage}.\n${ACTIONS_TEMPLATE}`
+  if (suffix === 'stage.yaml') {
+    return `# Stage config for "${stage}" of "${pipeline}".
+# Mirrors the platform — \`id\` is filled in by the first pull after this stage
+# exists there. Until then this stage is local-only.
+name: ${stage}
+order: ${Number.parseInt(nn, 10)}
+enter_condition: |-
+  # When a conversation enters this stage.
+`
   }
-  const headings: Record<string, string> = {
-    'enter_condition.md': '# Enter condition\n\n<!-- When a conversation enters this stage. -->',
-    'stage_instructions.md':
-      '# Stage instructions\n\n<!-- How the AI behaves inside this stage. -->',
-    'followup.md':
-      '# Followup\n\n<!-- Frontmatter carries followup settings (delays, attempts, assets); this body carries the followup instructions for stale contacts. -->',
-  }
-  const type = suffix.replace('.md', '').replace(/_/g, '-')
   return `---
 client: ${client}
 pipeline: ${pipeline}
 stage: ${stage}
-type: ${type}
+type: instructions
 ---
 
-${headings[suffix] ?? ''}
+# Stage instructions
+
+<!-- How the AI behaves inside this stage. -->
 `
 }
 
@@ -170,12 +157,9 @@ function scaffoldUnit(
   const unitAbs = join(clientAbs, group, slug)
   mkdirSync(unitAbs, { recursive: true })
   writeIfMissing(join(unitAbs, '_persona.md'), personaTemplate(client, kind, slug))
-  writeIfMissing(
-    join(unitAbs, '_general_instructions.md'),
-    generalInstructionsTemplate(client, kind, slug),
-  )
-  writeIfMissing(join(unitAbs, '_actions.curls.yaml'), ACTIONS_TEMPLATE)
-  writeIfMissing(join(unitAbs, '_settings.export.yaml'), SETTINGS_TEMPLATE)
+  writeIfMissing(join(unitAbs, '_instructions.md'), instructionsTemplate(client, kind, slug))
+  // _actions.yaml / _variables.yaml / pipeline.yaml are written by the pull, from
+  // the platform. Scaffolding empty ones would make an unpulled unit look pulled.
   if (kind === 'pipeline') mkdirSync(join(unitAbs, 'stages'), { recursive: true })
   return { slug, dir: `projects/${client}/${group}/${slug}` }
 }
@@ -204,16 +188,9 @@ function gitMv(vaultPath: string, fromAbs: string, toAbs: string): void {
   renameSync(fromAbs, toAbs)
 }
 
-/** Rename a stage folder to a new NN, including the NN_ prefix on the files inside. */
+/** Renumber a stage folder. Stage FILES carry no NN prefix, so only the dir moves. */
 function renameStage(vaultPath: string, stagesAbs: string, stage: StageInfo, newNn: string): void {
-  const fromAbs = join(stagesAbs, stage.dir)
-  const toDir = `${newNn}_${stage.slug}`
-  const toAbs = join(stagesAbs, toDir)
-  gitMv(vaultPath, fromAbs, toAbs)
-  for (const suffix of STAGE_FILE_SUFFIXES) {
-    const oldFile = join(toAbs, `${stage.nn}_${suffix}`)
-    if (existsSync(oldFile)) gitMv(vaultPath, oldFile, join(toAbs, `${newNn}_${suffix}`))
-  }
+  gitMv(vaultPath, join(stagesAbs, stage.dir), join(stagesAbs, `${newNn}_${stage.slug}`))
 }
 
 /**
@@ -266,10 +243,7 @@ export function scaffoldStage(
   const stageAbs = join(stagesAbs, dirName)
   mkdirSync(stageAbs, { recursive: true })
   for (const suffix of STAGE_FILE_SUFFIXES) {
-    writeIfMissing(
-      join(stageAbs, `${nn}_${suffix}`),
-      stageFileTemplate(client, pipeline, slug, suffix),
-    )
+    writeIfMissing(join(stageAbs, suffix), stageFileTemplate(client, pipeline, slug, nn, suffix))
   }
   return { dir: `projects/${client}/pipelines/${pipeline}/stages/${dirName}`, renumbered }
 }

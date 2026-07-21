@@ -28,11 +28,11 @@ describe('normalizeClient', () => {
     expect(info?.pipelines.map((p) => p.name)).toEqual(['main'])
     const pipe = info?.pipelines[0]
     expect(pipe?.persona).not.toBe('missing')
-    expect(pipe?.generalInstructions).not.toBe('missing')
+    expect(pipe?.instructions).not.toBe('missing')
     expect(pipe?.stages).toHaveLength(1)
     expect(pipe?.stages[0]?.nn).toBe('01')
     // every stage file present
-    for (const k of ['enterCondition', 'stageInstructions', 'followup', 'actions'] as const) {
+    for (const k of ['stageInstructions', 'stageConfig'] as const) {
       expect(pipe?.stages[0]?.files[k], k).toBe(true)
     }
     // starter agent
@@ -43,7 +43,7 @@ describe('normalizeClient', () => {
     const { v, slug, dir } = dexWithClient()
     normalizeClient(v, slug)
     // put real content in a stage instruction, then re-normalize
-    const instr = join(dir, 'pipelines', 'main', 'stages', '01_intake', '01_stage_instructions.md')
+    const instr = join(dir, 'pipelines', 'main', 'stages', '01_intake', '_instructions.md')
     writeFileSync(instr, '# Real content\n\nDo the thing.\n')
     const again = normalizeClient(v, slug)
     expect(again.alreadyCanonical).toBe(true)

@@ -54,25 +54,31 @@ describe('agent-ops doctor lints', () => {
     expect(findings.every((f) => f.level !== 'error')).toBe(true)
   })
 
-  it('pipeline with no stages, missing stage file, prefix mismatch, gaps → errors', () => {
+  it('pipeline with no stages, a stage with no stage.yaml, numbering gaps → errors', () => {
     const v = dex()
     const slug = cleanClient(v)
     // no-stage pipeline
     scaffoldPipeline(v, slug, 'ghost')
-    // missing stage file + prefix mismatch + gap
     const stages = join(v, 'projects', slug, 'pipelines', 'booking', 'stages')
-    rmSync(join(stages, '01_intake', '01_followup.md'))
-    renameSync(
-      join(stages, '01_intake', '01_enter_condition.md'),
-      join(stages, '01_intake', '03_enter_condition.md'),
-    )
+    rmSync(join(stages, '01_intake', 'stage.yaml'))
     renameSync(join(stages, '02_confirm'), join(stages, '04_confirm'))
     const findings = levels(v)
     const msgs = findings.filter((f) => f.level === 'error').map((f) => f.message)
     expect(msgs.some((m) => /no stages/.test(m))).toBe(true)
-    expect(msgs.some((m) => /missing 01_followup\.md/.test(m))).toBe(true)
-    expect(msgs.some((m) => /prefix doesn't match/.test(m))).toBe(true)
+    expect(msgs.some((m) => /missing stage\.yaml/.test(m))).toBe(true)
     expect(msgs.some((m) => /gaps/.test(m))).toBe(true)
+  })
+
+  it('a stage without _instructions.md is a warn, not an error — it inherits', () => {
+    const v = dex()
+    const slug = cleanClient(v)
+    const stages = join(v, 'projects', slug, 'pipelines', 'booking', 'stages')
+    rmSync(join(stages, '01_intake', '_instructions.md'))
+    const findings = levels(v)
+    expect(
+      findings.some((f) => f.level === 'warn' && /inherits the pipeline/.test(f.message)),
+    ).toBe(true)
+    expect(findings.every((f) => f.level !== 'error')).toBe(true)
   })
 
   it('agent with a stages/ dir → error', () => {

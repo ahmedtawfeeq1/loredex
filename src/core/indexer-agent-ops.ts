@@ -52,14 +52,10 @@ function clientSummary(info: ClientInfo): string {
 
 function emitUnit(moc: string[], unit: UnitInfo): void {
   moc.push(`### ${unit.name}`, '')
-  moc.push(
-    `- [[${unit.dir}/_persona|persona]] · [[${unit.dir}/_general_instructions|general instructions]]`,
-  )
+  moc.push(`- [[${unit.dir}/_persona|persona]] · [[${unit.dir}/_instructions|instructions]]`)
   if (unit.kind === 'pipeline') {
     for (const stage of unit.stages) {
-      moc.push(
-        `- ${stage.nn} — [[${unit.dir}/stages/${stage.dir}/${stage.nn}_stage_instructions|${stage.slug}]]`,
-      )
+      moc.push(`- ${stage.nn} — [[${unit.dir}/stages/${stage.dir}/_instructions|${stage.slug}]]`)
     }
     if (unit.stages.length === 0) moc.push('- _no stages yet_')
   }

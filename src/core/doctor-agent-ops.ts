@@ -34,15 +34,19 @@ function lintUnit(client: string, unit: UnitInfo): LintFinding[] {
       message: `_persona.md ${unit.persona} — every ${unit.kind} needs a persona`,
     })
   }
-  if (unit.generalInstructions !== 'ok') {
+  if (unit.instructions !== 'ok') {
     findings.push({
       level: 'error',
       client,
       scope,
-      message: `_general_instructions.md ${unit.generalInstructions}`,
+      message: `_instructions.md ${unit.instructions}`,
     })
   }
   if (unit.kind === 'pipeline') {
+    // Deliberately NOT linted: a missing pipeline.yaml. It only means this unit
+    // was never pulled from the platform, which is the normal state of a
+    // freshly scaffolded one — `hasConfig` is on UnitInfo for surfaces that want
+    // to show it, but a scaffold must lint clean.
     if (unit.stages.length === 0) {
       findings.push({ level: 'error', client, scope, message: 'pipeline has no stages' })
     }
@@ -67,30 +71,21 @@ function lintUnit(client: string, unit: UnitInfo): LintFinding[] {
         })
       }
       if (stage.nn) seen.add(stage.nn)
-      const missing = (
-        [
-          ['enterCondition', 'enter_condition.md'],
-          ['stageInstructions', 'stage_instructions.md'],
-          ['followup', 'followup.md'],
-          ['actions', 'actions.curls.yaml'],
-        ] as const
-      )
-        .filter(([key]) => !stage.files[key])
-        .map(([, name]) => `${stage.nn}_${name}`)
-      if (missing.length > 0) {
-        findings.push({
-          level: 'error',
-          client,
-          scope: stageScope,
-          message: `missing ${missing.join(', ')}`,
-        })
+      // stage.yaml carries id, order and enter_condition — without it the stage
+      // is not addressable on the platform, so its absence is structural.
+      if (!stage.files.stageConfig) {
+        findings.push({ level: 'error', client, scope: stageScope, message: 'missing stage.yaml' })
       }
-      for (const name of stage.prefixMismatches) {
+      // _instructions.md is optional by design: a stage with nothing of its own
+      // to say inherits the pipeline's instructions, and the pull deliberately
+      // does not mirror a stage field that duplicates them. Worth noticing,
+      // never a failure.
+      if (!stage.files.stageInstructions) {
         findings.push({
-          level: 'error',
+          level: 'warn',
           client,
           scope: stageScope,
-          message: `${name} — NN prefix doesn't match the ${stage.nn}_ folder`,
+          message: 'no _instructions.md — this stage inherits the pipeline instructions',
         })
       }
     }
@@ -157,9 +152,11 @@ export function scanForSecrets(vaultPath: string, files: string[]): LintFinding[
   const findings: LintFinding[] = []
   for (const rel of files) {
     if (!SCANNABLE.test(rel)) continue
-    // _randoms = keep-anyway; _versions = committed snapshots of already-scanned
-    // definition files — both lint-exempt so snapshots don't double-flag
-    if (rel.includes('/_randoms/') || rel.includes('/_versions/')) continue
+    // _randoms = keep-anyway; versions/ (and the retired _versions/) = committed
+    // snapshots of already-scanned definition files — lint-exempt so one secret
+    // is not re-reported once per snapshot that captured it
+    if (rel.includes('/_randoms/') || rel.includes('/versions/') || rel.includes('/_versions/'))
+      continue
     let raw: string
     try {
       raw = readFileSync(join(vaultPath, rel), 'utf8')
